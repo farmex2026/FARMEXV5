@@ -1294,6 +1294,7 @@ function buscarPrecios(L,q){
 const saludo=()=>{const hh=new Date().getHours();return hh<12?'Buenos días':hh<20?'Buenas tardes':'Buenas noches';};
 const vehiculoTxt=p=>[p.marca,p.modelo,p.anio?`(${p.anio})`:''].filter(Boolean).join(' ').trim();
 const totalPres=p=>p.items.reduce((a,i)=>a+i.p*i.cant,0);
+const CUOTAS=[3,6];
 
 // 11 1234-5678 -> 5491112345678
 function telWA(t){
@@ -1361,9 +1362,22 @@ async function armarPDF(p){
     y+=7.5;
   });
   y+=6;
+  const tot=totalPres(p);
   doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.text('Total: '+money(totalPres(p)),18,y);
-  y+=12;
+  doc.text('Total: '+money(tot),18,y);
+  y+=11;
+
+  // financiación: siempre visible, calculada sobre el total
+  if(y>250){ doc.addPage(); y=22; }
+  doc.setDrawColor(220); doc.line(18,y-4,192,y-4);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(...AZUL);
+  doc.text('MEDIOS DE PAGO',18,y+2);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(40);
+  doc.text('Visa y Mastercard',18,y+8);
+  CUOTAS.forEach((n,i)=>{
+    doc.text(`${n} cuotas sin interés de ${money(tot/n)}`,18,y+14+i*5.5);
+  });
+  y+=14+CUOTAS.length*5.5+6;
   doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(...GRIS);
   doc.text('Presupuesto informativo, sujeto a cambios y/o disponibilidad de la sucursal.',18,y);
   return doc;
@@ -1375,7 +1389,7 @@ const nombrePDF=p=>{
 async function pdfPresupuesto(p){ (await armarPDF(p)).save(nombrePDF(p)); }
 
 const urlWA=p=>{
-  const t=telWA(p.tel);
+  const t=telWA(p.tel||'');
   return `https://wa.me/${t.length>=12?t:''}?text=${encodeURIComponent(textoWA(p))}`;
 };
 // prepara el PDF de fondo, así compartir no tiene que esperar nada
@@ -1418,28 +1432,41 @@ async function vistaPresupuesto(){
       <p class="sub">Buscá por código o por descripción. Los aceites se encuentran bien por nombre; los filtros, por código.</p>
       <input type="text" id="pr-busca" value="${esc(S.busca||'')}" placeholder="Ej: 171896, ELAION AURO, C10353" autocomplete="off">
       <div id="pr-res">${resultadosHTML(buscarPrecios(L,S.busca||''))}</div>
+      <details${S.manualAbierto?' open':''} id="pr-manual"><summary>Agregar algo que no está en la lista</summary>
+        <p class="sub" style="margin-top:9px">Para lámparas, mano de obra o cualquier cosa suelta.</p>
+        <div class="rejilla">
+          <div class="ancho"><label for="pm-desc">Descripción</label>
+            <input type="text" id="pm-desc" placeholder="Lámpara H7 12V 55W"></div>
+          <div><label for="pm-precio">Precio por unidad</label>
+            <input type="text" inputmode="decimal" class="n" id="pm-precio" placeholder="0" style="width:100%"></div>
+          <div><label for="pm-cant">Cantidad</label>
+            <input type="text" inputmode="numeric" class="n" id="pm-cant" value="1" style="width:100%"></div>
+        </div>
+        <button class="btn sec" id="pm-agregar">Agregar al presupuesto</button>
+      </details>
     </div>
     <div class="tarjeta">
       <h2>Presupuesto</h2>
       ${p.items.length?`<div class="scroll"><table>
         <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Subtotal</th><th></th></tr></thead>
         <tbody>${p.items.map((it,i)=>`<tr>
-          <td><strong>${esc(it.d)}</strong><small>${it.tipo} · ${esc(it.c)}${it.e?' · '+esc(it.e):''} · ${money(it.p)} c/u</small></td>
+          <td><strong>${esc(it.d)}</strong><small>${it.tipo}${it.c?' · '+esc(it.c):''}${it.e?' · '+esc(it.e):''} · ${money(it.p)} c/u</small></td>
           <td><input type="text" inputmode="numeric" class="n" data-cant="${i}" value="${it.cant}" style="width:52px"></td>
           <td class="num">${money(it.p*it.cant)}</td>
           <td><button class="borrar" data-quita="${i}" aria-label="Quitar">×</button></td></tr>`).join('')}
         </tbody>
         <tfoot><tr class="tot"><td>Total</td><td></td><td class="num">${money(tot)}</td><td></td></tr></tfoot>
       </table></div>
-      <div class="rejilla" style="margin-top:13px">
-        <div class="ancho"><label for="pr-tel">Teléfono del cliente</label>
-          <input type="text" id="pr-tel" inputmode="tel" value="${esc(p.tel)}" placeholder="11 2345-6789"></div>
-      </div>
-      ${p.tel?`<p class="sub" style="margin:4px 0 0">Chat de <strong>+${telWA(p.tel)}</strong>. El envío final lo das vos dentro de WhatsApp.</p>`:''}
-      <a class="btn" id="pr-wa" href="${esc(urlWA(p))}" target="_blank" rel="noopener">Abrir WhatsApp con el mensaje</a>
-      ${puedeCompartir()?`<button class="btn sec" id="pr-compartir">Compartir el PDF</button>`:''}
+      <div class="eyebrow" style="margin-top:13px">Medios de pago · va en el PDF</div>
+      <div class="campo"><label>Visa y Mastercard</label></div>
+      ${CUOTAS.map(n=>`<div class="campo"><label>${n} cuotas sin interés</label>
+        <strong class="num">${money(tot/n)}</strong></div>`).join('')}
+      ${puedeCompartir()
+        ? `<button class="btn" id="pr-enviar">Enviar por WhatsApp</button>
+           <p class="sub" style="margin:9px 0 0">Se abre WhatsApp con el PDF y el mensaje queda copiado: al elegir el chat, tocá <strong>pegar</strong> y mandás todo junto.</p>`
+        : `<a class="btn" id="pr-wa" href="${esc(urlWA(p))}" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+           <p class="sub" style="margin:9px 0 0">Se abre WhatsApp con el mensaje: elegí el chat y adjuntá el PDF que descargues abajo.</p>`}
       <button class="btn sec" id="pr-pdf">Descargar PDF</button>
-      <p class="sub" style="margin:9px 0 0">WhatsApp no permite adjuntar archivos por link, así que el PDF se manda aparte: ${puedeCompartir()?'usá <strong>Compartir el PDF</strong> y elegí el chat.':'descargalo y arrastralo al chat.'}</p>
       <button class="btn sec" id="pr-limpiar">Vaciar presupuesto</button>`
       :`<p class="vacio">Todavía no agregaste productos.<br>Buscalos arriba y tocá el que quieras.</p>`}
     </div></div>`;
@@ -4131,7 +4158,7 @@ function conectar(){
   // ---- presupuesto ----
   const leerPres=()=>{
     const g=s=>{const e=q(s);return e?e.value:undefined;};
-    ['marca','modelo','anio','tel'].forEach(k=>{ const v=g('#pr-'+k); if(v!==undefined) S.pres[k]=v; });
+    ['marca','modelo','anio'].forEach(k=>{ const v=g('#pr-'+k); if(v!==undefined) S.pres[k]=v; });
     const a=q('#pr-wa'); if(a) a.href=urlWA(S.pres);
   };
   if(q('#pr-busca')||q('#pr-wa')) prepararPDFdeFondo();
@@ -4163,34 +4190,54 @@ function conectar(){
     const n=Math.max(1,Math.round(numero(i.value))||1);
     S.pres.items[Number(i.dataset.cant)].cant=n; await render();
   });
-  ['marca','modelo','anio','tel'].forEach(k=>{ const e=q('#pr-'+k); if(e) e.onblur=leerPres; });
+  ['marca','modelo','anio'].forEach(k=>{ const e=q('#pr-'+k); if(e) e.onblur=leerPres; });
+  const pmd=q('#pr-manual'); if(pmd) pmd.ontoggle=()=>{ S.manualAbierto=pmd.open; };
+  const pma=q('#pm-agregar');
+  if(pma) pma.onclick=async()=>{
+    leerPres();
+    const d=q('#pm-desc').value.trim();
+    const p=numero(q('#pm-precio').value);
+    const cant=Math.max(1,Math.round(numero(q('#pm-cant').value))||1);
+    if(!d){ toast('Poné la descripción'); q('#pm-desc').focus(); return; }
+    if(!p){ toast('Poné el precio'); q('#pm-precio').focus(); return; }
+    S.pres.items.push({tipo:'Otro',c:'',d,e:'',p,cant});
+    S.manualAbierto=true;
+    await render();
+    const n=q('#pm-desc'); if(n) n.focus();
+  };
   const pw=q('#pr-wa');
   if(pw){
     pw.onclick=e=>{
       leerPres();
       if(!S.pres.items.length){ e.preventDefault(); toast('El presupuesto está vacío'); return; }
-      if(telWA(S.pres.tel).length<12){ e.preventDefault(); toast('Revisá el teléfono'); const t=q('#pr-tel'); if(t) t.focus(); return; }
-      // el href ya está puesto: el navegador abre el chat sin que nada lo bloquee
+      // sin número: WhatsApp abre para elegir el contacto
       pw.href=urlWA(S.pres);
     };
   }
-  const pc=q('#pr-compartir');
-  if(pc) pc.onclick=async()=>{
+  const pe=q('#pr-enviar');
+  if(pe) pe.onclick=async()=>{
     leerPres();
     if(!S.pres.items.length){ toast('El presupuesto está vacío'); return; }
+    const texto=textoWA(S.pres);
+    // el mensaje se copia primero, para que solo haya que pegarlo en WhatsApp
+    try{ await navigator.clipboard.writeText(texto); }catch(e){}
     if(pdfListo()){
       const p=S.presPDF;
-      try{ await navigator.share({files:[new File([p.blob],p.nombre,{type:'application/pdf'})],text:textoWA(S.pres)}); }
-      catch(e){ if(e&&e.name!=='AbortError') toast('No se pudo compartir'); }
+      try{
+        await navigator.share({files:[new File([p.blob],p.nombre,{type:'application/pdf'})],text:texto});
+        toast('Mensaje copiado · pegalo en WhatsApp');
+      }catch(e){ if(e&&e.name!=='AbortError') toast('No se pudo compartir'); }
       return;
     }
-    pc.disabled=true; pc.textContent='Preparando PDF…';
+    pe.disabled=true; pe.textContent='Preparando el PDF…';
     try{
       const doc=await armarPDF(S.pres), nombre=nombrePDF(S.pres);
       S.presPDF={blob:doc.output('blob'),nombre,clave:JSON.stringify(S.pres)};
-      toast('PDF listo · tocá Compartir de nuevo');
+      pe.disabled=false; pe.textContent='Enviar por WhatsApp';
+      toast('PDF listo · tocá Enviar de nuevo');
+      return;
     }catch(e){ toast((e&&e.message)||'No se pudo generar el PDF'); }
-    pc.disabled=false; pc.textContent='Compartir el PDF';
+    pe.disabled=false; pe.textContent='Enviar por WhatsApp';
   };
   const pp=q('#pr-pdf');
   if(pp) pp.onclick=async()=>{
