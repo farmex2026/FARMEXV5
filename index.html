@@ -528,7 +528,7 @@ const S={
   facSec:'boxes', facProv:'todos', menuAbierto:false, grupoAbierto:undefined,
   objTAnio:null, objTMes:null, objAnio:null, objMes:null, objVerAnio:null, objVerTrim:null,
   maestro:null, previaMaestro:null, mBusca:'', mSoloFalta:false, conv:null,
-  contactos:null, facSel:{}, facMes:'todos', avisoAbierto:false,
+  gasMes:null, contactos:null, facSel:{}, facMes:'todos', avisoAbierto:false,
   diasAbiertos:{}, ctrl:null, ctrlMes:null, ctrlAbierto:false, ctrlEdit:null, top:null, bx:{}, bxRoll:null, previaBoxes:null, bxmAnio:null, bxmMes:null,
   lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
 };
@@ -2651,7 +2651,7 @@ async function tabConvertir(){
       <thead><tr><th>Renglón de la factura</th><th>Código de barra</th><th class="num">Cant.</th><th></th></tr></thead>
       <tbody>${c.filas.map(fila).join('')}</tbody></table></div>
     <p class="sub" style="margin-top:11px">${listos.length} de ${c.filas.length} renglones listos para bajar.</p>
-    <button class="btn" id="cv-bajar"${listos.length?'':' disabled'}>Descargar Excel para Debo (${listos.length})</button>
+    <button class="btn" id="cv-bajar"${listos.length?'':' disabled'}>Bajar YPF.xls para Debo (${listos.length})</button>
     <button class="btn sec" id="cv-reset">Empezar de nuevo</button>
   </div>`;
 }
@@ -2999,8 +2999,8 @@ const MENU_ADMIN=[
   ['Ventas',[['importar','Importar Excel'],['manual','Carga manual']]],
   ['Combustible',[['combustible','Cierre mensual'],['remitos','Remitos cisterna'],['objetivos','Objetivos']]],
   ['Tienda Full',[['tienda','Cierres de caja'],['objtienda','Objetivos']]],
-  ['Facturas',[['facturas','Facturas'],['maestro','Maestro Debo'],['convertir','Renova a Debo'],
-               ['ypf','YPF lubricantes'],['topaes','Topaes a Debo']]],
+  ['Facturas',[['facturas','Facturas'],['gastos','Gastos'],['maestro','Maestro Debo'],
+               ['convertir','Renova a Debo'],['ypf','YPF lubricantes'],['topaes','Topaes a Debo']]],
   ['Boxes',[['boxes','Reportes de servicios'],['objboxes','Objetivos'],['precios','Listas de precios']]],
   ['Sistema',[['sync','Sincronización'],['config','Configuración']]]
 ];
@@ -3026,6 +3026,10 @@ async function vistaAdmin(){
   if(S.tab==='topaes')      c=await tabTopaes();
   if(S.tab==='remitos')     c=await tabRemitos();
   if(S.tab==='facturas')    c=await tabFacturas();
+  if(S.tab==='gastos')      c=await tabGastos();
+  if(S.tab==='gastos')      c=await tabGastos();
+  if(S.tab==='gastos')      c=await tabGastos();
+  if(S.tab==='gastos')      c=await tabGastos();
   if(S.tab==='sync')        c=await tabSync();
   if(S.tab==='config')      c=await tabConfig();
 
@@ -3326,6 +3330,386 @@ async function proveedores(sec){
   const ocultos=await admin('proveedores-ocultos',{});
   const fuera=new Set(ocultos[sec]||[]);
   return [...new Set([...(PROV_DEF[sec]||[]),...((g[sec]||[]))])].filter(p=>!fuera.has(p));
+}
+
+async function tabGastos(){
+  const lista=await admin('facturas',[]);
+  const meses=[...new Set(lista.map(f=>(f.fecha||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  if(!lista.length) return `<div class="tarjeta"><h2>Gastos</h2>
+    <p class="vacio">Todavía no hay facturas cargadas.<br>Se cargan en Facturas.</p></div>`;
+  if(!S.gasMes||meses.indexOf(S.gasMes)<0) S.gasMes=meses[0];
+  const mes=S.gasMes;
+  const iAnt=meses.indexOf(mes)+1;
+  const mesAnt=iAnt<meses.length?meses[iAnt]:null;
+
+  const delMes=m=>lista.filter(f=>(f.fecha||'').slice(0,7)===m);
+  const suma=arr=>arr.reduce((a,f)=>a+(Number(f.importe)||0),0);
+  const fs=delMes(mes);
+  const pagadas=fs.filter(f=>f.estado==='pagada'), pend=fs.filter(f=>f.estado!=='pagada');
+  const hoy=hoyISO();
+  const vencidas=pend.filter(f=>f.vence&&f.vence<hoy);
+  const total=suma(fs), tAnt=mesAnt?suma(delMes(mesAnt)):null;
+  const varMes=tAnt?((total-tAnt)/tAnt*100):null;
+
+  // agrupa por una clave y devuelve la lista ordenada de mayor a menor
+  const agrupar=(arr,clave)=>{
+    const g={};
+    arr.forEach(f=>{ const k=clave(f)||'Sin dato';
+      g[k]=g[k]||{n:0,t:0}; g[k].n++; g[k].t+=Number(f.importe)||0; });
+    return Object.entries(g).map(([k,v])=>({k,...v})).sort((a,b)=>b.t-a.t);
+  };
+  const porSector=agrupar(fs,f=>nomSect(f.sector||'admin'));
+  const porProv=agrupar(fs,f=>f.proveedor);
+  const porMedio=agrupar(pagadas,f=>f.medio);
+
+  const barras=(items,color)=>{
+    if(!items.length) return `<p class="vacio">Sin datos.</p>`;
+    const max=Math.max(...items.map(i=>i.t),1);
+    return `<div class="hgraf">${items.map(i=>`<div class="hfila">
+      <div class="hnom" style="font-size:12px">${esc(i.k)}</div>
+      <div class="hbarras"><div class="hb"><i style="width:${i.t/max*100}%;background:${color}"></i>
+        <em>${nf(i.t,2)}</em></div></div></div>`).join('')}</div>`;
+  };
+
+  return `<div class="filtro"><span class="et">Mes</span>
+    <select id="gasMes">${meses.map(m=>`<option value="${m}"${m===mes?' selected':''}>${nombreMes(m)}</option>`).join('')}</select>
+  </div>
+  <div class="totem">
+    <div class="totem-cab"><div class="t">Gastos · ${nombreMes(mes)}</div>
+      <div class="d">${fs.length} factura${fs.length===1?'':'s'}</div></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--ok)"></span>
+      <span class="nom">Pagado</span><span class="guia"></span>
+      <span class="val">${nf(suma(pagadas),2)}<i>$</i></span></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--ambar)"></span>
+      <span class="nom">Pendiente</span><span class="guia"></span>
+      <span class="val">${nf(suma(pend),2)}<i>$</i></span></div>
+    <div class="totem-total"><span class="nom">Total del mes</span>
+      <span class="val">${nf(total,2)}<i>$</i></span></div>
+  </div>
+  ${varMes!==null?`<div class="tarjeta">
+    <h2>Contra ${nombreMes(mesAnt)}</h2>
+    <div class="barra-fila"><div class="mes"><span>${nombreMes(mesAnt)} → ${nombreMes(mes)}</span>
+      <span class="var ${varMes>0?'neg':varMes<0?'pos':'nula'}">${(varMes>0?'+':'')+nf(varMes,1)}%</span></div>
+      <div class="par"><span class="yr">ant</span><span class="pista"><i style="width:${Math.min(100,tAnt/Math.max(tAnt,total)*100)}%;background:#5B6B8F"></i></span><span class="cifra">${nf(tAnt,0)}</span></div>
+      <div class="par"><span class="yr">este</span><span class="pista"><i style="width:${Math.min(100,total/Math.max(tAnt,total)*100)}%;background:var(--cian)"></i></span><span class="cifra">${nf(total,0)}</span></div>
+    </div>
+    <p class="sub">En gastos, subir no es bueno: por eso el aumento va en rojo.</p>
+  </div>`:''}
+  ${vencidas.length?`<div class="aviso mal"><strong>${vencidas.length} factura${vencidas.length===1?'':'s'} vencida${vencidas.length===1?'':'s'}</strong> por ${nf(suma(vencidas),2)}.</div>`:''}
+  <div class="tarjeta"><h2>Por sector</h2>${barras(porSector,'var(--cian)')}</div>
+  <div class="tarjeta"><h2>Por proveedor</h2>${barras(porProv,'#9D7CFF')}</div>
+  <div class="tarjeta"><h2>Por medio de pago</h2>
+    <p class="sub">Solo lo que figura como pagado.</p>${barras(porMedio,'#3DE0A0')}</div>
+  <div class="tarjeta">
+    <h2>Detalle</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Fecha</th><th>Proveedor</th><th>Sector</th><th>Comprobante</th><th class="num">Importe</th><th>Estado</th></tr></thead>
+      <tbody>${fs.slice().sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(f=>`<tr>
+        <td>${(f.fecha||'').split('-').reverse().join('/')}</td>
+        <td>${esc(f.proveedor||'—')}</td>
+        <td>${esc(nomSect(f.sector||'admin'))}</td>
+        <td>${f.tipo||''} ${esc(f.numero||'')}${f.medio?`<small>${esc(f.medio)}</small>`:''}</td>
+        <td class="num">${nf(f.importe,2)}</td>
+        <td><span class="etiq ${f.estado==='pagada'?'pag':(f.vence&&f.vence<hoy?'dif':'pend')}">${f.estado==='pagada'?'pagada':(f.vence&&f.vence<hoy?'vencida':'pendiente')}</span></td></tr>`).join('')}
+      </tbody>
+      <tfoot><tr class="tot"><td>Total</td><td></td><td></td><td></td><td class="num">${nf(total,2)}</td><td></td></tr></tfoot>
+    </table></div>
+    <button class="btn sec" id="gas-excel">Bajar el detalle en Excel</button>
+  </div>`;
+}
+
+async function tabGastos(){
+  const lista=await admin('facturas',[]);
+  const meses=[...new Set(lista.map(f=>(f.fecha||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  if(!lista.length) return `<div class="tarjeta"><h2>Gastos</h2>
+    <p class="vacio">Todavía no hay facturas cargadas.<br>Se cargan en Facturas.</p></div>`;
+  if(!S.gastoMes) S.gastoMes=meses[0]||hoyISO().slice(0,7);
+  const mes=S.gastoMes;
+  const delMes=mes==='todos'?lista:lista.filter(f=>(f.fecha||'').slice(0,7)===mes);
+  const hoy=hoyISO();
+
+  const acum=(clave,rot)=>{
+    const g={};
+    delMes.forEach(f=>{
+      const k=clave(f)||'—';
+      const x=g[k]=g[k]||{total:0,pagado:0,pend:0,n:0,vencido:0};
+      const imp=Number(f.importe)||0;
+      x.total+=imp; x.n++;
+      if(f.estado==='pagada') x.pagado+=imp;
+      else { x.pend+=imp; if(f.vence&&f.vence<hoy) x.vencido+=imp; }
+    });
+    return Object.entries(g).sort((a,b)=>b[1].total-a[1].total);
+  };
+  const porSector=acum(f=>nomSect(f.sector||'admin'));
+  const porProv=acum(f=>f.proveedor);
+  const porMedio=acum(f=>f.medio||'sin medio');
+
+  const T=delMes.reduce((a,f)=>a+(Number(f.importe)||0),0);
+  const P=delMes.filter(f=>f.estado==='pagada').reduce((a,f)=>a+(Number(f.importe)||0),0);
+  const V=delMes.filter(f=>f.estado!=='pagada'&&f.vence&&f.vence<hoy).reduce((a,f)=>a+(Number(f.importe)||0),0);
+
+  const barras=(datos,color)=>{
+    const max=Math.max(...datos.map(([,x])=>x.total),1);
+    return `<div class="scroll"><table>
+      <thead><tr><th>${''}</th><th class="num">Facturas</th><th class="num">Total</th><th class="num">Pagado</th><th class="num">Pendiente</th></tr></thead>
+      <tbody>${datos.map(([k,x])=>`<tr>
+        <td>${esc(k)}
+          <div class="pista" style="height:5px;margin-top:4px;max-width:220px"><i style="width:${x.total/max*100}%;background:${color}"></i></div></td>
+        <td class="num">${nf(x.n)}</td>
+        <td class="num"><strong>${nf(x.total,2)}</strong></td>
+        <td class="num">${x.pagado?nf(x.pagado,2):'—'}</td>
+        <td class="num${x.vencido?' nocumple':''}">${x.pend?nf(x.pend,2):'—'}${x.vencido?`<small>vencido ${nf(x.vencido,2)}</small>`:''}</td></tr>`).join('')}
+      </tbody>
+      <tfoot><tr class="tot"><td>Total</td><td class="num">${nf(delMes.length)}</td>
+        <td class="num">${nf(T,2)}</td><td class="num">${nf(P,2)}</td><td class="num">${nf(T-P,2)}</td></tr></tfoot>
+    </table></div>`;
+  };
+
+  return `<div class="filtro"><span class="et">Mes</span>
+    <select id="gastoMes"><option value="todos"${mes==='todos'?' selected':''}>Todos</option>
+      ${meses.map(m=>`<option value="${m}"${m===mes?' selected':''}>${nombreMes(m)}</option>`).join('')}</select>
+  </div>
+  <div class="totem">
+    <div class="totem-cab"><div class="t">Gastos · ${mes==='todos'?'todo el período':nombreMes(mes)}</div>
+      <div class="d">${delMes.length} factura${delMes.length===1?'':'s'}</div></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--ok)"></span>
+      <span class="nom">Pagado</span><span class="guia"></span><span class="val">${nf(P,2)}<i>$</i></span></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--ambar)"></span>
+      <span class="nom">Pendiente</span><span class="guia"></span><span class="val">${nf(T-P,2)}<i>$</i></span></div>
+    ${V?`<div class="linea-totem"><span class="chip" style="background:var(--alerta)"></span>
+      <span class="nom">Vencido</span><span class="guia"></span><span class="val">${nf(V,2)}<i>$</i></span></div>`:''}
+    <div class="totem-total"><span class="nom">Total facturado</span><span class="val">${nf(T,2)}<i>$</i></span></div>
+  </div>
+  ${V?`<div class="aviso mal">Hay <strong>${nf(V,2)}</strong> en facturas vencidas sin pagar.</div>`:''}
+  <div class="tarjeta">
+    <h2>Por sector</h2>
+    <p class="sub">En qué área se gasta. Agrupado por la fecha de la factura.</p>
+    ${barras(porSector,'var(--cian)')}
+  </div>
+  <div class="tarjeta">
+    <h2>Por proveedor</h2>
+    <p class="sub">De mayor a menor.</p>
+    ${barras(porProv,'#9D7CFF')}
+  </div>
+  ${porMedio.some(([k])=>k!=='sin medio')?`<div class="tarjeta">
+    <h2>Por medio de pago</h2>
+    ${barras(porMedio,'#3DE0A0')}
+  </div>`:''}`;
+}
+
+async function tabGastos(){
+  const lista=await admin('facturas',[]);
+  const meses=[...new Set(lista.map(f=>(f.fecha||'').slice(0,7)).filter(Boolean))].sort().reverse();
+  if(!lista.length) return `<div class="tarjeta"><h2>Gastos</h2>
+    <p class="vacio">Todavía no hay facturas cargadas.<br>Se cargan en Facturas.</p></div>`;
+  if(!S.gasMes) S.gasMes=meses[0]||hoyISO().slice(0,7);
+  const mes=S.gasMes;
+  const delMes=mes==='todos'?lista:lista.filter(f=>(f.fecha||'').slice(0,7)===mes);
+  const hoy=hoyISO();
+
+  const acum=arr=>{
+    const t=arr.reduce((a,f)=>a+(Number(f.importe)||0),0);
+    const pag=arr.filter(f=>f.estado==='pagada').reduce((a,f)=>a+(Number(f.importe)||0),0);
+    const venc=arr.filter(f=>f.estado!=='pagada'&&f.vence&&f.vence<hoy).reduce((a,f)=>a+(Number(f.importe)||0),0);
+    return {n:arr.length,total:t,pagado:pag,pendiente:t-pag,vencido:venc};
+  };
+  const T=acum(delMes);
+
+  const porSector=SECT_FAC.map(([k,rot])=>({k,rot,...acum(delMes.filter(f=>(f.sector||'admin')===k))}))
+    .filter(x=>x.n).sort((a,b)=>b.total-a.total);
+  const provs=[...new Set(delMes.map(f=>f.proveedor||'Sin proveedor'))]
+    .map(p=>({p,...acum(delMes.filter(f=>(f.proveedor||'Sin proveedor')===p))}))
+    .sort((a,b)=>b.total-a.total);
+  const porMedio=[...new Set(delMes.filter(f=>f.estado==='pagada').map(f=>f.medio||'Sin especificar'))]
+    .map(m=>({m,...acum(delMes.filter(f=>f.estado==='pagada'&&(f.medio||'Sin especificar')===m))}))
+    .sort((a,b)=>b.total-a.total);
+
+  const barra=(v,max,color)=>`<div class="pista" style="height:11px"><i style="width:${max?v/max*100:0}%;background:${color}"></i></div>`;
+  const maxS=Math.max(...porSector.map(x=>x.total),1);
+  const maxP=Math.max(...provs.map(x=>x.total),1);
+
+  // evolución de los últimos meses
+  const serie=meses.slice(0,6).reverse().map(m=>({m,...acum(lista.filter(f=>(f.fecha||'').slice(0,7)===m))}));
+  const maxM=Math.max(...serie.map(x=>x.total),1);
+
+  return `<div class="filtro"><span class="et">Mes</span>
+    <select id="gasMes">
+      <option value="todos"${mes==='todos'?' selected':''}>Todos los meses</option>
+      ${meses.map(m=>`<option value="${m}"${mes===m?' selected':''}>${nombreMes(m)}</option>`).join('')}
+    </select></div>
+  <div class="totem">
+    <div class="totem-cab"><div class="t">Gastos · ${mes==='todos'?'todo el período':nombreMes(mes)}</div>
+      <div class="d">${T.n} factura${T.n===1?'':'s'}</div></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--ok)"></span>
+      <span class="nom">Pagado</span><span class="guia"></span><span class="val">${nf(T.pagado,2)}<i>$</i></span></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--ambar)"></span>
+      <span class="nom">Pendiente</span><span class="guia"></span><span class="val">${nf(T.pendiente,2)}<i>$</i></span></div>
+    ${T.vencido?`<div class="linea-totem"><span class="chip" style="background:var(--alerta)"></span>
+      <span class="nom">Vencido</span><span class="guia"></span><span class="val">${nf(T.vencido,2)}<i>$</i></span></div>`:''}
+    <div class="totem-total"><span class="nom">Total facturado</span><span class="val">${nf(T.total,2)}<i>$</i></span></div>
+  </div>
+  ${T.vencido?`<div class="aviso mal"><strong>Hay ${nf(T.vencido,2)} vencido sin pagar.</strong> Mirá el detalle en Facturas.</div>`:''}
+  <div class="tarjeta">
+    <h2>Por sector</h2>
+    ${porSector.map(x=>`<div style="margin-bottom:11px">
+      <div class="mrot"><span>${x.rot}<small style="font-weight:400;color:var(--tinta-suave)"> · ${x.n} factura${x.n===1?'':'s'}</small></span>
+        <span class="num" style="font-weight:600">${nf(x.total,2)}</span></div>
+      ${barra(x.total,maxS,'var(--cian)')}
+      <div class="mpie">${nf(x.pagado,2)} pagado${x.pendiente?` · ${nf(x.pendiente,2)} pendiente`:''}</div>
+    </div>`).join('')}
+  </div>
+  <div class="tarjeta">
+    <h2>Por proveedor</h2>
+    <p class="sub">Ordenados de mayor a menor.</p>
+    ${provs.map(x=>`<div style="margin-bottom:11px">
+      <div class="mrot"><span>${esc(x.p)}<small style="font-weight:400;color:var(--tinta-suave)"> · ${x.n} factura${x.n===1?'':'s'}</small></span>
+        <span class="num" style="font-weight:600">${nf(x.total,2)}</span></div>
+      ${barra(x.total,maxP,'#9D7CFF')}
+      ${x.pendiente?`<div class="mpie">${nf(x.pendiente,2)} pendiente</div>`:''}
+    </div>`).join('')}
+  </div>
+  ${porMedio.length?`<div class="tarjeta">
+    <h2>Cómo se pagó</h2>
+    <p class="sub">Solo lo que figura como pagado.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Medio</th><th class="num">Facturas</th><th class="num">Importe</th></tr></thead>
+      <tbody>${porMedio.map(x=>`<tr><td>${esc(x.m)}</td><td class="num">${x.n}</td>
+        <td class="num">${nf(x.total,2)}</td></tr>`).join('')}
+      </tbody>
+      <tfoot><tr class="tot"><td>Total</td><td class="num">${porMedio.reduce((a,x)=>a+x.n,0)}</td>
+        <td class="num">${nf(porMedio.reduce((a,x)=>a+x.total,0),2)}</td></tr></tfoot>
+    </table></div>
+  </div>`:''}
+  ${serie.length>1?`<div class="tarjeta">
+    <h2>Mes a mes</h2>
+    <p class="sub">Los últimos ${serie.length} meses con facturas.</p>
+    ${serie.map(x=>`<div style="margin-bottom:11px">
+      <div class="mrot"><span>${nombreMes(x.m)}</span><span class="num" style="font-weight:600">${nf(x.total,2)}</span></div>
+      ${barra(x.total,maxM,x.m===mes?'var(--cian)':'#3E5E8A')}
+    </div>`).join('')}
+  </div>`:''}
+  <div class="tarjeta">
+    <h2>Detalle</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Fecha</th><th>Sector</th><th>Proveedor</th><th>Número</th><th class="num">Importe</th><th>Estado</th></tr></thead>
+      <tbody>${delMes.slice().sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')).map(f=>`<tr>
+        <td>${(f.fecha||'').split('-').reverse().join('/')}</td>
+        <td>${esc(nomSect(f.sector||'admin'))}</td>
+        <td>${esc(f.proveedor||'—')}</td>
+        <td>${f.tipo||''} ${esc(f.numero||'')}</td>
+        <td class="num">${nf(f.importe,2)}</td>
+        <td><span class="etiq ${f.estado==='pagada'?'pag':(f.vence&&f.vence<hoy?'dif':'pend')}">${f.estado==='pagada'?'pagada':(f.vence&&f.vence<hoy?'vencida':'pendiente')}</span></td></tr>`).join('')}
+      </tbody>
+      <tfoot><tr class="tot"><td>Total</td><td></td><td></td><td></td><td class="num">${nf(T.total,2)}</td><td></td></tr></tfoot>
+    </table></div>
+    <button class="btn sec" id="gas-excel">Bajar el detalle en Excel</button>
+  </div>`;
+}
+
+async function tabGastos(){
+  const lista=await admin('facturas',[]);
+  const CT=await contactos();
+  const conFecha=lista.filter(f=>f.fecha);
+  const meses=[...new Set(conFecha.map(f=>f.fecha.slice(0,7)))].sort().reverse();
+  if(!conFecha.length) return `<div class="tarjeta"><h2>Gastos</h2>
+    <p class="vacio">Todavía no hay facturas cargadas.<br>Se cargan en Facturas, eligiendo el sector.</p></div>`;
+  if(!S.gasMes) S.gasMes=meses[0];
+  const mes=S.gasMes;
+  const delMes=mes==='todos'?conFecha:conFecha.filter(f=>f.fecha.slice(0,7)===mes);
+  const hoy=hoyISO();
+
+  const tot=arr=>{
+    const t=arr.reduce((a,f)=>a+(Number(f.importe)||0),0);
+    const pag=arr.filter(f=>f.estado==='pagada').reduce((a,f)=>a+(Number(f.importe)||0),0);
+    const venc=arr.filter(f=>f.estado!=='pagada'&&f.vence&&f.vence<hoy).reduce((a,f)=>a+(Number(f.importe)||0),0);
+    return {t,pag,pend:t-pag,venc,n:arr.length};
+  };
+  const G=tot(delMes);
+
+  const porSector=SECT_FAC.map(([k,rot])=>({k,rot,...tot(delMes.filter(f=>(f.sector||'admin')===k))}))
+    .filter(x=>x.n).sort((a,b)=>b.t-a.t);
+  const provs=[...new Set(delMes.map(f=>f.proveedor||'Sin proveedor'))]
+    .map(p=>({p,...tot(delMes.filter(f=>(f.proveedor||'Sin proveedor')===p))}))
+    .sort((a,b)=>b.t-a.t);
+  const maxS=Math.max(...porSector.map(x=>x.t),1);
+  const maxP=Math.max(...provs.map(x=>x.t),1);
+  const COL=['#22E3F5','#9D7CFF','#3DE0A0','#FF6B85','#FFB86B','#5B8DEF','#6FD3C7','#C08AE0'];
+
+  // evolución mensual, para ver si el gasto sube o baja
+  const serie=meses.slice(0,12).reverse().map(m=>({m,...tot(conFecha.filter(f=>f.fecha.slice(0,7)===m))}));
+  const maxM=Math.max(...serie.map(x=>x.t),1);
+
+  const barra=(v,max,color)=>`<div class="hbarras"><div class="hb">
+    <i style="width:${v/max*100}%;background:${color}"></i><em>${nf(v,2)}</em></div></div>`;
+
+  return `<div class="filtro"><span class="et">Mes</span>
+    <select id="gasMes">
+      <option value="todos"${mes==='todos'?' selected':''}>Todos los meses</option>
+      ${meses.map(m=>`<option value="${m}"${mes===m?' selected':''}>${nombreMes(m)}</option>`).join('')}</select>
+  </div>
+  <div class="totem">
+    <div class="totem-cab"><div class="t">Gastos · ${mes==='todos'?'todo el período':nombreMes(mes)}</div>
+      <div class="d">${G.n} factura${G.n===1?'':'s'}</div></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--ok)"></span>
+      <span class="nom">Pagado</span><span class="guia"></span><span class="val">${nf(G.pag,2)}<i>$</i></span></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--ambar)"></span>
+      <span class="nom">Pendiente</span><span class="guia"></span><span class="val">${nf(G.pend,2)}<i>$</i></span></div>
+    ${G.venc?`<div class="linea-totem"><span class="chip" style="background:var(--alerta)"></span>
+      <span class="nom">Vencido</span><span class="guia"></span><span class="val">${nf(G.venc,2)}<i>$</i></span></div>`:''}
+    <div class="totem-total"><span class="nom">Total facturado</span><span class="val">${nf(G.t,2)}<i>$</i></span></div>
+  </div>
+  ${G.venc?`<div class="aviso mal">Hay <strong>${nf(G.venc,2)}</strong> en facturas vencidas sin pagar.</div>`:''}
+  <div class="tarjeta">
+    <h2>Por sector</h2>
+    <div class="hgraf">${porSector.map((x,i)=>`<div class="hfila">
+      <div class="hnom">${esc(x.rot)}</div>${barra(x.t,maxS,COL[i%COL.length])}</div>`).join('')}</div>
+    <div class="scroll" style="margin-top:11px"><table>
+      <thead><tr><th>Sector</th><th class="num">Facturas</th><th class="num">Total</th><th class="num">Pagado</th><th class="num">Pendiente</th></tr></thead>
+      <tbody>${porSector.map(x=>`<tr><td>${esc(x.rot)}</td><td class="num">${x.n}</td>
+        <td class="num"><strong>${nf(x.t,2)}</strong></td><td class="num">${nf(x.pag,2)}</td>
+        <td class="num ${x.pend?'nocumple':''}">${nf(x.pend,2)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr class="tot"><td>Total</td><td class="num">${G.n}</td><td class="num">${nf(G.t,2)}</td>
+        <td class="num">${nf(G.pag,2)}</td><td class="num">${nf(G.pend,2)}</td></tr></tfoot>
+    </table></div>
+  </div>
+  <div class="tarjeta">
+    <h2>Por proveedor</h2>
+    <p class="sub">${provs.length} proveedor${provs.length===1?'':'es'} en ${mes==='todos'?'todo el período':nombreMes(mes)}.</p>
+    <div class="hgraf">${provs.slice(0,12).map((x,i)=>`<div class="hfila">
+      <div class="hnom" style="font-size:11.5px">${esc(x.p)}</div>${barra(x.t,maxP,COL[i%COL.length])}</div>`).join('')}</div>
+    <div class="scroll" style="margin-top:11px"><table>
+      <thead><tr><th>Proveedor</th><th class="num">Facturas</th><th class="num">Total</th><th class="num">Pagado</th><th class="num">Pendiente</th></tr></thead>
+      <tbody>${provs.map(x=>`<tr><td>${esc(x.p)}${(CT[x.p]||{}).nombre?`<small>${esc(CT[x.p].nombre)}</small>`:''}</td>
+        <td class="num">${x.n}</td><td class="num"><strong>${nf(x.t,2)}</strong></td>
+        <td class="num">${nf(x.pag,2)}</td><td class="num ${x.pend?'nocumple':''}">${nf(x.pend,2)}</td></tr>`).join('')}</tbody>
+    </table></div>
+  </div>
+  ${serie.length>1?`<div class="tarjeta">
+    <h2>Mes por mes</h2>
+    <p class="sub">Total facturado en cada mes.</p>
+    <div class="vgraf"><div class="vcols">${serie.map(x=>`<div class="vcol">
+      <div class="vbarras"><div class="vb" style="width:66%;max-width:30px">
+        <i style="height:${x.t/maxM*100}%;background:${x.m===mes?'var(--cian)':'#3E5E8A'}"></i></div></div>
+      <div class="vet">${MESES[Number(x.m.slice(5,7))-1]}</div></div>`).join('')}</div></div>
+    <div class="scroll" style="margin-top:11px"><table>
+      <thead><tr><th>Mes</th><th class="num">Facturas</th><th class="num">Total</th><th class="num">Pendiente</th></tr></thead>
+      <tbody>${serie.slice().reverse().map(x=>`<tr><td>${nombreMes(x.m)}</td><td class="num">${x.n}</td>
+        <td class="num"><strong>${nf(x.t,2)}</strong></td><td class="num ${x.pend?'nocumple':''}">${nf(x.pend,2)}</td></tr>`).join('')}</tbody>
+    </table></div>
+  </div>`:''}
+  <div class="tarjeta">
+    <h2>Medios de pago</h2>
+    ${(()=>{
+      const pagadas=delMes.filter(f=>f.estado==='pagada');
+      const med={};
+      pagadas.forEach(f=>{ const k=f.medio||'Sin especificar'; med[k]=(med[k]||0)+(Number(f.importe)||0); });
+      const ent=Object.entries(med).sort((a,b)=>b[1]-a[1]);
+      if(!ent.length) return `<p class="vacio">Ninguna factura pagada en este mes.</p>`;
+      const mx=Math.max(...ent.map(e=>e[1]),1);
+      return `<div class="hgraf">${ent.map(([k,v],i)=>`<div class="hfila">
+        <div class="hnom" style="font-size:11.5px">${esc(k)}</div>${barra(v,mx,COL[i%COL.length])}</div>`).join('')}</div>`;
+    })()}
+  </div>`;
 }
 
 async function tabFacturas(){
@@ -4136,10 +4520,15 @@ function conectar(){
   if(cvb) cvb.onclick=async()=>{
     const listos=S.conv.filas.filter(f=>f.barra);
     if(!listos.length){ toast('No hay renglones listos'); return; }
-    const ws=XLSX.utils.aoa_to_sheet(listos.map(f=>[f.barra,f.cant]));
-    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Debo');
-    XLSX.writeFile(wb,`debo-${hoyISO()}.xlsx`);
-    toast(listos.length+' renglones descargados');
+    // mismo formato que los otros: .xls 97-2003, hoja Hoja1, títulos y una fila libre
+    const ws=XLSX.utils.aoa_to_sheet([
+      ['Columna 1','cantidad'],
+      [null,null],
+      ...listos.map(f=>[Number(f.barra)||f.barra,Number(f.cant)])
+    ]);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Hoja1');
+    XLSX.writeFile(wb,'YPF.xls',{bookType:'biff8'});
+    toast(listos.length+' renglones · YPF.xls');
   };
 
   // ---- listas de precios ----
@@ -4548,6 +4937,8 @@ function conectar(){
   document.querySelectorAll('#app [data-facsec]').forEach(b=>b.onclick=async()=>{
     S.facSec=b.dataset.facsec; S.facProv='todos'; S.facSel={}; S.adjunto=null; await render();
   });
+  const selGasto=q('#gastoMes'); if(selGasto) selGasto.onchange=async()=>{ S.gastoMes=selGasto.value; await render(); };
+  const selGas=q('#gasMes'); if(selGas) selGas.onchange=async()=>{ S.gasMes=selGas.value; await render(); };
   const fmes=q('#facMes'); if(fmes) fmes.onchange=async()=>{ S.facMes=fmes.value; await render(); };
   document.querySelectorAll('#app [data-facsel]').forEach(c=>c.onchange=async()=>{
     S.facSel[c.dataset.facsel]=c.checked; await render();
@@ -4558,6 +4949,21 @@ function conectar(){
     const w=q('#fc-motro-wrap');
     w.style.display=msel.value==='__otro'?'':'none';
     if(msel.value==='__otro') q('#fc-motro').focus();
+  };
+  const gex=q('#gas-excel');
+  if(gex) gex.onclick=async()=>{
+    const lista=await admin('facturas',[]);
+    const fs=lista.filter(f=>(f.fecha||'').slice(0,7)===S.gasMes);
+    const ws=XLSX.utils.aoa_to_sheet([
+      ['Fecha','Proveedor','Sector','Tipo','Numero','Detalle','Medio de pago','Fecha de pago','Vencimiento','Importe','Estado'],
+      ...fs.slice().sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||'')).map(f=>[
+        f.fecha||'',f.proveedor||'',nomSect(f.sector||'admin'),f.tipo||'',f.numero||'',
+        f.detalle||'',f.medio||'',f.pagada||'',f.vence||'',Number(f.importe)||0,f.estado||''])
+    ]);
+    ws['!cols']=[{wch:11},{wch:22},{wch:15},{wch:6},{wch:18},{wch:26},{wch:20},{wch:12},{wch:12},{wch:14},{wch:11}];
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Gastos');
+    XLSX.writeFile(wb,`gastos-${S.gasMes}.xlsx`);
+    toast('Detalle descargado');
   };
   document.querySelectorAll('#app [data-provdel]').forEach(b=>b.onclick=async()=>{
     const p=b.dataset.provdel, sec=S.facSec||'boxes';
