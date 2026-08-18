@@ -3323,7 +3323,9 @@ const nomSect=k=>(SECT_FAC.find(s=>s[0]===k)||[,k])[1];
 
 async function proveedores(sec){
   const g=await admin('proveedores',{});
-  return [...new Set([...(PROV_DEF[sec]||[]),...((g[sec]||[]))])];
+  const ocultos=await admin('proveedores-ocultos',{});
+  const fuera=new Set(ocultos[sec]||[]);
+  return [...new Set([...(PROV_DEF[sec]||[]),...((g[sec]||[]))])].filter(p=>!fuera.has(p));
 }
 
 async function tabFacturas(){
@@ -3374,9 +3376,9 @@ async function tabFacturas(){
       <div class="ancho"><label for="fc-p">Proveedor</label>
         <select id="fc-p">
           ${provs.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('')}
-          <option value="__otro">Otro proveedor…</option>
+          <option value="__otro"${provs.length?'':' selected'}>Otro proveedor…</option>
         </select></div>
-      <div class="ancho" id="fc-otro-wrap" style="display:none">
+      <div class="ancho" id="fc-otro-wrap"${provs.length?' style="display:none"':''}>
         <label for="fc-otro">Nombre del proveedor</label>
         <input type="text" id="fc-otro" placeholder="Razón social"></div>
       <div><label for="fc-f">Fecha</label><input type="date" id="fc-f" value="${hoyISO()}"></div>
@@ -3408,6 +3410,16 @@ async function tabFacturas(){
     </div>
     <button class="btn sec" id="ct-guardar">Guardar contacto</button>
   </div>`:''}
+  <div class="tarjeta">
+    <h2>Proveedores de ${nomSect(sec)}</h2>
+    ${provs.length?`<p class="sub">Los que aparecen en el desplegable. Quitar uno no borra sus facturas.</p>
+      ${provs.map(p=>{
+        const n=lista.filter(f=>(f.sector||'admin')===sec&&f.proveedor===p).length;
+        return `<div class="campo"><label>${esc(p)}
+          <small style="display:block;font-size:11.5px;color:var(--tinta-suave)">${n?`${n} factura${n>1?'s':''}`:'sin facturas'}</small></label>
+          <button class="borrar" data-provdel="${esc(p)}" aria-label="Quitar ${esc(p)}">×</button></div>`;}).join('')}`
+    :`<p class="vacio">Sin proveedores todavía. Cargá uno con la primera factura.</p>`}
+  </div>
   <div class="tarjeta">
     <h2>Comprobantes</h2>
     <div class="filtro">
@@ -4547,6 +4559,20 @@ function conectar(){
     w.style.display=msel.value==='__otro'?'':'none';
     if(msel.value==='__otro') q('#fc-motro').focus();
   };
+  document.querySelectorAll('#app [data-provdel]').forEach(b=>b.onclick=async()=>{
+    const p=b.dataset.provdel, sec=S.facSec||'boxes';
+    const g=await admin('proveedores',{});
+    if((g[sec]||[]).includes(p)){                       // agregado por vos: se saca de la lista
+      g[sec]=g[sec].filter(x=>x!==p);
+      await guardar('admin:proveedores',g); S.admin.proveedores=g;
+    } else {                                            // viene de fábrica: se oculta
+      const o=await admin('proveedores-ocultos',{});
+      o[sec]=[...new Set([...(o[sec]||[]),p])];
+      await guardar('admin:proveedores-ocultos',o); S.admin['proveedores-ocultos']=o;
+    }
+    if(S.facProv===p) S.facProv='todos';
+    toast(p+' quitado'); await render();
+  });
   const ctg=q('#ct-guardar');
   if(ctg) ctg.onclick=async()=>{
     const CT=await contactos(), p=S.facProv;
