@@ -33,7 +33,8 @@ h1,h2,h3,.cond{font-family:'Barlow Condensed','Archivo',sans-serif;text-transfor
 .marca{font-size:19px;line-height:1;color:var(--tinta);text-shadow:0 0 14px rgba(45,212,232,.5)}
 .marca span{color:var(--cian);text-shadow:0 0 12px var(--cian)}
 .fecha-hoy{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--cian);white-space:nowrap;
-  display:flex;align-items:center;gap:9px;justify-content:flex-end}
+  display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.fecha-linea{display:flex;align-items:center;gap:9px}
 .chip-sync{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.12em;padding:2px 7px;
   border-radius:9px;border:1px solid;white-space:nowrap}
 .chip-sync.aldia{color:var(--ok);border-color:rgba(61,224,160,.4);background:rgba(61,224,160,.08)}
@@ -50,6 +51,42 @@ h1,h2,h3,.cond{font-family:'Barlow Condensed','Archivo',sans-serif;text-transfor
   text-shadow:0 0 12px rgba(34,227,245,.55)}
 @media (prefers-reduced-motion:reduce){.nav button{transition:none}}
 
+/* ---- cartel de cumpleaños: pantallita de pixeles ---- */
+.cartel{position:relative;overflow:hidden;width:210px;height:48px;flex:0 0 auto;
+  background:#04070E;border:1px solid var(--linea);border-radius:2px;
+  box-shadow:inset 0 0 14px rgba(34,227,245,.14)}
+.cartel:empty{display:none}
+.cartel::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 1px,transparent 1px 3px),
+             repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 1px,transparent 1px 3px)}
+.cartel-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:0 6px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;
+  line-height:1.35;letter-spacing:.1em;color:var(--cian);text-shadow:0 0 7px rgba(34,227,245,.8)}
+.cartel-txt.desliza{white-space:nowrap}
+.cartel.fest{border-color:var(--ambar);box-shadow:inset 0 0 16px rgba(255,178,36,.22)}
+.cartel.fest .cartel-txt{color:#FFD166;text-shadow:0 0 8px rgba(255,209,102,.9)}
+.cartel-txt.desliza{animation:cDesliza 6s linear both}
+.cartel-txt.cae{animation:cCae 6s ease-out both}
+.cartel-txt.sube{animation:cSube 6s ease-out both}
+.cartel-txt.fija{animation:cFija 6.5s ease-out both}
+@keyframes cDesliza{0%{transform:translateX(105%)}100%{transform:translateX(-105%)}}
+@keyframes cCae{0%{transform:translateY(-100%);opacity:0}14%{transform:translateY(0);opacity:1}
+  86%{transform:translateY(0);opacity:1}100%{transform:translateY(100%);opacity:0}}
+@keyframes cSube{0%{transform:translateY(100%);opacity:0}14%{transform:translateY(0);opacity:1}
+  86%{transform:translateY(0);opacity:1}100%{transform:translateY(-100%);opacity:0}}
+@keyframes cFija{0%{opacity:0;letter-spacing:.4em}12%{opacity:1;letter-spacing:.1em}
+  88%{opacity:1}100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){ .cartel-txt{animation:none!important} }
+@media(max-width:620px){ .cartel{width:min(52vw,200px);height:40px} .cartel-txt{font-size:9.5px;letter-spacing:.06em} }
+
+/* ---- papelitos ---- */
+#papeles{position:fixed;inset:0;pointer-events:none;z-index:70}
+#papeles i{position:absolute;top:-24px;width:9px;height:14px;opacity:.95;
+  animation:caer linear forwards}
+@keyframes caer{
+  0%{transform:translateY(-20px) rotate(0deg)}
+  100%{transform:translateY(102vh) rotate(720deg)}
+}
 .envoltorio{padding:14px 12px 0;max-width:900px;margin:0 auto}
 .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--cian);font-weight:500;margin-bottom:8px;opacity:.85}
@@ -446,6 +483,8 @@ details[open] summary::after{content:'–'}
 const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MESES_L=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const hoyISO=()=>new Date().toLocaleDateString('sv-SE');
+// al tipear el año, el navegador arma fechas como 0002 y dispararía el redibujado
+const fechaCompleta=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'')&&Number(String(v).slice(0,4))>=1900;
 const nf=(v,d=0)=>(v||0).toLocaleString('es-AR',{minimumFractionDigits:d,maximumFractionDigits:d});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function numero(s){
@@ -666,11 +705,20 @@ const Sync={
       throw new Error('acción no disponible acá: '+accion);
     }
     if(!c.url) throw new Error('falta la dirección del script');
-    const r=await fetch(c.url,{
-      method:'POST', redirect:'follow',
-      headers:{'Content-Type':'text/plain;charset=utf-8'},   // evita el pedido previo de CORS
-      body:JSON.stringify({accion,clave:c.clave,...(extra||{})})
-    });
+    const ctrl=new AbortController();
+    const corte=setTimeout(()=>ctrl.abort(),20000);   // sin esto, un Google lento cuelga la app
+    let r;
+    try{
+      r=await fetch(c.url,{
+        method:'POST', redirect:'follow', signal:ctrl.signal,
+        headers:{'Content-Type':'text/plain;charset=utf-8'},   // evita el pedido previo de CORS
+        body:JSON.stringify({accion,clave:c.clave,...(extra||{})})
+      });
+    }catch(e){
+      clearTimeout(corte);
+      throw new Error(e&&e.name==='AbortError'?'la planilla no respondió a tiempo':'no se pudo conectar con la planilla');
+    }
+    clearTimeout(corte);
     if(!r.ok) throw new Error('el script respondió '+r.status);
     let j;
     try{ j=await r.json(); }
@@ -821,16 +869,112 @@ function cajaAdjunto(idInput){
     <input type="file" id="${idInput}" accept="application/pdf,image/*"></label>`;
 }
 
+/* ---------- cumpleaños ---------- */
+async function cumples(){
+  if(!S.cumples) S.cumples=await leer('admin:cumples',[]);
+  return S.cumples;
+}
+// días que faltan para el próximo cumpleaños, y la edad que cumple
+function proximoCumple(nac){
+  const m=String(nac||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m) return null;
+  const hoy=new Date(hoyISO()+'T12:00:00');
+  const anio=hoy.getFullYear();
+  let f=new Date(`${anio}-${m[2]}-${m[3]}T12:00:00`);
+  if(isNaN(f)) return null;                      // 29/02 en año no bisiesto
+  const dias0=Math.round((f-hoy)/86400000);
+  if(dias0<0) f=new Date(`${anio+1}-${m[2]}-${m[3]}T12:00:00`);
+  const dias=Math.round((f-hoy)/86400000);
+  return {dias,fecha:f,cumple:f.getFullYear()-Number(m[1]),dia:m[3],mes:m[2]};
+}
+async function agendaCumples(){
+  const lista=await cumples();
+  return lista.map(p=>({...p,p:proximoCumple(p.nac)})).filter(x=>x.p)
+              .sort((a,b)=>a.p.dias-b.p.dias);
+}
+function papelitos(ms){
+  if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let cont=document.getElementById('papeles');
+  if(!cont){ cont=document.createElement('div'); cont.id='papeles'; document.body.appendChild(cont); }
+  const colores=['#22E3F5','#9D7CFF','#3DE0A0','#FF6B85','#FFD166','#8FF0FB'];
+  const hasta=Date.now()+(ms||9000);
+  (function tanda(){
+    for(let i=0;i<14;i++){
+      const p=document.createElement('i');
+      p.style.left=Math.random()*100+'vw';
+      p.style.background=colores[Math.floor(Math.random()*colores.length)];
+      const dur=3+Math.random()*3;
+      p.style.animationDuration=dur+'s';
+      p.style.animationDelay=(Math.random()*.6)+'s';
+      if(Math.random()<.35) p.style.borderRadius='50%';
+      cont.appendChild(p);
+      setTimeout(()=>p.remove(),(dur+1.2)*1000);
+    }
+    if(Date.now()<hasta) setTimeout(tanda,420);
+    else setTimeout(()=>{ if(cont&&!cont.childElementCount) cont.remove(); },5000);
+  })();
+}
+
+// arma los mensajes que va rotando el cartel
+function mensajesCumple(agenda){
+  if(!agenda.length) return [];
+  const hoyes=agenda.filter(x=>x.p.dias===0);
+  const soloNombre=n=>String(n).trim().split(/\s+/)[0].toUpperCase();
+  if(hoyes.length){
+    const m=[];
+    hoyes.forEach(x=>{
+      const n=soloNombre(x.nombre);
+      m.push({t:`★ FELIZ CUMPLE ${n} ★`,clase:'fest'});
+      m.push({t:`${n} CUMPLE ${x.p.cumple}`,clase:'fest'});
+      m.push({t:'★ QUE LO DISFRUTES ★',clase:'fest'});
+      m.push({t:'♪ HOY SE FESTEJA ♪',clase:'fest'});
+    });
+    return m;
+  }
+  const p=agenda[0], n=soloNombre(p.nombre), d=p.p.dias;
+  const m=[
+    {t:`PRÓXIMO CUMPLE: ${n}`},
+    {t:d===1?'¡MAÑANA!':`FALTAN ${d} DÍAS`},
+    {t:`${n} CUMPLE ${p.p.cumple} EL ${p.p.dia}/${p.p.mes}`}
+  ];
+  if(d<=7) m.push({t:`▸ YA FALTA POCO ▸`});
+  if(d<=1) m.push({t:'PREPARÁ LA TORTA'});
+  agenda.slice(1,4).forEach(x=>{
+    m.push({t:`DESPUÉS: ${soloNombre(x.nombre)} EN ${x.p.dias} DÍAS`});
+  });
+  return m;
+}
+
+// el cartel: alterna deslizar de costado, caer de arriba y quedarse fijo
+function arrancarCartel(){
+  clearTimeout(S.cartelT);
+  const el=document.getElementById('cartel');
+  if(!el||!S.msgs||!S.msgs.length) return;
+  const quieto=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const modos=['desliza','cae','fija','fija','sube'];
+  let i=S.msgIdx||0;
+  const paso=()=>{
+    const m=S.msgs[i%S.msgs.length];
+    const modo=quieto?'fija':modos[i%modos.length];
+    el.className='cartel'+(m.clase?' '+m.clase:'');
+    el.innerHTML=`<span class="cartel-txt ${modo}">${esc(m.t)}</span>`;
+    i++; S.msgIdx=i;
+    S.cartelT=setTimeout(paso, modo==='fija'?6500:6000);
+  };
+  paso();
+}
 /* ---------- barra ---------- */
 function barra(){
   const f=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
   const nav=[['playa','Playa'],['tienda','Tienda Full'],['boxes','Boxes'],['admin','Administración']];
   return `<div class="top"><div class="top-fila">
       <div class="marca cond">${esc(S.cfg.estacion)}<span>.</span></div>
-      <div class="fecha-hoy">${f}<span class="chip-sync ${(S.syncFlag||{}).estado||'off'}" id="chipSync"
+      <div class="fecha-hoy"><span class="fecha-linea">${f}<span class="chip-sync ${(S.syncFlag||{}).estado||'off'}" id="chipSync"
         style="${(S.syncFlag||{}).estado&&S.syncFlag.estado!=='off'?'':'display:none'}"
-        title="${esc((S.syncFlag||{}).detalle||'')}">${SYNC_ROT[(S.syncFlag||{}).estado]||''}</span></div></div>
-    <nav class="nav">${nav.map(([k,t])=>`<button data-vista="${k}" aria-current="${S.vista===k}">${t}</button>`).join('')}</nav></div>`;
+        title="${esc((S.syncFlag||{}).detalle||'')}">${SYNC_ROT[(S.syncFlag||{}).estado]||''}</span></span>
+        <span class="cartel" id="cartel"></span></div></div>
+    <nav class="nav">${nav.map(([k,t])=>`<button data-vista="${k}" aria-current="${S.vista===k}">${t}</button>`).join('')}</nav>
+    </div>`;
 }
 function totem(titulo,det,filas,total,unidad,vacio){
   const hay=filas.some(f=>f.valor>0);
@@ -1224,12 +1368,14 @@ async function vistaComparativo(sec){
 async function vistaSector(sec){
   const subs=[['mes','Por mes'],['comparativo','Comparativo']];
   if(sec==='playa'||sec==='tienda') subs.push(['objetivos','Objetivos']);
+  if(sec==='tienda') subs.push(['vencimientos','Vencimientos']);
   if(sec==='boxes'){ subs.length=0; subs.push(['servicios','Servicios'],['comparativo','Comparativo'],
     ['objetivos','Objetivos'],['presupuesto','Presupuesto'],['control','Control']); }
   if(!subs.some(s=>s[0]===S.sub)) S.sub=subs[0][0];
   const cuerpo=S.sub==='servicios'?await vistaBoxes()
     :S.sub==='comparativo'?(sec==='boxes'?await vistaCmpBoxes():await vistaComparativo(sec))
     :S.sub==='objetivos'?(sec==='tienda'?await vistaObjTienda():sec==='boxes'?await vistaObjBoxes():await vistaObjetivos(sec))
+    :S.sub==='vencimientos'?await vistaVencimientos()
     :S.sub==='presupuesto'?await vistaPresupuesto()
     :S.sub==='control'?(S.ctrlAbierto?await vistaControl():candadoControl())
     :await vistaMes(sec);
@@ -2172,6 +2318,160 @@ async function rollBoxes(){
   return S.bxRoll;
 }
 
+/* ---------- vencimientos de mercadería ---------- */
+const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
+const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
+async function vencimientos(){
+  if(!S.venc) S.venc=await leer('tienda:vencimientos',{});
+  return S.venc;
+}
+const diasHasta=f=>Math.round((new Date(f+'T12:00:00')-new Date(hoyISO()+'T12:00:00'))/86400000);
+function estadoVenc(f){
+  const d=diasHasta(f);
+  if(d<0) return {clave:'vencido',rot:'vencido',dias:d};
+  if(d===0) return {clave:'hoy',rot:'vence hoy',dias:0};
+  if(d<=DIAS_AVISO) return {clave:'pronto',rot:`en ${d} día${d===1?'':'s'}`,dias:d};
+  return {clave:'ok',rot:`en ${d} días`,dias:d};
+}
+
+async function vistaVencimientos(){
+  const V=await vencimientos();
+  const todos=Object.entries(V).map(([k,v])=>({k,...v,est:estadoVenc(v.vence)}))
+    .sort((a,b)=>a.vence.localeCompare(b.vence));
+  const verTodo=!!S.vencTodo;
+  const activos=todos.filter(x=>!x.consumido&&x.est.dias>=-DIAS_GRACIA);
+  const lista=verTodo?todos:activos;
+  const vencidos=activos.filter(x=>x.est.clave==='vencido'||x.est.clave==='hoy');
+  const pronto=activos.filter(x=>x.est.clave==='pronto');
+
+  if(!todos.length) return `<div class="envoltorio"><div class="tarjeta"><h2>Vencimientos</h2>
+    <p class="vacio">Todavía no cargaste vencimientos.<br>Se cargan al procesar la factura, en Administración → Facturas → Andreani a Debo.</p></div></div>`;
+
+  const fila=x=>`<tr class="${x.est.clave==='vencido'||x.est.clave==='hoy'?'vig':''}">
+    <td><strong>${esc(x.desc||x.barra)}</strong><small>${esc(x.barra||x.cod||'')}${x.factura?' · '+esc(x.factura):''}${x.consumido?' · consumido':''}</small></td>
+    <td class="num">${nf(x.cant)}</td>
+    <td class="num">${x.vence.split('-').reverse().join('/')}</td>
+    <td class="num" style="color:${x.est.clave==='vencido'?'var(--alerta)':x.est.clave==='hoy'?'var(--alerta)':x.est.clave==='pronto'?'var(--ambar)':'var(--tinta-suave)'}">
+      ${x.est.clave==='vencido'?`vencido hace ${-x.est.dias} día${x.est.dias===-1?'':'s'}`:x.est.rot}</td>
+    <td>${x.consumido
+      ? `<button class="ver" data-vencvolver="${esc(x.k)}">Reponer</button>`
+      : `<button class="ver" data-venccons="${esc(x.k)}">Consumido</button>`}
+      <button class="borrar" data-vencdel="${esc(x.k)}" aria-label="Quitar">×</button></td></tr>`;
+
+  return `<div class="envoltorio">
+    <div class="totem">
+      <div class="totem-cab"><div class="t">Vencimientos</div><div class="d">${activos.length} partida${activos.length===1?'':'s'} en control</div></div>
+      <div class="linea-totem"><span class="chip" style="background:var(--alerta)"></span>
+        <span class="nom">Vencido o vence hoy</span><span class="guia"></span><span class="val">${nf(vencidos.length)}</span></div>
+      <div class="linea-totem"><span class="chip" style="background:var(--ambar)"></span>
+        <span class="nom">Vence en ${DIAS_AVISO} días</span><span class="guia"></span><span class="val">${nf(pronto.length)}</span></div>
+      <div class="totem-total"><span class="nom">Unidades en riesgo</span>
+        <span class="val">${nf([...vencidos,...pronto].reduce((a,x)=>a+(Number(x.cant)||0),0))}</span></div>
+    </div>
+    ${vencidos.length?`<div class="aviso mal"><strong>${vencidos.length} partida${vencidos.length===1?'':'s'} vencida${vencidos.length===1?'':'s'}.</strong> Se dejan de mostrar ${DIAS_GRACIA} días después de vencer, pero quedan guardadas.</div>`:''}
+    <div class="tarjeta">
+      <h2>${verTodo?'Todo lo cargado':'En control'}</h2>
+      <p class="sub">${verTodo?`Historial completo: ${todos.length} partidas.`:`Lo que vence, más lo vencido en los últimos ${DIAS_GRACIA} días.`}</p>
+      <div class="filtro">
+        <button class="btn sec chico" id="venc-todo" style="width:auto;margin:0">${verTodo?'Ver solo lo activo':'Ver todo el historial'}</button>
+        <button class="btn sec chico" id="venc-bajar" style="width:auto;margin:0">Descargar Excel</button>
+      </div>
+      ${lista.length?`<div class="scroll"><table>
+        <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Vence</th><th class="num">Estado</th><th></th></tr></thead>
+        <tbody>${lista.map(fila).join('')}</tbody></table></div>`
+      :`<p class="vacio">Nada en control por ahora.</p>`}
+    </div>
+  </div>`;
+}
+
+/* ---------- facturas de Andreani ---------- */
+// renglón: código, descripción, cantidad, importe unitario y, a veces, el neto en la línea de abajo
+const RE_AND=/^(\d{6,20})\s+(.+?)\s+(\d{1,5})\s+([\d.]+,\d{2})(?:\s+([\d.]+,\d{2}))?\s*$/;
+const RE_SOLO_IMP=/^[\d.]+,\d{2}$/;
+const codAnd=c=>String(c).trim();   // tal cual viene en la factura, con los ceros
+function renglonesAndreani(lineas){
+  const out=[], vistos=new Set();
+  for(let i=0;i<lineas.length;i++){
+    const l=String(lineas[i]).replace(/\s+/g,' ').trim();
+    if(!l) continue;
+    const m=l.match(RE_AND);
+    if(!m) continue;
+    const cod=codAnd(m[1]), cant=Math.round(numeroSig(m[3]));
+    if(!cant) continue;
+    const unit=numeroSig(m[4]);
+    let neto=m[5]?numeroSig(m[5]):0;
+    // si el neto quedó en el renglón siguiente, lo toma de ahí
+    if(!neto){
+      const sig=String(lineas[i+1]||'').replace(/\s+/g,' ').trim();
+      if(RE_SOLO_IMP.test(sig)) neto=numeroSig(sig);
+    }
+    if(!neto) neto=Math.round(unit*cant*100)/100;
+    const k=cod+'|'+neto;
+    if(vistos.has(k)) continue;
+    vistos.add(k);
+    out.push({cod,codOrig:m[1],desc:m[2].trim(),cant,unit,neto});
+  }
+  return out;
+}
+async function tabAndreani(){
+  const a=S.and;
+  const m=await maestro();
+  if(!a) return `<div class="aviso">Subí la factura de Andreani en PDF. Leo el código, la descripción y la cantidad de cada renglón. El <strong>código de barra sale del maestro</strong>; el que no esté, lo cargás una vez y queda guardado.</div>
+    <div class="tarjeta"><h2>Factura de Andreani</h2>
+      <p class="sub">Maestro: ${nf(m.length)} códigos, ${nf(m.filter(x=>x.barra).length)} con barra.</p>
+      <label class="archivo"><strong>Elegir factura</strong><small>PDF</small>
+        <input type="file" id="an-arch" accept="application/pdf"></label>
+      <details style="margin-top:11px"><summary>Pegar el texto</summary>
+        <p class="sub" style="margin-top:9px">Un renglón por producto, con el código adelante.</p>
+        <textarea id="an-texto" rows="5" placeholder="000000000000010151 YPF FULL ENDULZANTE 400X0.8G 5 13.607,18 68.035,91"></textarea>
+        <button class="btn sec" id="an-pegado">Procesar texto</button>
+      </details>
+    </div>`;
+
+  if(a.error) return `<div class="tarjeta"><h2>Factura de Andreani</h2>
+    <div class="aviso mal">${esc(a.error)}</div>
+    <button class="btn sec" id="an-reset">Probar con otro archivo</button></div>`;
+
+  const listos=a.filas.filter(f=>f.barra);
+  const sin=a.filas.filter(f=>!f.barra);
+  const totNeto=a.filas.reduce((x,f)=>x+f.neto,0);
+  const totCant=a.filas.reduce((x,f)=>x+f.cant,0);
+  const dif=a.subtotal?totNeto-a.subtotal:null;
+
+  return `<div class="tarjeta">
+    <h2>${esc(a.nombre||'Factura')}</h2>
+    <p class="sub">${a.filas.length} renglones${a.numero?` · comprobante ${esc(a.numero)}`:''}${a.fecha?` · ${a.fecha}`:''}</p>
+    <div class="campo"><label>Con código de barra</label><strong class="num" style="color:var(--ok)">${listos.length}</strong></div>
+    <div class="campo"><label>Sin barra, a completar</label><strong class="num" style="color:${sin.length?'var(--alerta)':'var(--tinta-suave)'}">${sin.length}</strong></div>
+    <div class="campo"><label>Unidades</label><strong class="num">${nf(totCant)}</strong></div>
+    <div class="campo"><label>Suma de los renglones</label><strong class="num">${nf(totNeto,2)}</strong></div>
+    ${a.subtotal?`<div class="campo"><label>Subtotal de la factura</label><strong class="num">${nf(a.subtotal,2)}</strong></div>
+      <div class="campo"><label>Diferencia</label><strong class="num" style="color:${Math.abs(dif)<0.05?'var(--ok)':'var(--alerta)'}">${nf(dif,2)}</strong></div>`:''}
+  </div>
+  ${sin.length?`<div class="aviso">Completá el código de barra de los renglones marcados y tocá <strong>Guardar</strong>: quedan en el maestro y no vuelven a aparecer.</div>`:''}
+  <div class="aviso">Si el remito trae el vencimiento de la mercadería, cargalo en la columna <strong>Vence</strong>: aparece en Tienda Full → Vencimientos.</div>
+  ${a.subtotal&&Math.abs(dif)>=0.05?`<div class="aviso mal">La suma de los renglones no coincide con el subtotal. Revisá antes de cargar.</div>`:''}
+  <div class="tarjeta">
+    <h2>Renglones</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Producto</th><th>Código de barra</th><th class="num">Cant.</th><th>Vence</th><th class="num">Importe</th><th></th></tr></thead>
+      <tbody>${a.filas.map((f,i)=>`<tr class="${f.barra?'':'vig'}">
+        <td><strong>${esc(f.desc)}</strong><small>cód. ${esc(f.cod)}${f.origen?' · '+f.origen:''}</small></td>
+        <td>${f.barra?`<span class="num">${esc(f.barra)}</span>`:`<input type="text" inputmode="numeric" class="n" data-anbarra="${i}" placeholder="código de barra" style="width:136px">`}</td>
+        <td><input type="text" inputmode="numeric" class="n" data-ancant="${i}" value="${f.cant}" style="width:62px"></td>
+        <td><input type="date" data-anvence="${i}" value="${esc(f.vence||'')}" style="width:150px"></td>
+        <td class="num">${nf(f.neto,2)}</td>
+        <td>${!f.barra?`<button class="ver" data-anguardar="${i}">Guardar</button>`:''}
+          <button class="borrar" data-andel="${i}" aria-label="Quitar">×</button></td></tr>`).join('')}
+      </tbody>
+      <tfoot><tr class="tot"><td>Total</td><td></td><td class="num">${nf(totCant)}</td><td></td><td class="num">${nf(totNeto,2)}</td><td></td></tr></tfoot>
+    </table></div>
+    <button class="btn sec" id="an-venc"${a.filas.some(f=>f.vence)?'':' style="display:none"'}>Guardar los vencimientos (${a.filas.filter(f=>f.vence).length})</button>
+    <button class="btn" id="an-bajar"${listos.length?'':' disabled'}>Bajar YPF.xls para Debo (${listos.length})</button>
+    <button class="btn sec" id="an-reset">Empezar de nuevo</button>
+  </div>`;
+}
+
 /* ---------- facturas de Topaes ---------- */
 const barraTopaes=cod=>String(cod).trim()+'0';
 // renglón de Topaes: codigo, detalle, UM, cantidad, precio unitario, ... total
@@ -3000,9 +3300,10 @@ const MENU_ADMIN=[
   ['Combustible',[['combustible','Cierre mensual'],['remitos','Remitos cisterna'],['objetivos','Objetivos']]],
   ['Tienda Full',[['tienda','Cierres de caja'],['objtienda','Objetivos']]],
   ['Facturas',[['facturas','Facturas'],['gastos','Gastos'],['maestro','Maestro Debo'],
-               ['convertir','Renova a Debo'],['ypf','YPF lubricantes'],['topaes','Topaes a Debo']]],
+               ['convertir','Renova a Debo'],['ypf','YPF lubricantes'],['topaes','Topaes a Debo'],
+               ['andreani','Andreani a Debo']]],
   ['Boxes',[['boxes','Reportes de servicios'],['objboxes','Objetivos'],['precios','Listas de precios']]],
-  ['Sistema',[['sync','Sincronización'],['config','Configuración']]]
+  ['Sistema',[['cumples','Cumpleaños'],['sync','Sincronización'],['config','Configuración']]]
 ];
 const TODAS_TABS=MENU_ADMIN.flatMap(g=>g[1]);
 const rotTab=k=>(TODAS_TABS.find(t=>t[0]===k)||[,k])[1];
@@ -3024,12 +3325,14 @@ async function vistaAdmin(){
   if(S.tab==='convertir')   c=await tabConvertir();
   if(S.tab==='ypf')         c=await tabYPF();
   if(S.tab==='topaes')      c=await tabTopaes();
+  if(S.tab==='andreani')    c=await tabAndreani();
   if(S.tab==='remitos')     c=await tabRemitos();
   if(S.tab==='facturas')    c=await tabFacturas();
   if(S.tab==='gastos')      c=await tabGastos();
   if(S.tab==='gastos')      c=await tabGastos();
   if(S.tab==='gastos')      c=await tabGastos();
   if(S.tab==='gastos')      c=await tabGastos();
+  if(S.tab==='cumples')     c=await tabCumples();
   if(S.tab==='sync')        c=await tabSync();
   if(S.tab==='config')      c=await tabConfig();
 
@@ -3837,6 +4140,39 @@ async function tabFacturas(){
   </div>`;
 }
 
+async function tabCumples(){
+  const lista=await cumples();
+  const agenda=await agendaCumples();
+  const hoyes=agenda.filter(x=>x.p.dias===0);
+  return `<div class="aviso">Cargá el nombre y la fecha de nacimiento de cada uno. En la franja de arriba aparece la cuenta regresiva, y el día del cumple se llena de papelitos.</div>
+  <div class="tarjeta">
+    <h2>Agregar persona</h2>
+    <div class="rejilla">
+      <div class="ancho"><label for="cu-nom">Nombre y apellido</label>
+        <input type="text" id="cu-nom" placeholder="Juan Cruz Pérez"></div>
+      <div class="ancho"><label for="cu-nac">Fecha de nacimiento</label>
+        <input type="date" id="cu-nac"></div>
+    </div>
+    <button class="btn" id="cu-agregar">Agregar</button>
+  </div>
+  <div class="tarjeta">
+    <h2>Cumpleaños · ${nf(lista.length)}</h2>
+    ${hoyes.length?`<div class="aviso bien">Hoy cumple ${hoyes.map(x=>`<strong>${esc(x.nombre)}</strong>`).join(' y ')}.</div>`:''}
+    ${agenda.length?`<div class="scroll"><table>
+      <thead><tr><th>Nombre</th><th>Nace</th><th class="num">Cumple</th><th class="num">Falta</th><th></th></tr></thead>
+      <tbody>${agenda.map(x=>`<tr class="${x.p.dias===0?'vig':''}">
+        <td>${esc(x.nombre)}</td>
+        <td>${x.p.dia}/${x.p.mes}</td>
+        <td class="num">${x.p.cumple}</td>
+        <td class="num" style="color:${x.p.dias===0?'var(--ambar)':x.p.dias<=7?'var(--cian)':'var(--tinta-suave)'}">
+          ${x.p.dias===0?'¡HOY!':x.p.dias===1?'mañana':`${x.p.dias} días`}</td>
+        <td><button class="borrar" data-cudel="${esc(x.id)}" aria-label="Quitar">×</button></td></tr>`).join('')}
+      </tbody></table></div>
+      <button class="btn sec" id="cu-probar">Probar el festejo</button>`
+    :`<p class="vacio">Todavía no cargaste a nadie.</p>`}
+  </div>`;
+}
+
 async function tabSync(){
   const c=await Sync.conf(), ult=await leer('sync:ultima',null);
   const st=S.syncEstado;
@@ -3962,11 +4298,16 @@ async function render(){
   const app=document.getElementById('app');
   if(S.cargando){ app.innerHTML=`<div class="vacio" style="padding-top:60px">Abriendo el panel…</div>`; return; }
   if(!S.entrado){ app.innerHTML=portada(); conectar(); return; }
+  const agenda=await agendaCumples();
+  S.msgs=mensajesCumple(agenda);
+  const hayFestejo=agenda.some(x=>x.p.dias===0);
   let c='';
   if(S.vista==='admin') c=S.abierto?await vistaAdmin():candado();
   else c=await vistaSector(S.vista);
   app.innerHTML=barra()+c+(S.ctrlEdit?panelCarga():'')+(S.avisoAbierto?panelAviso():'');
   conectar();
+  arrancarCartel();
+  if(hayFestejo&&!S.festejo){ S.festejo=true; papelitos(9000); }
 }
 
 function tomarBorrador(){
@@ -4170,6 +4511,145 @@ function conectar(){
   if(bxAn) bxAn.onchange=async()=>{ S.filtro.bxserv={...(S.filtro.bxserv||{}),a:bxAn.value}; await render(); };
   const bxMe=q('#bxMes');
   if(bxMe) bxMe.onchange=async()=>{ S.filtro.bxserv={...(S.filtro.bxserv||{}),m:bxMe.value}; await render(); };
+
+  // ---- factura de Andreani ----
+  const procAnd=async(lineas,nombre)=>{
+    const r=renglonesAndreani(lineas);
+    if(!r.length) throw new Error('No reconocí renglones de producto. Probá pegando el texto.');
+    const m=await maestro();
+    const plano=lineas.join('\n');
+    const mn=plano.match(/Nro de Comprobante:\s*([A-Z0-9]+)/i);
+    const mf=plano.match(/Fecha:\s*(\d{2}[./-]\d{2}[./-]\d{4})/);
+    // el subtotal está en la línea siguiente al rótulo
+    let sub=0;
+    const iS=lineas.findIndex(l=>/Subtotal/i.test(String(l)));
+    if(iS>=0){
+      const propia=String(lineas[iS]).match(/Subtotal[^\d]{0,20}([\d.]+,\d{2})/i);
+      if(propia) sub=numeroSig(propia[1]);
+      else {
+        const sig=String(lineas[iS+1]||'').replace(/\s+/g,' ').trim().match(/^([\d.]+,\d{2})/);
+        if(sig) sub=numeroSig(sig[1]);
+      }
+    }
+    const filas=r.map(f=>{
+      const h2=buscarMaestro(m,f.cod);
+      return {...f, barra:(h2&&h2.modo==='codigo')?h2.item.barra:'',
+              origen:(h2&&h2.modo==='codigo')?'del maestro':(h2?'en el maestro sin barra':'')};
+    });
+    S.and={nombre,filas,subtotal:sub,numero:mn?mn[1]:'',fecha:mf?mf[1]:''};
+  };
+  const ana=q('#an-arch');
+  if(ana) ana.onchange=async()=>{
+    const f=ana.files&&ana.files[0]; if(!f) return;
+    ana.closest('label').querySelector('strong').textContent='Leyendo el PDF…';
+    try{
+      const lineas=await textoPDF(f);
+      if(!lineas.length) throw new Error('El PDF no tiene texto adentro: es una foto o un escaneo. Pegá el texto o cargalo a mano.');
+      await procAnd(lineas,f.name);
+    }catch(e){ S.and={error:(e&&e.message)||'no se pudo leer el PDF'}; }
+    await render();
+  };
+  const anp=q('#an-pegado');
+  if(anp) anp.onclick=async()=>{
+    const t=q('#an-texto').value.split('\n').map(x=>x.trim()).filter(Boolean);
+    if(!t.length){ toast('Pegá el texto'); return; }
+    try{ await procAnd(t,'Texto pegado'); }
+    catch(e){ S.and={error:(e&&e.message)||'no se pudo leer'}; }
+    await render();
+  };
+  const anr=q('#an-reset'); if(anr) anr.onclick=async()=>{ S.and=null; await render(); };
+  document.querySelectorAll('#app [data-anbarra]').forEach(i=>i.onchange=()=>{
+    const f=S.and.filas[Number(i.dataset.anbarra)];
+    f.barra=i.value.trim(); if(f.barra) f.origen='a mano';
+  });
+  document.querySelectorAll('#app [data-ancant]').forEach(i=>i.onchange=()=>{
+    S.and.filas[Number(i.dataset.ancant)].cant=Math.max(1,Math.round(numero(i.value))||1);
+  });
+  document.querySelectorAll('#app [data-andel]').forEach(b=>b.onclick=async()=>{
+    S.and.filas.splice(Number(b.dataset.andel),1); await render();
+  });
+  document.querySelectorAll('#app [data-anguardar]').forEach(b=>b.onclick=async()=>{
+    const i=Number(b.dataset.anguardar), f=S.and.filas[i];
+    const inp=q(`[data-anbarra="${i}"]`);
+    const barra=(inp?inp.value:f.barra||'').trim();
+    if(!barra){ toast('Escribí el código de barra'); if(inp) inp.focus(); return; }
+    const m=await maestro();
+    const j=m.findIndex(x=>compacto(x.cod)===compacto(f.cod));
+    if(j>=0) m[j].barra=barra; else m.push({cod:f.cod,barra,debo:''});
+    if(await guardarMaestro(m)){ f.barra=barra; f.origen='a mano'; toast('Guardado al maestro'); await render(); }
+  });
+  document.querySelectorAll('#app [data-anvence]').forEach(i=>{
+    const guardar1=()=>{
+      const v=i.value;
+      S.and.filas[Number(i.dataset.anvence)].vence=(v&&fechaCompleta(v))?v:'';
+      actualizarBotonVenc();
+    };
+    i.oninput=guardar1; i.onchange=guardar1;   // sin redibujar: te sacaba del campo
+  });
+  // el botón se actualiza solo, sin rehacer la tabla
+  function actualizarBotonVenc(){
+    const b=document.getElementById('an-venc');
+    const n=(S.and&&S.and.filas||[]).filter(f=>f.vence).length;
+    if(b){ b.textContent=`Guardar los vencimientos (${n})`; b.style.display=n?'':'none'; }
+  }
+  const anv=q('#an-venc');
+  if(anv) anv.onclick=async()=>{
+    const V=await vencimientos();
+    let n=0;
+    S.and.filas.filter(f=>f.vence).forEach(f=>{
+      const k=`${S.and.numero||hoyISO()}|${f.cod}|${f.vence}`;
+      V[k]={barra:f.barra||'',cod:f.cod,desc:f.desc,cant:f.cant,vence:f.vence,
+            factura:S.and.numero||'',prov:'Andreani',ts:Date.now(),
+            consumido:(V[k]&&V[k].consumido)||false};
+      n++;
+    });
+    if(await guardar('tienda:vencimientos',V)){ S.venc=V; toast(n+' vencimiento'+(n===1?'':'s')+' guardado'+(n===1?'':'s')); await render(); }
+  };
+  // ---- vencimientos ----
+  const btnVencTodo=q('#venc-todo'); if(btnVencTodo) btnVencTodo.onclick=async()=>{ S.vencTodo=!S.vencTodo; await render(); };
+  document.querySelectorAll('#app [data-venccons]').forEach(b=>b.onclick=async()=>{
+    const V=await vencimientos(); if(V[b.dataset.venccons]) V[b.dataset.venccons].consumido=true;
+    if(await guardar('tienda:vencimientos',V)){ S.venc=V; toast('Marcado como consumido'); await render(); }
+  });
+  document.querySelectorAll('#app [data-vencvolver]').forEach(b=>b.onclick=async()=>{
+    const V=await vencimientos(); if(V[b.dataset.vencvolver]) V[b.dataset.vencvolver].consumido=false;
+    if(await guardar('tienda:vencimientos',V)){ S.venc=V; await render(); }
+  });
+  document.querySelectorAll('#app [data-vencdel]').forEach(b=>b.onclick=async()=>{
+    const V=await vencimientos(); delete V[b.dataset.vencdel];
+    if(await guardar('tienda:vencimientos',V)){ S.venc=V; toast('Quitado'); await render(); }
+  });
+  const vb=q('#venc-bajar');
+  if(vb) vb.onclick=async()=>{
+    const V=await vencimientos();
+    const todos=Object.entries(V).map(([k,v])=>({k,...v,est:estadoVenc(v.vence)}))
+      .sort((a,b)=>a.vence.localeCompare(b.vence));
+    const lista=S.vencTodo?todos:todos.filter(x=>!x.consumido&&x.est.dias>=-DIAS_GRACIA);
+    if(!lista.length){ toast('No hay nada para bajar'); return; }
+    const ws=XLSX.utils.aoa_to_sheet([
+      ['Producto','Codigo de barra','Codigo proveedor','Cantidad','Vence','Dias','Estado','Factura','Proveedor','Consumido'],
+      ...lista.map(x=>[x.desc||'',x.barra||'',x.cod||'',Number(x.cant)||0,x.vence,x.est.dias,
+        x.est.clave==='vencido'?'VENCIDO':x.est.clave==='hoy'?'VENCE HOY':x.est.clave==='pronto'?'POR VENCER':'EN FECHA',
+        x.factura||'',x.prov||'',x.consumido?'SI':'NO'])
+    ]);
+    ws['!cols']=[{wch:38},{wch:16},{wch:20},{wch:9},{wch:12},{wch:7},{wch:12},{wch:18},{wch:12},{wch:10}];
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Vencimientos');
+    XLSX.writeFile(wb,`vencimientos-${hoyISO()}.xlsx`);
+    toast(lista.length+' partidas descargadas');
+  };
+  const anb=q('#an-bajar');
+  if(anb) anb.onclick=()=>{
+    const l=S.and.filas.filter(f=>f.barra);
+    if(!l.length){ toast('No hay renglones listos'); return; }
+    const ws=XLSX.utils.aoa_to_sheet([
+      ['Columna 1','cantidad'],
+      [null,null],
+      ...l.map(f=>[Number(f.barra)||f.barra,Number(f.cant)])
+    ]);
+    const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Hoja1');
+    XLSX.writeFile(wb,'YPF.xls',{bookType:'biff8'});
+    toast(l.length+' renglones · YPF.xls');
+  };
 
   // ---- factura de Topaes ----
   const tpEstado=()=>{ if(!S.top) S.top={filas:[]}; return S.top; };
@@ -4758,7 +5238,11 @@ function conectar(){
   const selM=q('#fMes');
   if(selM) selM.onchange=async()=>{ S.filtro[S.vista]={...(S.filtro[S.vista]||{}),m:selM.value}; await render(); };
   const ma=q('#mesAdmin'); if(ma) ma.onchange=async()=>{ S.mes=ma.value||S.mes; await render(); };
-  const cf=q('#cfecha'); if(cf) cf.onchange=async()=>{ S.cargaFecha=cf.value||hoyISO(); S.borrador=null; await render(); };
+  const cf=q('#cfecha');
+  if(cf) cf.onchange=async()=>{
+    if(cf.value&&!fechaCompleta(cf.value)) return;   // año a medio escribir
+    S.cargaFecha=cf.value||hoyISO(); S.borrador=null; await render();
+  };
 
   const ent=q('#entrar');
   if(ent){
@@ -4774,6 +5258,20 @@ function conectar(){
   document.querySelectorAll('#app details.dia[data-dia]').forEach(d=>{
     d.ontoggle=()=>{ if(d.open) S.diasAbiertos[d.dataset.dia]=true; else delete S.diasAbiertos[d.dataset.dia]; };
   });
+  const cua=q('#cu-agregar');
+  if(cua) cua.onclick=async()=>{
+    const nom=q('#cu-nom').value.trim(), nac=q('#cu-nac').value;
+    if(!nom){ toast('Poné el nombre'); q('#cu-nom').focus(); return; }
+    if(!fechaCompleta(nac)){ toast('Poné la fecha de nacimiento'); q('#cu-nac').focus(); return; }
+    const lista=await cumples();
+    lista.push({id:'c'+Date.now(),nombre:nom,nac});
+    if(await guardar('admin:cumples',lista)){ S.cumples=lista; toast(nom+' agregado'); await render(); }
+  };
+  document.querySelectorAll('#app [data-cudel]').forEach(b=>b.onclick=async()=>{
+    const lista=(await cumples()).filter(x=>x.id!==b.dataset.cudel);
+    if(await guardar('admin:cumples',lista)){ S.cumples=lista; toast('Quitado'); await render(); }
+  });
+  const cup=q('#cu-probar'); if(cup) cup.onclick=()=>{ papelitos(9000); toast('¡Feliz cumple!'); };
   const abc=q('#abrirCtrl');
   if(abc){
     const probar=async()=>{
@@ -5140,33 +5638,33 @@ async function sembrar(forzar){
   if(S.cfg.clave==='1234'){ S.cfg.clave='Ingreso01'; await guardar('config',S.cfg); }
   if(!S.cfg.claveEntrada||S.cfg.claveEntrada==='Ingreso01'){ S.cfg.claveEntrada='2026'; await guardar('config',S.cfg); }
   try{ await sembrar(); }catch(e){ console.warn('semilla',e); }
-  if(Sync.servido){
-    marcarSync('bajando');
-    const listo=await Sync.esperarPuente(12000);
-    if(!listo) marcarSync('error','Google no habilitó la conexión. Recargá la página.');
-    else {
+  // el panel se muestra primero; la sincronización va después, de fondo
+  const sincronizarAlAbrir=async()=>{
+    if(Sync.servido){
+      marcarSync('bajando');
+      const listo=await Sync.esperarPuente(12000);
+      if(!listo){ marcarSync('error','Google no habilitó la conexión. Recargá la página.'); return; }
       try{
         const r=await Sync.bajar();
-        // planilla vacía la primera vez: deja los eneros que trae el archivo y los sube
-        if(!r.n){
-          await sembrar(true);
-          await Sync.vaciarCola();
-        }
+        if(!r.n){ await sembrar(true); await Sync.vaciarCola(); }
         marcarSync('aldia');
-      }
-      catch(e){ marcarSync('error',(e&&e.message)||''); }
+      }catch(e){ marcarSync('error',(e&&e.message)||''); }
+      await render();
+      return;
     }
-  } else {
     const sc=await Sync.conf();
-    if(sc.url&&sc.auto!==false){
-      marcarSync('bajando');
-      try{ await Sync.bajar(); marcarSync('aldia'); }
-      catch(e){ marcarSync('error',(e&&e.message)||''); }
-    }
-  }
+    if(!sc.url||sc.auto===false) return;
+    marcarSync('bajando');
+    try{ await Sync.bajar(); marcarSync('aldia'); }
+    catch(e){ marcarSync('error',(e&&e.message)||''); }
+    await render();
+  };
+
   const r=await roll('playa'); const ms=Object.keys(r).sort();
   if(ms.length) S.mes=ms[ms.length-1];
   S.cargando=false;
   await render();
+  // no se espera: si la planilla tarda o falla, el panel ya está en pantalla
+  sincronizarAlAbrir().catch(e=>marcarSync('error',(e&&e.message)||''));
 })();
 </script>
