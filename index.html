@@ -56,6 +56,8 @@ h1,h2,h3,.cond{font-family:'Barlow Condensed','Archivo',sans-serif;text-transfor
   background:#04070E;border:1px solid var(--linea);border-radius:2px;
   box-shadow:inset 0 0 14px rgba(34,227,245,.14)}
 .cartel:empty{display:none}
+.cartel{cursor:pointer}
+.cartel:hover,.cartel:focus-visible{border-color:var(--cian);outline:none}
 .cartel::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
   background:repeating-linear-gradient(90deg,rgba(0,0,0,.45) 0 1px,transparent 1px 3px),
              repeating-linear-gradient(0deg,rgba(0,0,0,.4) 0 1px,transparent 1px 3px)}
@@ -887,6 +889,7 @@ function proximoCumple(nac){
   const dias=Math.round((f-hoy)/86400000);
   return {dias,fecha:f,cumple:f.getFullYear()-Number(m[1]),dia:m[3],mes:m[2]};
 }
+const nombreCompleto=x=>[x.nombre,x.apellido].filter(Boolean).join(' ').trim();
 async function agendaCumples(){
   const lista=await cumples();
   return lista.map(p=>({...p,p:proximoCumple(p.nac)})).filter(x=>x.p)
@@ -919,11 +922,11 @@ function papelitos(ms){
 function mensajesCumple(agenda){
   if(!agenda.length) return [];
   const hoyes=agenda.filter(x=>x.p.dias===0);
-  const soloNombre=n=>String(n).trim().split(/\s+/)[0].toUpperCase();
+  const soloNombre=x=>String(x.nombre||'').trim().split(/\s+/)[0].toUpperCase();
   if(hoyes.length){
     const m=[];
     hoyes.forEach(x=>{
-      const n=soloNombre(x.nombre);
+      const n=soloNombre(x);
       m.push({t:`★ FELIZ CUMPLE ${n} ★`,clase:'fest'});
       m.push({t:`${n} CUMPLE ${x.p.cumple}`,clase:'fest'});
       m.push({t:'★ QUE LO DISFRUTES ★',clase:'fest'});
@@ -931,7 +934,7 @@ function mensajesCumple(agenda){
     });
     return m;
   }
-  const p=agenda[0], n=soloNombre(p.nombre), d=p.p.dias;
+  const p=agenda[0], n=soloNombre(p), d=p.p.dias;
   const m=[
     {t:`PRÓXIMO CUMPLE: ${n}`},
     {t:d===1?'¡MAÑANA!':`FALTAN ${d} DÍAS`},
@@ -940,7 +943,7 @@ function mensajesCumple(agenda){
   if(d<=7) m.push({t:`▸ YA FALTA POCO ▸`});
   if(d<=1) m.push({t:'PREPARÁ LA TORTA'});
   agenda.slice(1,4).forEach(x=>{
-    m.push({t:`DESPUÉS: ${soloNombre(x.nombre)} EN ${x.p.dias} DÍAS`});
+    m.push({t:`DESPUÉS: ${soloNombre(x)} EN ${x.p.dias} DÍAS`});
   });
   return m;
 }
@@ -972,7 +975,7 @@ function barra(){
       <div class="fecha-hoy"><span class="fecha-linea">${f}<span class="chip-sync ${(S.syncFlag||{}).estado||'off'}" id="chipSync"
         style="${(S.syncFlag||{}).estado&&S.syncFlag.estado!=='off'?'':'display:none'}"
         title="${esc((S.syncFlag||{}).detalle||'')}">${SYNC_ROT[(S.syncFlag||{}).estado]||''}</span></span>
-        <span class="cartel" id="cartel"></span></div></div>
+        <span class="cartel" id="cartel" role="button" tabindex="0" title="Ver todos los cumpleaños"></span></div></div>
     <nav class="nav">${nav.map(([k,t])=>`<button data-vista="${k}" aria-current="${S.vista===k}">${t}</button>`).join('')}</nav>
     </div>`;
 }
@@ -1800,6 +1803,31 @@ function liquidar(regs){
     }
   });
   return out;
+}
+
+function panelCumples(){
+  const a=S.cumplesAbierto; if(!a) return '';
+  const hoyes=a.filter(x=>x.p.dias===0);
+  return `<div class="fondo-modal" id="cerrarCump"></div>
+  <div class="modal" role="dialog" aria-label="Cumpleaños">
+    <div class="modal-cab">
+      <div><div class="eyebrow" style="margin:0">Cumpleaños</div>
+        <h2 style="font-size:17px">${hoyes.length?'¡Hoy se festeja!':'Los que se vienen'}</h2></div>
+      <button class="borrar" id="cerrarCumpX" aria-label="Cerrar">×</button>
+    </div>
+    <div class="modal-cuerpo">
+      ${a.length?`<div class="scroll" style="margin:0"><table>
+        <thead><tr><th>Quién</th><th class="num">Cumple</th><th class="num">Falta</th></tr></thead>
+        <tbody>${a.map(x=>`<tr class="${x.p.dias===0?'vig':''}">
+          <td><strong>${esc(x.nombre)}</strong>${x.apellido?` ${esc(x.apellido)}`:''}
+            <small>${x.p.dia}/${x.p.mes}</small></td>
+          <td class="num">${x.p.cumple}</td>
+          <td class="num" style="color:${x.p.dias===0?'var(--ambar)':x.p.dias<=7?'var(--cian)':'var(--tinta-suave)'}">
+            ${x.p.dias===0?'¡HOY!':x.p.dias===1?'mañana':`${x.p.dias} días`}</td></tr>`).join('')}
+        </tbody></table></div>`
+      :`<p class="vacio">Todavía no hay nadie cargado.</p>`}
+    </div>
+  </div>`;
 }
 
 function panelAviso(){
@@ -4147,21 +4175,24 @@ async function tabCumples(){
   return `<div class="aviso">Cargá el nombre y la fecha de nacimiento de cada uno. En la franja de arriba aparece la cuenta regresiva, y el día del cumple se llena de papelitos.</div>
   <div class="tarjeta">
     <h2>Agregar persona</h2>
+    <p class="sub">En el cartel se muestra solo el nombre.</p>
     <div class="rejilla">
-      <div class="ancho"><label for="cu-nom">Nombre y apellido</label>
-        <input type="text" id="cu-nom" placeholder="Juan Cruz Pérez"></div>
-      <div class="ancho"><label for="cu-nac">Fecha de nacimiento</label>
+      <div><label for="cu-nom">Nombre</label>
+        <input type="text" id="cu-nom" placeholder="Juan Cruz"></div>
+      <div><label for="cu-ape">Apellido</label>
+        <input type="text" id="cu-ape" placeholder="Pérez"></div>
+      <div><label for="cu-nac">Fecha de nacimiento</label>
         <input type="date" id="cu-nac"></div>
     </div>
     <button class="btn" id="cu-agregar">Agregar</button>
   </div>
   <div class="tarjeta">
     <h2>Cumpleaños · ${nf(lista.length)}</h2>
-    ${hoyes.length?`<div class="aviso bien">Hoy cumple ${hoyes.map(x=>`<strong>${esc(x.nombre)}</strong>`).join(' y ')}.</div>`:''}
+    ${hoyes.length?`<div class="aviso bien">Hoy cumple ${hoyes.map(x=>`<strong>${esc(nombreCompleto(x))}</strong>`).join(' y ')}.</div>`:''}
     ${agenda.length?`<div class="scroll"><table>
       <thead><tr><th>Nombre</th><th>Nace</th><th class="num">Cumple</th><th class="num">Falta</th><th></th></tr></thead>
       <tbody>${agenda.map(x=>`<tr class="${x.p.dias===0?'vig':''}">
-        <td>${esc(x.nombre)}</td>
+        <td>${esc(nombreCompleto(x))}</td>
         <td>${x.p.dia}/${x.p.mes}</td>
         <td class="num">${x.p.cumple}</td>
         <td class="num" style="color:${x.p.dias===0?'var(--ambar)':x.p.dias<=7?'var(--cian)':'var(--tinta-suave)'}">
@@ -4304,7 +4335,7 @@ async function render(){
   let c='';
   if(S.vista==='admin') c=S.abierto?await vistaAdmin():candado();
   else c=await vistaSector(S.vista);
-  app.innerHTML=barra()+c+(S.ctrlEdit?panelCarga():'')+(S.avisoAbierto?panelAviso():'');
+  app.innerHTML=barra()+c+(S.ctrlEdit?panelCarga():'')+(S.avisoAbierto?panelAviso():'')+(S.cumplesAbierto?panelCumples():'');
   conectar();
   arrancarCartel();
   if(hayFestejo&&!S.festejo){ S.festejo=true; papelitos(9000); }
@@ -5258,13 +5289,22 @@ function conectar(){
   document.querySelectorAll('#app details.dia[data-dia]').forEach(d=>{
     d.ontoggle=()=>{ if(d.open) S.diasAbiertos[d.dataset.dia]=true; else delete S.diasAbiertos[d.dataset.dia]; };
   });
+  const cart=document.getElementById('cartel');
+  if(cart){
+    const abrirCump=async()=>{ S.cumplesAbierto=await agendaCumples(); await render(); };
+    cart.onclick=abrirCump;
+    cart.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); abrirCump(); } };
+  }
+  const cerrarCump=async()=>{ S.cumplesAbierto=null; await render(); };
+  const cc1=document.getElementById('cerrarCump'); if(cc1) cc1.onclick=cerrarCump;
+  const cc2=document.getElementById('cerrarCumpX'); if(cc2) cc2.onclick=cerrarCump;
   const cua=q('#cu-agregar');
   if(cua) cua.onclick=async()=>{
-    const nom=q('#cu-nom').value.trim(), nac=q('#cu-nac').value;
+    const nom=q('#cu-nom').value.trim(), ape=q('#cu-ape').value.trim(), nac=q('#cu-nac').value;
     if(!nom){ toast('Poné el nombre'); q('#cu-nom').focus(); return; }
     if(!fechaCompleta(nac)){ toast('Poné la fecha de nacimiento'); q('#cu-nac').focus(); return; }
     const lista=await cumples();
-    lista.push({id:'c'+Date.now(),nombre:nom,nac});
+    lista.push({id:'c'+Date.now(),nombre:nom,apellido:ape,nac});
     if(await guardar('admin:cumples',lista)){ S.cumples=lista; toast(nom+' agregado'); await render(); }
   };
   document.querySelectorAll('#app [data-cudel]').forEach(b=>b.onclick=async()=>{
