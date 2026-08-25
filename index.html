@@ -280,6 +280,17 @@ table.obj td{vertical-align:middle}
 table.obj td:first-child{white-space:normal;min-width:132px;font-weight:600;font-size:13.5px}
 table.obj input.n{width:96px}
 .uni{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tinta-suave);margin-left:5px}
+.celda-cod{white-space:normal;min-width:118px;max-width:230px}
+.cod-btn{display:flex;align-items:center;gap:5px;background:transparent;border:0;padding:0;cursor:pointer;
+  color:var(--tinta);font-family:'IBM Plex Mono',monospace;font-size:13.5px;font-weight:600}
+.cod-btn:hover .cod{color:var(--cian)}
+.cod-fl svg{width:12px;height:12px;color:var(--tinta-suave);transition:transform .15s ease}
+.celda-cod:has(.cod-desc.abierta) .cod-fl svg{transform:rotate(90deg)}
+.cod-est{font-size:10.5px;color:var(--tinta-suave);font-family:'IBM Plex Mono',monospace;margin-top:1px}
+.cod-desc{display:none;font-size:12px;color:var(--tinta-suave);margin-top:4px;line-height:1.35;
+  border-left:2px solid var(--linea);padding-left:7px}
+.cod-desc.abierta{display:block}
+@media (prefers-reduced-motion:reduce){.cod-fl svg{transition:none}}
 .resu{margin-top:9px;border:1px solid var(--linea);border-radius:var(--r);overflow:hidden;max-height:310px;overflow-y:auto;background:#080D18}
 .rfila{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;
   border-bottom:1px solid var(--linea-2);padding:9px 11px;cursor:pointer;font-family:'Archivo',sans-serif}
@@ -2510,6 +2521,7 @@ function renglonesTopaes(lineas){
   for(const l0 of lineas){
     const l=String(l0).replace(/\s+/g,' ').trim();
     if(!l||corta.test(l)) continue;
+    if(/Cond\.:|%Dto\.|Vencimiento CAE|Fecha Vencimiento/i.test(l)) continue;
     const m=l.match(RE_TOP);
     if(!m) continue;
     const cod=m[1], cant=Math.round(numeroSig(m[4]));
@@ -2847,15 +2859,18 @@ async function textoPDF(f){
   return lineas;
 }
 // formato Renova: "1.00 PH3569 Descripción C14 21.00 8,943.89 22.40 6,940.46 6,940.46"
-// la cantidad abre el renglón y el código va segundo; el resto son importes.
+// un renglón solo vale si termina con la cola de importes; si no, es encabezado o pie.
 const RE_ITEM=/^(\d{1,4}(?:[.,]\d{1,3})?)\s+([A-Z0-9][A-Z0-9\-\/\.]{2,})\s+(.*)$/i;
 const RE_CIERRE=/((?:[A-Z]{1,3}\d{0,3}\s+)?\d{1,3}[.,]\d{2}\s+)?[\d.,]+\s+[\d.,]+\s+[\d.,]+\s+[\d.,]+\s*$/;
+// la cola real: al menos cuatro importes seguidos, el último con dos decimales
+const RE_COLA_OK=/(?:[\d.,]+\s+){3,}[\d.,]*\d[.,]\d{2}\s*$/;
 function renglonesFactura(lineas){
   const out=[];
-  const corta=/^(TOTAL|SUBTOTAL|IVA|NETO|CUIT|CAE|HOJA|SON PESOS|OBSERVACIONES|ORIGINAL|No se aceptan|Cantidad\s+Codigo)/i;
+  const corta=/^(TOTAL|SUBTOTAL|IVA|NETO|CUIT|CAE|HOJA|SON PESOS|OBSERVACIONES|ORIGINAL|No se aceptan|Cantidad\s+Codigo|Cond\.|Remito|Vendedor|Cliente|Domicilio)/i;
   for(const l0 of lineas){
     const l=l0.replace(/\s+/g,' ').trim();
     if(!l||corta.test(l)) continue;
+    if(/Cond\.:|%Dto\.|Vencimiento CAE|Fecha Vencimiento/i.test(l)) continue;
     const m=l.match(RE_ITEM);
     if(!m){
       // renglón de continuación: se pega a la descripción del anterior
@@ -2866,14 +2881,25 @@ function renglonesFactura(lineas){
         out[out.length-1].desc=(out[out.length-1].desc+' '+l).replace(/\s+/g,' ').trim();
       continue;
     }
+    // sin la cola de importes no es un producto: es la condición de pago o el pie
+    if(!RE_COLA_OK.test(l)) continue;
     const cant=Math.max(1,Math.round(numero(m[1])));
     const cod=m[2].toUpperCase();
-    // saca de la descripción la cola de importes y la unidad de medida
     let desc=m[3].replace(RE_CIERRE,'').trim();
+    // a veces el código vuelve a aparecer al principio de la descripción
+    const rep=new RegExp('^'+cod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[\\s\\-]*','i');
+    desc=desc.replace(rep,'').trim();
     if(!desc) desc=cod;
     out.push({cod,desc,cant,linea:l});
   }
-  return out;
+  // limpieza final: la descripción no debe repetir el código, ni al principio ni suelto
+  return out.map(r=>{
+    const c=r.cod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    let d=String(r.desc||'')
+      .replace(new RegExp('\\b'+c+'\\b','ig'),' ')     // el código en cualquier parte
+      .replace(/\s+/g,' ').replace(/^[\s\-–·.]+/,'').trim();
+    return {...r,desc:d||r.cod};
+  });
 }
 async function tabMaestro(){
   await listas();
@@ -2959,7 +2985,14 @@ async function tabConvertir(){
   const listos=c.filas.filter(f=>f.barra);
 
   const fila=(f,i)=>`<tr class="${f.barra?'':'vig'}">
-    <td><strong>${esc(f.cod||'—')}</strong> ${esc(f.desc)}<small>${f.modo==='codigo'?'por código, exacto':f.modo==='manual'?'cargado a mano':f.modo==='faltabarra'?'está en el maestro pero sin código de barra':'sin coincidencia'}</small></td>
+    <td class="celda-cod">
+      <button class="cod-btn" data-verdesc="${i}" title="Ver la descripción">
+        <span class="cod">${esc(f.cod||'—')}</span>
+        <span class="cod-fl">${ICO.flecha}</span>
+      </button>
+      <div class="cod-est">${f.modo==='codigo'?'por código':f.modo==='manual'?'a mano':f.modo==='faltabarra'?'sin barra':'desconocido'}</div>
+      <div class="cod-desc${S.descAbierta&&S.descAbierta[i]?' abierta':''}">${esc(f.desc)}</div>
+    </td>
     <td class="num">${f.barra?esc(f.barra):`<input type="text" inputmode="numeric" class="n" data-cvbarra="${i}" placeholder="código de barra" style="width:132px">`}</td>
     <td><input type="text" inputmode="numeric" class="n" data-cvcant="${i}" value="${f.cant}" style="width:56px"></td>
     <td>${!f.barra?`<button class="ver" data-cvguardar="${i}">Guardar</button>`:''}
@@ -2976,7 +3009,7 @@ async function tabConvertir(){
   <div class="tarjeta">
     <h2>Renglones</h2>
     <div class="scroll"><table>
-      <thead><tr><th>Renglón de la factura</th><th>Código de barra</th><th class="num">Cant.</th><th></th></tr></thead>
+      <thead><tr><th>Código</th><th>Código de barra</th><th class="num">Cant.</th><th></th></tr></thead>
       <tbody>${c.filas.map(fila).join('')}</tbody></table></div>
     <p class="sub" style="margin-top:11px">${listos.length} de ${c.filas.length} renglones listos para bajar.</p>
     <button class="btn" id="cv-bajar"${listos.length?'':' disabled'}>Bajar YPF.xls para Debo (${listos.length})</button>
@@ -3467,20 +3500,25 @@ async function tabObjetivos(){
 }
 
 // metricas de objetivo de tienda: total de unidades, tickets y los rubros principales
+const RUBROS_TABACO=['02-238','02-214'];
 const METS_TIENDA=()=>[
+  {k:'unidades',rot:'Unidades totales',uni:'u',ayuda:'Todos los rubros menos Cigarrillos y Otros Tabacos'},
   {k:'combos',rot:'Combos',uni:'u',ayuda:'Combo comidas + combo cafetería'},
   {k:'tickets',rot:'Tickets',uni:'tk'},
   ...S.cfg.tiendaRubros.filter(r=>r.principal).map(r=>({k:r.id,rot:r.nombre,uni:'u'}))];
 // combos vendidos: por ahora a mano, hasta que aparezca el reporte que los trae
 // objetivos de tienda que vienen puestos de fábrica; si después los cambiás, manda lo tuyo
 const OBJ_TIENDA_FIJOS={
-  '2026-07':{combos:{min:1930,max:2133}},
-  '2026-08':{combos:{min:3847,max:4252}}
+  '2026-07':{combos:{min:1930,max:2133},unidades:{min:9264,max:10808}},
+  '2026-08':{combos:{min:3847,max:4252},unidades:{min:17603,max:20536}}
 };
 async function objTienda(){
   const g=await admin('objetivos-tienda',{});
   let falta=false;
-  for(const [ym,v] of Object.entries(OBJ_TIENDA_FIJOS)) if(!g[ym]){ g[ym]=v; falta=true; }
+  for(const [ym,v] of Object.entries(OBJ_TIENDA_FIJOS)){
+    if(!g[ym]){ g[ym]=v; falta=true; continue; }
+    for(const [met,val] of Object.entries(v)) if(!g[ym][met]){ g[ym][met]=val; falta=true; }
+  }
   if(falta){ S.admin['objetivos-tienda']=g; await guardar('admin:objetivos-tienda',g); }
   return g;
 }
@@ -3511,6 +3549,10 @@ const realTienda=(r,anio,meses,k,C)=>(meses||[]).reduce((a,m)=>{
   if(k==='combos') return a+(Number((C||{})[`${anio}-${m}`])||0);
   const x=r[`${anio}-${m}`]; if(!x) return a;
   if(k==='tickets') return a+(x.tickets||0);
+  if(k==='unidades'){                      // total de rubros menos el tabaco
+    const tab=RUBROS_TABACO.reduce((s,c)=>s+((x.porProd||{})[c]||0),0);
+    return a+((x.total||0)-tab);
+  }
   return a+((x.porProd||{})[k]||0);
 },0);
 
@@ -5026,6 +5068,12 @@ function conectar(){
     const j=m.findIndex(x=>compacto(x.cod)===compacto(f.cod||''));
     if(j>=0) m[j].barra=barra; else m.push({cod:f.cod||'',barra,debo:''});
     if(await guardarMaestro(m)){ f.barra=barra; f.modo='manual'; toast('Guardado al maestro'); await render(); }
+  });
+  document.querySelectorAll('#app [data-verdesc]').forEach(b=>b.onclick=()=>{
+    const i=b.dataset.verdesc;
+    const d=b.closest('.celda-cod').querySelector('.cod-desc');
+    const abierta=d.classList.toggle('abierta');
+    S.descAbierta=S.descAbierta||{}; S.descAbierta[i]=abierta;
   });
   const cvb=q('#cv-bajar');
   if(cvb) cvb.onclick=async()=>{
