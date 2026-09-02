@@ -370,7 +370,7 @@ table.mix tr:nth-child(odd) td{background:rgba(255,255,255,.025)}
 .subnav.envuelta{flex-wrap:wrap;overflow:visible}
 
 /* ---- administración con menú lateral ---- */
-.adminwrap{display:block;max-width:1100px;margin:0 auto;padding:0 12px}
+.adminwrap{display:block;max-width:none;margin:0;padding:0 12px}
 .lateral{display:none}
 .abremenu{width:100%;background:var(--panel);border:1px solid var(--linea);border-radius:var(--r);
   padding:11px 13px;margin:14px 0 12px;text-align:left;cursor:pointer;color:var(--tinta);
@@ -400,7 +400,7 @@ table.mix tr:nth-child(odd) td{background:rgba(255,255,255,.025)}
   border-left-color:var(--cian);font-weight:600;box-shadow:inset 0 0 24px rgba(34,227,245,.06)}
 .adminmain{min-width:0}
 @media(min-width:860px){
-  .adminwrap{display:grid;grid-template-columns:214px 1fr;gap:18px;padding:16px 16px 0}
+  .adminwrap{display:grid;grid-template-columns:214px minmax(0,1fr);gap:18px;padding:16px 20px 0;max-width:none}
   .lateral{display:block;background:var(--panel);border:1px solid var(--linea-2);border-radius:var(--r);
     padding:9px 0;align-self:start;position:sticky;top:104px}
   .abremenu{display:none}
@@ -420,6 +420,28 @@ table.mix tr:nth-child(odd) td{background:rgba(255,255,255,.025)}
 .item .t2{font-size:12px;color:var(--tinta-suave);font-family:'IBM Plex Mono',monospace;margin-top:1px}
 .item .der{text-align:right;flex:0 0 auto}
 .borrar{background:transparent;border:0;color:var(--tinta-suave);cursor:pointer;font-size:16px;padding:2px 5px;line-height:1}
+.ob-chip{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;
+  letter-spacing:.09em;font-family:'IBM Plex Mono',monospace;white-space:nowrap;border:1px solid}
+.ob-chip.max{background:rgba(61,224,160,.16);color:#6CF0BE;border-color:rgba(61,224,160,.5)}
+.ob-chip.min{background:rgba(34,227,245,.14);color:var(--cian);border-color:rgba(34,227,245,.45)}
+.ob-chip.no{background:rgba(255,107,133,.14);color:#FF95A7;border-color:rgba(255,107,133,.45)}
+.ob-chip.vacio{background:rgba(140,155,180,.12);color:#96A3B8;border-color:rgba(140,155,180,.35)}
+.ob-resumen{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 11px}
+tr.ob-max td{background:rgba(61,224,160,.07);box-shadow:inset 3px 0 0 #3DE0A0}
+tr.ob-min td{background:rgba(34,227,245,.06);box-shadow:inset 3px 0 0 var(--cian)}
+tr.ob-no  td{background:rgba(255,107,133,.06);box-shadow:inset 3px 0 0 #FF6B85}
+tr.ob-vacio td{box-shadow:inset 3px 0 0 rgba(140,155,180,.35)}
+tr.ob-max td:not(:first-child),tr.ob-min td:not(:first-child),
+tr.ob-no td:not(:first-child),tr.ob-vacio td:not(:first-child){box-shadow:none}
+.fila-ed{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:4px}
+.fila-ed select{width:auto;font-size:11.5px;padding:4px 6px}
+.fila-ed label{display:inline-flex;gap:4px;align-items:center;cursor:pointer;color:var(--tinta-suave)}
+.fila-ed input[type=checkbox]{width:14px;height:14px;accent-color:var(--cian)}
+.sino{display:flex;gap:5px}
+.sino button{padding:5px 12px;background:var(--panel-2);border:1px solid var(--linea);color:var(--tinta-suave);
+  cursor:pointer;font-size:12px;border-radius:2px}
+.sino button.act{background:var(--cian);color:#04121a;border-color:var(--cian);font-weight:600}
+.sino button:hover{border-color:var(--cian)}
 .marca{display:flex;align-items:center;flex:0 0 auto;padding-top:2px;cursor:pointer}
 .marca input{width:17px;height:17px;accent-color:var(--cian);cursor:pointer}
 .etiq{display:inline-block;font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;padding:2px 6px;border-radius:2px;font-family:'Barlow Condensed',sans-serif}
@@ -582,7 +604,7 @@ const S={
   maestro:null, previaMaestro:null, mBusca:'', mSoloFalta:false, conv:null,
   gasMes:null, contactos:null, facSel:{}, facMes:'todos', avisoAbierto:false,
   diasAbiertos:{}, ctrl:null, ctrlMes:null, ctrlAbierto:false, ctrlEdit:null, top:null, bx:{}, bxRoll:null, previaBoxes:null, bxmAnio:null, bxmMes:null,
-  lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
+  lub:null, lubMes:null, lubFoco:null, prodLub:null, lubAddAce:false, lubAddOtr:false, lubAnio:null, lubTrim:null, lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
 };
 
 /* ---------- almacenamiento ---------- */
@@ -1780,6 +1802,181 @@ async function tabTienda(){
   </div>`;
 }
 
+/* ---------- tablero de objetivos (v2) ---------- */
+const TIPOS_OBJ={num:'Cantidad',pct:'Porcentaje',money:'Pesos',si:'Sí / No'};
+const uid2=()=>Math.random().toString(36).slice(2,9);
+const mObj=(nombre,tipo,objMin,valMin,objMax,valMax,exc)=>
+  ({id:uid2(),nombre,tipo,objMin,valMin,objMax,valMax,exc:!!exc,resultado:null,fuente:'',fuenteMeta:''});
+
+const PLANTILLA_OBJ=()=>[
+  {id:uid2(),nombre:'Vendedores — Combustibles',items:[
+    {...mObj('Combustibles Lts','num',75000,41420,null,72485),
+      fuente:'playa.total',fuenteMeta:'obj.comb'},
+    mObj('Infinias Lts','pct',0,31065,0,51775),
+    mObj('Elaion Lts.','num',175,20710,201,0),
+    mObj('Crosselling','money',500000,14497,800000,20710),
+    mObj('Crosselling unidades café','num',null,15862,null,22660),
+    mObj('Cliente incógnito','pct',90,18639,null,null,true),
+    mObj('Desempeño','pct',null,null,null,null),
+  ]},
+  {id:uid2(),nombre:'Vendedores — Cafetería y comidas',items:[
+    mObj('Ventas cafetería y comidas','money',18000000,54000,null,null),
+    mObj('Unidades totales s/tabaco','num',null,38000,null,57000),
+    mObj('Combos café y comidas','num',950,38000,1050,57000),
+    mObj('Crosselling','pct',27,26600,30,38000),
+    mObj('Bromatología','pct',90,19000,null,null,true),
+    mObj('Cliente incógnito','pct',90,19000,null,null,true),
+  ]},
+  {id:uid2(),nombre:'RRPP',items:[
+    mObj('Ventas naftas','num',50000,414200,null,486685),
+    mObj('Ventas diesel','num',25000,207100,null,283250),
+    mObj('Infinias Lts','pct',null,207100,null,486685),
+    mObj('Elaion Lts.','num',175,82840,null,103550),
+    mObj('Carga media','num',0,186390,0,258875),
+    mObj('GNC mts3','num',null,186390,null,258875),
+    mObj('Cliente incógnito','pct',90,62130,100,94240),
+    mObj('Trimestre + YPF','si',null,0,null,null,true),
+  ]},
+  {id:uid2(),nombre:'RRFF',items:[
+    mObj('Margen bruto','pct',43,152000,46,171000),
+    mObj('Cafetería unidades','num',40,152000,45,171000),
+    mObj('Comidas unidades','num',15,57000,20,76000),
+    mObj('Crosselling','pct',27,57000,30,76000),
+    mObj('Bromatología','pct',90,76000,100,114000,true),
+    mObj('Cliente incógnito','pct',90,76000,100,114000,true),
+    mObj('Trimestre + YPF','si',null,0,null,null,true),
+  ]},
+];
+
+// de dónde puede salir solo el resultado de un objetivo
+const FUENTES_OBJ=[
+  {id:'',            rot:'A mano'},
+  {id:'playa.total', rot:'Playa · litros totales'},
+  {id:'playa.naftas',rot:'Playa · litros naftas'},
+  {id:'playa.diesel',rot:'Playa · litros diesel'},
+  {id:'playa.mixinf',rot:'Playa · % Infinia sobre el total'},
+];
+async function valorFuente(fuente,ym){
+  if(!fuente) return null;
+  const r=await roll('playa'), x=r[ym];
+  if(!x) return null;
+  const suma=ids=>ids.reduce((a,c)=>a+((x.porProd||{})[c]||0),0);
+  const naftas=suma(idsFam('Naftas')), diesel=suma(idsFam('Diesel'));
+  if(fuente==='playa.total')  return x.total||0;
+  if(fuente==='playa.naftas') return naftas;
+  if(fuente==='playa.diesel') return diesel;
+  if(fuente==='playa.mixinf'){
+    const inf=suma(['inf','ind']);
+    return (x.total? inf/x.total*100 : 0);
+  }
+  return null;
+}
+
+// el objetivo del mes solo: la diferencia con el mes previo del trimestre
+function objDelMes(o,ym,met){
+  const anio=ym.slice(0,4), mes=ym.slice(5,7), meses=TRIM[trimDe(mes)-1];
+  let pMin=0,pMax=0,res={min:0,max:0};
+  for(const m of meses){
+    const y=`${anio}-${m}`;
+    const aMin=objV(o,y,met,'min'), aMax=objV(o,y,met,'max');
+    const hay=aMin||aMax;
+    if(m===mes){ res={min:hay?aMin-pMin:0,max:hay?aMax-pMax:0}; break; }
+    if(hay){ pMin=aMin; pMax=aMax; }
+  }
+  return res;
+}
+// de dónde puede salir solo el mínimo y el máximo de un objetivo
+const FUENTES_META=[
+  {id:'',           rot:'Objetivo a mano'},
+  {id:'obj.comb',   rot:'Objetivo · naftas + diesel del mes'},
+  {id:'obj.naftas', rot:'Objetivo · naftas del mes'},
+  {id:'obj.diesel', rot:'Objetivo · diesel del mes'},
+  {id:'obj.mix',    rot:'Objetivo · mix Infinia vigente'},
+];
+async function valorMeta(fuente,ym){
+  if(!fuente) return null;
+  const o=await admin('objetivos',{});
+  if(fuente==='obj.mix'){
+    const v=objVigente(o,ym.slice(0,4),TRIM[trimDe(ym.slice(5,7))-1],'mix');
+    return {min:v.min||null,max:v.max||null};
+  }
+  const n=objDelMes(o,ym,'naftas'), d=objDelMes(o,ym,'diesel');
+  if(fuente==='obj.naftas') return {min:n.min||null,max:n.max||null,detalle:''};
+  if(fuente==='obj.diesel') return {min:d.min||null,max:d.max||null,detalle:''};
+  if(fuente==='obj.comb') return {
+    min:(n.min+d.min)||null, max:(n.max+d.max)||null,
+    detalle:(n.min||d.min)?`mín ${nf(n.min)} naftas + ${nf(d.min)} diesel · máx ${nf(n.max)} + ${nf(d.max)}`:''
+  };
+  return null;
+}
+
+function calcObjItem(it){
+  const r=it.resultado;
+  if(it.tipo==='si'){ const ok=r===true; return {cumple:ok,nivel:ok?'min':'no',pago:ok?(it.valMin||0):0}; }
+  if(r===null||r===undefined) return {cumple:false,nivel:'no',pago:0};
+  const hayMax=it.objMax!==null&&it.objMax!==undefined&&it.objMax>0;
+  if(hayMax&&r>=it.objMax) return {cumple:true,nivel:'max',pago:it.valMax||it.valMin||0};
+  if(it.objMin===null||it.objMin===undefined) return {cumple:false,nivel:'no',pago:0};
+  if(r>=it.objMin) return {cumple:true,nivel:'min',pago:it.valMin||0};
+  return {cumple:false,nivel:'no',pago:0};
+}
+function calcObjGrupo(g){
+  const filas=g.items.map(it=>({it,res:calcObjItem(it)}));
+  const falla=filas.filter(f=>f.it.exc&&!f.res.cumple).map(f=>f.it.nombre);
+  const bruto=filas.reduce((a,f)=>a+f.res.pago,0);
+  return {filas,falla,bruto,total:falla.length?0:bruto};
+}
+
+async function cargarObj2(per){
+  let base=await leer('objetivos:'+per,null);
+  if(!base){
+    // hereda los objetivos del último período cargado, sin los resultados
+    const idx=await leer('objetivos:indice',[]);
+    const previos=idx.filter(p=>p<per).sort();
+    if(previos.length){
+      const p=await leer('objetivos:'+previos[previos.length-1],null);
+      if(p){ base={periodo:per,grupos:JSON.parse(JSON.stringify(p.grupos))};
+        base.grupos.forEach(g=>g.items.forEach(it=>it.resultado=null)); }
+    }
+    if(!base) base={periodo:per,grupos:PLANTILLA_OBJ()};
+  }
+  base.periodo=per;
+  base.grupos.forEach(g=>g.items.forEach(it=>{
+    if(it.fuente===undefined) it.fuente='';
+    if(it.fuenteMeta===undefined) it.fuenteMeta='';
+    // corrige los tableros viejos que habían quedado con la fuente de naftas sola
+    if(/combustible/i.test(it.nombre)&&it.tipo==='num'){
+      if(!it.fuenteMeta||it.fuenteMeta==='obj.naftas'||it.fuenteMeta==='obj.diesel') it.fuenteMeta='obj.comb';
+      if(!it.fuente) it.fuente='playa.total';
+    }
+  }));
+  S.ob2=base;
+  await traerFuentesObj();
+}
+// completa los resultados que tienen fuente automática
+async function traerFuentesObj(){
+  if(!S.ob2) return;
+  for(const g of S.ob2.grupos)
+    for(const it of g.items){
+      // los litros de combustible siempre son naftas + diesel del mes
+      if(/combustible/i.test(it.nombre)&&it.tipo==='num'&&!it.fuenteMeta) it.fuenteMeta='obj.comb';
+      if(/combustible/i.test(it.nombre)&&it.tipo==='num'&&!it.fuente)     it.fuente='playa.total';
+      if(it.fuenteMeta){
+        const m=await valorMeta(it.fuenteMeta,S.ob2.periodo);
+        if(m){ it.objMin=m.min; it.objMax=m.max; it.detalle=m.detalle||''; }
+      }
+      if(!it.fuente) continue;
+      const v=await valorFuente(it.fuente,S.ob2.periodo);
+      if(v!==null) it.resultado=Math.round(v*100)/100;
+    }
+}
+async function guardarObj2(){
+  if(!S.ob2) return;
+  await guardar('objetivos:'+S.ob2.periodo,S.ob2);
+  const idx=await leer('objetivos:indice',[]);
+  if(!idx.includes(S.ob2.periodo)){ idx.push(S.ob2.periodo); idx.sort(); await guardar('objetivos:indice',idx); }
+}
+
 /* ---------- control de comisiones ---------- */
 const OPERARIOS=[{id:'juan',nombre:'Juan Cruz',escala:true},{id:'maxi',nombre:'Maxi',escala:false}];
 const TIPOS_SERV=[{id:'Express',nombre:'Express'},{id:'Completo',nombre:'Completo'},{id:'Premium',nombre:'Premium'}];
@@ -2267,6 +2464,67 @@ async function vistaBoxes(){
   </div>`;
 }
 
+/* ---------- compra de lubricante por trimestre ---------- */
+// caja de 4L: 4 unidades de 4 litros = 16 L · caja de 1L: 12 unidades de 1 litro = 12 L
+const LTS_C4=16, LTS_C1=12;
+const ACEITES=['Auro FE','Auro Plus','Auro D1 530','Auro D1 020','Auro FR 530','Auro FR 540',
+  'Auro DPF','Auro D2 30','MI 15W-40','TS 10W40','FS 530','FS 540','MI 20W-50'];
+// los demás: unidades por caja y centímetros cúbicos por unidad
+const OTROS_LUB=[
+  {n:'Freno T3 200',u:24,cc:200},{n:'Freno T3 500',u:20,cc:500},{n:'Freno T3 1 LT',u:12,cc:1000},
+  {n:'Freno T4 200',u:24,cc:200},{n:'Freno T4 1 LT',u:12,cc:1000},
+  {n:'Kriox 1 LT',u:12,cc:1000},{n:'Lavaparabrisas 1 LT',u:12,cc:1000},
+  {n:'Hidro 1 LT',u:12,cc:1000},{n:'Röd Moto 1 LT',u:12,cc:1000},
+  {n:'2T 1 LT',u:12,cc:1000},{n:'2T 100',u:60,cc:100},{n:'2T 200',u:40,cc:200},
+];
+async function prodLub(){
+  if(!S.prodLub) S.prodLub=await leer('boxes:lubri-productos',{ace:[],otr:[]});
+  S.prodLub.ace=S.prodLub.ace||[]; S.prodLub.otr=S.prodLub.otr||[];
+  if(!S.prodLub.cuenta) S.prodLub.cuenta=['Kriox 1 LT'];   // por defecto solo el refrigerante
+  return S.prodLub;
+}
+const listaAce=()=>[...ACEITES,...((S.prodLub||{}).ace||[])];
+const listaOtr=()=>[...OTROS_LUB,...((S.prodLub||{}).otr||[])];
+const ltsOtro=o=>o.u*o.cc/1000;
+const cuentaOtro=n=>((S.prodLub||{}).cuenta||[]).includes(n);          // litros que trae una caja
+const claveLub=(anio,t)=>`boxes:lubri:${anio}-T${t}`;
+
+function lubVacio(anio,t){
+  return {anio,trim:t,
+    obj:{premium:null,total:null,crm:null},
+    meses:Object.fromEntries(TRIM[t-1].map(m=>[m,{ace:{},otr:{},plan:{premium:null,total:null,crm:null},crm:null}]))};
+}
+async function cargarLub(anio,t){
+  const d=await leer(claveLub(anio,t),null);
+  S.lub=d||lubVacio(anio,t);
+  TRIM[t-1].forEach(m=>{ if(!S.lub.meses[m]) S.lub.meses[m]={ace:{},otr:{},plan:{},crm:null}; });
+}
+// litros de un mes, separando aceite de motor del resto
+function litrosMes(mes){
+  const a=mes.ace||{}, o=mes.otr||{};
+  let c4=0,c1=0;
+  listaAce().forEach(p=>{ c4+=Number((a[p]||{}).c4)||0; c1+=Number((a[p]||{}).c1)||0; });
+  const premium=c4*LTS_C4+c1*LTS_C1;
+  let otros=0, fuera=0, cajasOtr=0;
+  listaOtr().forEach(x=>{ const c=Number(o[x.n])||0; cajasOtr+=c;
+    if(cuentaOtro(x.n)) otros+=c*ltsOtro(x); else fuera+=c*ltsOtro(x); });
+  return {c4,c1,u4:c4*4,u1:c1*12,premium,otros,fuera,cajasOtr,total:premium+otros};
+}
+function litrosTrim(d){
+  const meses=TRIM[d.trim-1];
+  const por=Object.fromEntries(meses.map(m=>[m,litrosMes(d.meses[m]||{})]));
+  const suma=k=>meses.reduce((a,m)=>a+por[m][k],0);
+  return {por,premium:suma('premium'),otros:suma('otros'),fuera:suma('fuera'),total:suma('total'),
+          crm:meses.reduce((a,m)=>a+(Number((d.meses[m]||{}).crm)||0),0)};
+}
+// los litros comprados alimentan el objetivo de lubricante de Boxes
+async function volcarLubriObjetivo(d){
+  const L=await litrosLubri(), t=litrosTrim(d);
+  TRIM[d.trim-1].forEach(m=>{ const ym=`${d.anio}-${m}`; const v=t.por[m].total;
+    if(v) L[ym]=v; else delete L[ym]; });
+  if(await guardar('boxes:lubricante',L)) S.lubri=L;
+}
+
 /* ---------- reportes de servicios de Boxes ---------- */
 const SERVICIOS=[
   {id:'Premium', nombre:'Premium', color:'#22E3F5'},
@@ -2635,6 +2893,149 @@ async function armarYPF(renglones){
     return {...r,upc,origen,litros:p?p.litros:null,unidades,pu,barra:barraYPF(r.cod),
             cierra:unidades?Math.abs(unidades*pu-r.imp)<0.01:false};
   });
+}
+
+async function tabLub(){
+  const hoyA=Number(hoyISO().slice(0,4));
+  await prodLub();
+  if(!S.lub) await cargarLub(String(S.lubAnio||hoyA), S.lubTrim||trimDe(hoyISO().slice(5,7)));
+  const d=S.lub, meses=TRIM[d.trim-1];
+  if(!S.lubMes||meses.indexOf(S.lubMes)<0) S.lubMes=meses[0];
+  const anios=[hoyA-1,hoyA,hoyA+1].map(String);
+  return `<div class="aviso">Cargá las <strong>cajas</strong> que pedís y la app calcula las unidades y los litros. Una caja de 4 L trae 4 unidades de 4 litros (${LTS_C4} L) y una de 1 L trae 12 unidades de 1 litro (${LTS_C1} L). La compra es por trimestre.</div>
+  <div class="filtro">
+    <span class="et">Trimestre</span>
+    <select id="lub-anio">${anios.map(a=>`<option value="${a}"${a===d.anio?' selected':''}>${a}</option>`).join('')}</select>
+    <select id="lub-trim">${[1,2,3,4].map(x=>`<option value="${x}"${x===d.trim?' selected':''}>${ROMANO[x-1]} trimestre</option>`).join('')}</select>
+    <button class="btn sec chico" id="lub-guardar" style="width:auto;margin:0">Guardar</button>
+  </div>
+  <div id="lub-cuerpo">${cuerpoLub()}</div>`;
+}
+
+function cuerpoLub(){
+  const d=S.lub; if(!d) return '';
+  const meses=TRIM[d.trim-1], t=litrosTrim(d), mes=S.lubMes, m=d.meses[mes], L=t.por[mes];
+  const objP=Number(d.obj.premium)||0, objT=Number(d.obj.total)||0, objC=Number(d.obj.crm)||0;
+  const pct=(v,o)=>o?v/o*100:0;
+  const barra=(v,o,rot)=>{
+    const p=Math.min(100,pct(v,o));
+    return `<div class="meta" style="margin-bottom:11px">
+      <div class="mrot"><span>${rot}</span><span class="mpc ${p>=100?'ok':''}">${o?nf(pct(v,o),1)+'%':'—'}</span></div>
+      <div class="mtrack"><i style="width:${p}%;background:${p>=100?'var(--ok)':'var(--cian)'}"></i></div>
+      <div class="mpie">${nf(v)} de ${o?nf(o):'—'} litros${o&&v<o?` · faltan ${nf(o-v)}`:''}</div></div>`;
+  };
+
+  const filasAce=listaAce().map(p=>{
+    const it=m.ace[p]||{}, c4=Number(it.c4)||0, c1=Number(it.c1)||0;
+    const lts=c4*LTS_C4+c1*LTS_C1;
+    return `<tr${lts?'':' style="opacity:.62"'}>
+      <td>${esc(p)}</td>
+      <td><input type="text" inputmode="numeric" class="n" data-lub4="${esc(p)}" value="${c4||''}" placeholder="0" style="width:66px"></td>
+      <td><input type="text" inputmode="numeric" class="n" data-lub1="${esc(p)}" value="${c1||''}" placeholder="0" style="width:66px"></td>
+      <td class="num">${c4?nf(c4*4):'—'}</td><td class="num">${c1?nf(c1*12):'—'}</td>
+      <td class="num"><strong>${lts?nf(lts):'—'}</strong></td>
+      <td>${ACEITES.includes(p)?'':`<button class="borrar" data-lubdelace="${esc(p)}" aria-label="Quitar">×</button>`}</td></tr>`;
+  }).join('');
+
+  const filasOtr=listaOtr().map(o=>{
+    const c=Number(m.otr[o.n])||0, lts=c*ltsOtro(o), cu=cuentaOtro(o.n);
+    return `<tr${c?'':' style="opacity:.62"'}>
+      <td>${esc(o.n)}<small>caja de ${o.u} × ${o.cc} cc = ${nf(ltsOtro(o),1)} L</small></td>
+      <td><label class="marca" style="justify-content:center">
+        <input type="checkbox" data-lubcuenta="${esc(o.n)}"${cu?' checked':''} title="Cuenta para el objetivo"></label></td>
+      <td><input type="text" inputmode="numeric" class="n" data-lubo="${esc(o.n)}" value="${c||''}" placeholder="0" style="width:66px"></td>
+      <td class="num">${c?nf(c*o.u):'—'}</td>
+      <td class="num ${cu?'':'nocumple'}"><strong>${lts?nf(lts,1):'—'}</strong></td>
+      <td>${OTROS_LUB.some(x=>x.n===o.n)?'':`<button class="borrar" data-lubdelotr="${esc(o.n)}" aria-label="Quitar">×</button>`}</td></tr>`;
+  }).join('');
+
+  return `<div class="totem">
+      <div class="totem-cab"><div class="t">${ROMANO[d.trim-1]} trimestre ${d.anio}</div>
+        <div class="d">${meses.map(x=>MESES[Number(x)-1]).join(' · ')}</div></div>
+      <div class="linea-totem"><span class="chip" style="background:var(--cian)"></span>
+        <span class="nom">Aceite de motor</span><span class="guia"></span><span class="val">${nf(t.premium)}<i>L</i></span></div>
+      <div class="linea-totem"><span class="chip" style="background:#9D7CFF"></span>
+        <span class="nom">Resto que cuenta</span><span class="guia"></span><span class="val">${nf(t.otros)}<i>L</i></span></div>
+      ${t.fuera?`<div class="linea-totem" style="opacity:.6"><span class="chip" style="background:#7A8AA8"></span>
+        <span class="nom">No cuenta</span><span class="guia"></span><span class="val">${nf(t.fuera,1)}<i>L</i></span></div>`:''}
+      <div class="totem-total"><span class="nom">Total del trimestre</span><span class="val">${nf(t.total)}<i>L</i></span></div>
+    </div>
+    <div class="tarjeta">
+      <h2>Objetivo del trimestre</h2>
+      <p class="sub">YPF lo pide en M3: <strong>2,43</strong> son 2.430 litros. Escribilo como te lo dan.</p>
+      <div class="rejilla">
+        <div><label for="lub-op">Premium · aceite de motor (M3)</label>
+          <input type="text" inputmode="decimal" class="n" id="lub-op" value="${d.obj.premium??''}" placeholder="2,17"></div>
+        <div><label for="lub-ot">Total (M3)</label>
+          <input type="text" inputmode="decimal" class="n" id="lub-ot" value="${d.obj.total??''}" placeholder="2,43"></div>
+        <div><label for="lub-oc">Cambios CRM</label>
+          <input type="text" inputmode="numeric" class="n" id="lub-oc" value="${d.obj.crm??''}" placeholder="473"></div>
+      </div>
+      ${objP?barra(t.premium,objP*1000,'Aceite de motor'):''}
+      ${objT?barra(t.total,objT*1000,'Total de la línea'):''}
+      ${objC?`<div class="campo"><label>Cambios CRM</label>
+        <strong class="num" style="color:${t.crm>=objC?'var(--ok)':'var(--tinta)'}">${nf(t.crm)} de ${nf(objC)}</strong></div>
+        ${t.crm<objC?`<p class="sub">Faltan ${nf(objC-t.crm)} cambios.</p>`:''}`:''}
+    </div>
+    <div class="subnav" style="margin-bottom:0">${meses.map(x=>
+      `<button data-lubmes="${x}" aria-current="${x===mes}">${MESES_L[Number(x)-1]}</button>`).join('')}</div>
+    <div class="tarjeta">
+      <h2>${MESES_L[Number(mes)-1]} · aceite de motor</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Producto</th><th>Cajas 4 L</th><th>Cajas 1 L</th>
+          <th class="num">Unid. 4 L</th><th class="num">Unid. 1 L</th><th class="num">Litros</th><th></th></tr></thead>
+        <tbody>${filasAce}</tbody>
+        <tfoot><tr class="tot"><td>Total</td><td class="num">${nf(L.c4)}</td><td class="num">${nf(L.c1)}</td>
+          <td class="num">${nf(L.u4)}</td><td class="num">${nf(L.u1)}</td><td class="num">${nf(L.premium)}</td><td></td></tr></tfoot>
+      </table></div>
+      <details${S.lubAddAce?' open':''} id="lub-addace"><summary>Agregar un aceite</summary>
+        <div class="rejilla" style="margin-top:9px">
+          <div class="ancho"><label for="lub-nace">Nombre del producto</label>
+            <input type="text" id="lub-nace" placeholder="Ej: Auro FE 0W20"></div>
+        </div>
+        <button class="btn sec" id="lub-addace-ok">Agregar</button>
+      </details>
+    </div>
+    <div class="tarjeta">
+      <h2>${MESES_L[Number(mes)-1]} · resto de la línea</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Producto</th><th>Cuenta</th><th>Cajas</th><th class="num">Unidades</th><th class="num">Litros</th><th></th></tr></thead>
+        <tbody>${filasOtr}</tbody>
+        <tfoot><tr class="tot"><td>Cuenta para el objetivo</td><td></td><td class="num">${nf(L.cajasOtr)}</td><td></td>
+          <td class="num">${nf(L.otros,1)}</td><td></td></tr></tfoot>
+      </table></div>
+      ${L.fuera?`<p class="sub" style="margin-top:9px">Hay <strong>${nf(L.fuera,1)} litros</strong> de productos que no cuentan para el objetivo. Si alguno tiene que contar, marcalo en la columna <strong>Cuenta</strong>.</p>`:''}
+      <details${S.lubAddOtr?' open':''} id="lub-addotr"><summary>Agregar un producto</summary>
+        <p class="sub" style="margin-top:9px">Poné cuántas unidades trae la caja y de cuánto es cada una.</p>
+        <div class="rejilla">
+          <div><label for="lub-notr">Nombre</label><input type="text" id="lub-notr" placeholder="Ej: Kriox 5 L"></div>
+          <div><label for="lub-uotr">Unidades por caja</label>
+            <input type="text" inputmode="numeric" class="n" id="lub-uotr" placeholder="12"></div>
+          <div><label for="lub-cotr">Cc por unidad</label>
+            <input type="text" inputmode="numeric" class="n" id="lub-cotr" placeholder="1000"></div>
+        </div>
+        <button class="btn sec" id="lub-addotr-ok">Agregar</button>
+      </details>
+      <div class="campo" style="margin-top:11px"><label for="lub-crm">Cambios CRM de ${MESES_L[Number(mes)-1]}</label>
+        <input type="text" inputmode="numeric" class="n" id="lub-crm" value="${m.crm??''}" placeholder="0"></div>
+      <div class="campo"><label><strong>Litros del mes</strong></label>
+        <strong class="num" style="color:var(--cian)">${nf(L.total,1)}</strong></div>
+    </div>
+    <div class="tarjeta">
+      <h2>Mes por mes</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Mes</th><th class="num">Aceite motor</th><th class="num">Resto</th><th class="num">Litros</th><th class="num">Cambios CRM</th></tr></thead>
+        <tbody>${meses.map(x=>{const p=t.por[x];
+          return `<tr${x===mes?' style="background:rgba(34,227,245,.09)"':''}><td>${MESES_L[Number(x)-1]}</td>
+            <td class="num">${nf(p.premium)}</td><td class="num">${nf(p.otros,1)}</td>
+            <td class="num"><strong>${nf(p.total,1)}</strong></td>
+            <td class="num">${nf(Number((d.meses[x]||{}).crm)||0)}</td></tr>`;}).join('')}
+        </tbody>
+        <tfoot><tr class="tot"><td>Trimestre</td><td class="num">${nf(t.premium)}</td><td class="num">${nf(t.otros,1)}</td>
+          <td class="num">${nf(t.total,1)}</td><td class="num">${nf(t.crm)}</td></tr></tfoot>
+      </table></div>
+      <p class="sub" style="margin-top:9px">Estos litros alimentan solos el objetivo de <strong>Lubricante</strong> en Boxes → Objetivos.</p>
+    </div>`;
 }
 
 async function tabBoxes(){
@@ -3363,8 +3764,9 @@ const MENU_ADMIN=[
   ['Facturas',[['facturas','Facturas'],['gastos','Gastos'],['maestro','Maestro Debo'],
                ['convertir','Renova a Debo'],['ypf','YPF lubricantes'],['topaes','Topaes a Debo'],
                ['andreani','Andreani a Debo']]],
-  ['Boxes',[['boxes','Reportes de servicios'],['objboxes','Objetivos'],['precios','Listas de precios']]],
-  ['Sistema',[['cumples','Cumpleaños'],['sync','Sincronización'],['config','Configuración']]]
+  ['Boxes',[['boxes','Reportes de servicios'],['lubricante','Compra de lubricante'],
+             ['objboxes','Objetivos'],['precios','Listas de precios']]],
+  ['Sistema',[['objetivos2','Objetivos v2'],['cumples','Cumpleaños'],['sync','Sincronización'],['config','Configuración']]]
 ];
 const TODAS_TABS=MENU_ADMIN.flatMap(g=>g[1]);
 const rotTab=k=>(TODAS_TABS.find(t=>t[0]===k)||[,k])[1];
@@ -3380,6 +3782,7 @@ async function vistaAdmin(){
   if(S.tab==='objtienda')   c=await tabObjTienda();
   if(S.tab==='combustible') c=await tabCombustible();
   if(S.tab==='boxes')       c=await tabBoxes();
+  if(S.tab==='lubricante')  c=await tabLub();
   if(S.tab==='objboxes')    c=await tabObjBoxes();
   if(S.tab==='precios')     c=await tabPrecios();
   if(S.tab==='maestro')     c=await tabMaestro();
@@ -3393,6 +3796,7 @@ async function vistaAdmin(){
   if(S.tab==='gastos')      c=await tabGastos();
   if(S.tab==='gastos')      c=await tabGastos();
   if(S.tab==='gastos')      c=await tabGastos();
+  if(S.tab==='objetivos2')  c=await tabObj2();
   if(S.tab==='cumples')     c=await tabCumples();
   if(S.tab==='sync')        c=await tabSync();
   if(S.tab==='config')      c=await tabConfig();
@@ -3476,23 +3880,49 @@ async function tabObjetivos(){
   </div>
   <div class="tarjeta">
     <h2>${ROMANO[t-1]} trimestre ${anio}</h2>
-    <p class="sub">El mes que estás editando va resaltado. La fila de abajo es el objetivo que rige hoy: el del último mes cargado, no la suma.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>Mes</th><th class="num">Naftas mín</th><th class="num">Naftas máx</th><th class="num">Diesel mín</th><th class="num">Diesel máx</th><th class="num">Mix mín</th><th class="num">Mix máx</th></tr></thead>
-      <tbody>${meses.map(m=>{
+    <p class="sub">El objetivo se carga acumulado, así que <strong>lo del mes solo</strong> es la diferencia con el mes anterior del trimestre. El mes que estás editando va resaltado.</p>
+    ${['naftas','diesel'].map(met=>{
+      const rot=met==='naftas'?'Volumen naftas':'Volumen diesel';
+      let pMin=0,pMax=0;                       // acumulado del mes previo del trimestre
+      const filas=meses.map(m=>{
         const y=`${anio}-${m}`;
-        const c=v=>v?nf(v):'—';
-        return `<tr${m===mes?' style="background:rgba(34,227,245,.09)"':''}><td>${MESES_L[Number(m)-1]}</td>
-          <td class="num">${c(objV(o,y,'naftas','min'))}</td><td class="num">${c(objV(o,y,'naftas','max'))}</td>
-          <td class="num">${c(objV(o,y,'diesel','min'))}</td><td class="num">${c(objV(o,y,'diesel','max'))}</td>
-          <td class="num">${objV(o,y,'mix','min')?nf(objV(o,y,'mix','min'),1)+'%':'—'}</td>
-          <td class="num">${objV(o,y,'mix','max')?nf(objV(o,y,'mix','max'),1)+'%':'—'}</td></tr>`;}).join('')}
-      </tbody>
-      <tfoot><tr class="tot"><td>Vigente</td>
-        <td class="num">${rN.min?nf(rN.min):'—'}</td><td class="num">${rN.max?nf(rN.max):'—'}</td>
-        <td class="num">${rD.min?nf(rD.min):'—'}</td><td class="num">${rD.max?nf(rD.max):'—'}</td>
-        <td class="num">${rM.min?nf(rM.min,1)+'%':'—'}</td><td class="num">${rM.max?nf(rM.max,1)+'%':'—'}</td></tr></tfoot>
-    </table></div>
+        const aMin=objV(o,y,met,'min'), aMax=objV(o,y,met,'max');
+        const hay=aMin||aMax;
+        const dMin=hay?aMin-pMin:0, dMax=hay?aMax-pMax:0;
+        if(hay){ pMin=aMin; pMax=aMax; }
+        return `<tr${m===mes?' style="background:rgba(34,227,245,.09)"':''}>
+          <td>${MESES_L[Number(m)-1]}</td>
+          <td class="num"><strong>${hay?nf(dMin):'—'}</strong></td>
+          <td class="num"><strong>${hay?nf(dMax):'—'}</strong></td>
+          <td class="num" style="color:var(--tinta-suave)">${aMin?nf(aMin):'—'}</td>
+          <td class="num" style="color:var(--tinta-suave)">${aMax?nf(aMax):'—'}</td></tr>`;
+      }).join('');
+      const v=met==='naftas'?rN:rD;
+      return `<div style="margin-top:13px">
+        <div class="eyebrow">${rot} · litros</div>
+        <div class="scroll"><table>
+          <thead><tr><th>Mes</th><th class="num">Mín del mes</th><th class="num">Máx del mes</th>
+            <th class="num">Mín acum.</th><th class="num">Máx acum.</th></tr></thead>
+          <tbody>${filas}</tbody>
+          <tfoot><tr class="tot"><td>Trimestre</td>
+            <td class="num">${v.min?nf(v.min):'—'}</td><td class="num">${v.max?nf(v.max):'—'}</td>
+            <td class="num">${v.min?nf(v.min):'—'}</td><td class="num">${v.max?nf(v.max):'—'}</td></tr></tfoot>
+        </table></div></div>`;
+    }).join('')}
+    <div style="margin-top:13px">
+      <div class="eyebrow">Mix Infinia · porcentaje</div>
+      <p class="sub" style="margin:4px 0 0">El mix es un porcentaje, así que no se reparte por mes: rige el del último mes cargado.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>Mes</th><th class="num">Mínimo</th><th class="num">Máximo</th></tr></thead>
+        <tbody>${meses.map(m=>{const y=`${anio}-${m}`;
+          return `<tr${m===mes?' style="background:rgba(34,227,245,.09)"':''}><td>${MESES_L[Number(m)-1]}</td>
+            <td class="num">${objV(o,y,'mix','min')?nf(objV(o,y,'mix','min'),1)+'%':'—'}</td>
+            <td class="num">${objV(o,y,'mix','max')?nf(objV(o,y,'mix','max'),1)+'%':'—'}</td></tr>`;}).join('')}
+        </tbody>
+        <tfoot><tr class="tot"><td>Vigente</td>
+          <td class="num">${rM.min?nf(rM.min,1)+'%':'—'}</td>
+          <td class="num">${rM.max?nf(rM.max,1)+'%':'—'}</td></tr></tfoot>
+      </table></div></div>
     <div class="campo" style="margin-top:11px"><label>Vendido naftas</label><strong class="num">${nf(realN)} L</strong></div>
     <div class="campo"><label>Vendido diesel</label><strong class="num">${nf(realD)} L</strong></div>
     <div class="campo"><label>Mix Infinia real</label><strong class="num">${realN?nf(realI/realN*100,1):'0,0'} %</strong></div>
@@ -4210,6 +4640,116 @@ async function tabFacturas(){
   </div>`;
 }
 
+async function tabObj2(){
+  if(!S.ob2) await cargarObj2(hoyISO().slice(0,7));
+  const hoyA=Number(hoyISO().slice(0,4));
+  const anios=[hoyA-2,hoyA-1,hoyA,hoyA+1].map(String);
+  const [pa,pm]=S.ob2.periodo.split('-');
+  return `<div class="filtro">
+      <span class="et">Período</span>
+      <select id="ob2-anio">${anios.map(a=>`<option value="${a}"${a===pa?' selected':''}>${a}</option>`).join('')}</select>
+      <select id="ob2-mes">${MESES_L.map((n,i)=>{const v=String(i+1).padStart(2,'0');
+        return `<option value="${v}"${v===pm?' selected':''}>${n}</option>`;}).join('')}</select>
+      <button class="btn sec chico" id="ob2-editar" style="width:auto;margin:0">${S.ob2Edit?'Listo':'Editar objetivos'}</button>
+      <button class="btn sec chico" id="ob2-traer" style="width:auto;margin:0">Traer de ventas</button>
+      <button class="btn sec chico" id="ob2-csv" style="width:auto;margin:0">Descargar CSV</button>
+    </div>
+    <div id="ob2-cuerpo">${cuerpoObj2()}</div>`;
+}
+
+function cuerpoObj2(){
+  const d=S.ob2; if(!d) return '';
+  const ed=S.ob2Edit;
+  let total=0;
+  const secciones=d.grupos.map(g=>{
+    const c=calcObjGrupo(g); total+=c.total;
+    const filas=c.filas.map(({it,res})=>{
+      const celdaRes = it.tipo==='si'
+        ? `<div class="sino">
+             <button data-obsi="${it.id}" data-v="1" class="${it.resultado===true?'act':''}">Sí</button>
+             <button data-obsi="${it.id}" data-v="0" class="${it.resultado===false?'act':''}">No</button>
+           </div>`
+        : `<input type="text" inputmode="decimal" class="n" data-obres="${it.id}"
+             value="${it.resultado===null||it.resultado===undefined?'':nf(it.resultado,it.tipo==='pct'?1:0)}"
+             ${it.fuente?'readonly title="Sale de las ventas"':''} style="width:104px">`;
+      const ligado=k=>it.fuenteMeta&&(k==='objMin'||k==='objMax');
+      const campo=(k,ancho)=>ed&&!ligado(k)
+        ? `<input type="text" inputmode="decimal" class="n" data-obcampo="${k}" data-obid="${it.id}"
+             value="${it[k]===null||it[k]===undefined||it[k]===''?'':it[k]}" style="width:${ancho}px;max-width:100%">`
+        : `<span class="num">${it[k]===null||it[k]===undefined||it[k]===''?'—'
+            :(k==='objMin'||k==='objMax')
+              ? (it.tipo==='pct'?nf(it[k],1)+'%':it.tipo==='money'?nf(it[k]):nf(it[k]))
+              : nf(it[k])}</span>`;
+      const vacio=it.tipo==='si'?it.resultado===null||it.resultado===undefined
+                                :it.resultado===null||it.resultado===undefined;
+      const estado=vacio?'vacio':res.nivel;                 // max / min / no / vacio
+      const ROT={max:'MÁXIMO',min:'MÍNIMO',no:'NO LLEGA',vacio:'SIN CARGAR'};
+      const clase=res.nivel==='max'?'cumple':(res.nivel==='min'?'ok':'nocumple');
+      return `<tr class="ob-${estado}">
+        <td>${ed
+          ? `<input type="text" data-obcampo="nombre" data-obid="${it.id}" value="${esc(it.nombre)}" style="width:100%;max-width:230px">
+             <div class="fila-ed">
+               <select data-obcampo="tipo" data-obid="${it.id}">
+                 ${Object.entries(TIPOS_OBJ).map(([k,v])=>`<option value="${k}"${it.tipo===k?' selected':''}>${v}</option>`).join('')}
+               </select>
+               <select data-obcampo="fuente" data-obid="${it.id}" title="De dónde sale el resultado">
+                 ${FUENTES_OBJ.map(f=>`<option value="${f.id}"${it.fuente===f.id?' selected':''}>${esc(f.rot)}</option>`).join('')}
+               </select>
+               <select data-obcampo="fuenteMeta" data-obid="${it.id}" title="De dónde salen el mínimo y el máximo">
+                 ${FUENTES_META.map(f=>`<option value="${f.id}"${it.fuenteMeta===f.id?' selected':''}>${esc(f.rot)}</option>`).join('')}
+               </select>
+               <label><input type="checkbox" data-obexc="${it.id}"${it.exc?' checked':''}><small>excl.</small></label>
+             </div>`
+          : `<strong>${esc(it.nombre)}</strong>${it.exc?'<span class="etiq pend" style="margin-left:6px">excluyente</span>':''}
+             ${it.fuente?`<small>${esc((FUENTES_OBJ.find(f=>f.id===it.fuente)||{}).rot||'')}</small>`:''}
+             ${it.fuenteMeta?`<small>${esc((FUENTES_META.find(f=>f.id===it.fuenteMeta)||{}).rot||'')}</small>`:''}
+             ${it.detalle?`<small style="color:var(--cian)">${esc(it.detalle)}</small>`:''}`}</td>
+        <td>${celdaRes}</td>
+        <td>${campo('objMin',82)}</td>
+        <td>${campo('valMin',92)}</td>
+        <td>${campo('objMax',82)}</td>
+        <td>${campo('valMax',92)}</td>
+        <td><span class="ob-chip ${estado}">${ROT[estado]}</span></td>
+        <td class="num ${clase}"><strong>${nf(res.pago)}</strong></td>
+        ${ed?`<td><button class="borrar" data-obdel="${it.id}" aria-label="Quitar">×</button></td>`:''}
+      </tr>`;
+    }).join('');
+    const cuenta={max:0,min:0,no:0,vacio:0};
+    c.filas.forEach(({it,res})=>{
+      const v=it.resultado===null||it.resultado===undefined;
+      cuenta[v?'vacio':res.nivel]++;
+    });
+    return `<div class="tarjeta">
+      <h2>${ed?`<input type="text" data-obgnom="${g.id}" value="${esc(g.nombre)}" style="width:280px">`:esc(g.nombre)}
+        <span style="float:right;color:${c.total?'var(--cian)':'var(--alerta)'}">${nf(c.total)}</span></h2>
+      <div class="ob-resumen">
+        <span class="ob-chip max">${cuenta.max} al máximo</span>
+        <span class="ob-chip min">${cuenta.min} al mínimo</span>
+        <span class="ob-chip no">${cuenta.no} sin llegar</span>
+        <span class="ob-chip vacio">${cuenta.vacio} sin cargar</span>
+      </div>
+      ${c.falla.length?`<div class="aviso mal">No se paga el grupo: falta cumplir <strong>${c.falla.map(esc).join(', ')}</strong> (excluyente). Si se cumpliera, cobraría ${nf(c.bruto)}.</div>`:''}
+      <div class="scroll"><table>
+        <thead><tr><th>Objetivo</th><th>Resultado</th><th class="num">Mínimo</th><th class="num">Valor mín.</th>
+          <th class="num">Máximo</th><th class="num">Valor máx.</th><th>Estado</th><th class="num">A cobrar</th>${ed?'<th></th>':''}</tr></thead>
+        <tbody>${filas}</tbody>
+      </table></div>
+      ${ed?`<button class="btn sec" data-obadd="${g.id}">Agregar objetivo</button>
+            <button class="btn sec" data-obgdel="${g.id}">Quitar el grupo</button>`:''}
+    </div>`;
+  }).join('');
+
+  const ligados=d.grupos.some(g=>g.items.some(it=>it.fuenteMeta));
+  const sinObj=ligados&&d.grupos.some(g=>g.items.some(it=>it.fuenteMeta&&!it.objMin&&!it.objMax));
+  return `${sinObj?`<div class="aviso mal">Hay objetivos que salen de <strong>Combustible → Objetivos</strong> y ese mes todavía no está cargado, por eso quedan en blanco.</div>`:''}
+    <div class="totem">
+      <div class="totem-cab"><div class="t">Total a pagar</div><div class="d">${nombreMes(d.periodo)}</div></div>
+      <div class="totem-total"><span class="nom">Todos los grupos</span><span class="val">${nf(total)}<i>$</i></span></div>
+    </div>
+    ${secciones}
+    ${S.ob2Edit?`<button class="btn sec" id="ob2-grupo">Agregar grupo</button>`:''}`;
+}
+
 async function tabCumples(){
   const lista=await cumples();
   const agenda=await agendaCumples();
@@ -4469,6 +5009,103 @@ function conectar(){
     }catch(e){ S.syncEstado={ok:false,msg:'No se pudo traer: '+((e&&e.message)||'error')}; }
     syb.disabled=false; syb.textContent='Traer lo de la planilla a esta computadora'; await render();
   };
+
+  // ---- compra de lubricante ----
+  // se repinta solo el cuerpo: si redibujara todo, se perdería el foco al tipear
+  const pintarLub=async()=>{ await guardar(claveLub(S.lub.anio,S.lub.trim),S.lub);
+    await volcarLubriObjetivo(S.lub);
+    const c=q('#lub-cuerpo'); if(c){ c.innerHTML=cuerpoLub(); conectar();
+      if(S.lubFoco){ const f=S.lubFoco; S.lubFoco=null;
+        const el=q(`[data-${f.tipo}="${f.prod}"]`);
+        if(el){ el.focus(); el.select(); } } } };
+  const lubA=q('#lub-anio'), lubT=q('#lub-trim');
+  const irLub=async()=>{ S.lubAnio=lubA.value; S.lubTrim=Number(lubT.value); S.lubMes=null;
+    await cargarLub(lubA.value,Number(lubT.value)); await render(); };
+  if(lubA) lubA.onchange=irLub;
+  if(lubT) lubT.onchange=irLub;
+  document.querySelectorAll('#app [data-lubmes]').forEach(b=>b.onclick=()=>{
+    S.lubMes=b.dataset.lubmes; const c=q('#lub-cuerpo'); if(c){ c.innerHTML=cuerpoLub(); conectar(); } });
+  const mesLub=()=>S.lub.meses[S.lubMes];
+  // Tab baja por la misma columna en vez de saltar de una a la otra
+  const colLub=t=>t==='lubo'?listaOtr().map(o=>o.n):listaAce();
+  const guardarCelda=(i,t,p)=>{
+    const v=Math.max(0,Math.round(numero(i.value)))||0, m=mesLub();
+    if(t==='lubo') m.otr[p]=v;
+    else { m.ace[p]=m.ace[p]||{}; m.ace[p][t==='lub4'?'c4':'c1']=v; }
+  };
+  const saltar=(e,t,p)=>{
+    const lista=colLub(t), i=lista.indexOf(p);
+    let dest=e.shiftKey?lista[i-1]:lista[i+1], tipo=t;
+    if(dest===undefined){
+      // al terminar la columna de 4 L sigue por la de 1 L, y al revés
+      if(!e.shiftKey&&t==='lub4'){ tipo='lub1'; dest=lista[0]; }
+      else if(e.shiftKey&&t==='lub1'){ tipo='lub4'; dest=lista[lista.length-1]; }
+      else return false;
+    }
+    S.lubFoco={tipo,prod:dest};
+    return true;
+  };
+  let saltandoLub=false;    // al reemplazar la tabla se dispara otro change que pisaba el foco
+  ['lub4','lub1','lubo'].forEach(t=>{
+    document.querySelectorAll(`#app [data-${t}]`).forEach(i=>{
+      const p=i.dataset[t];
+      i.onchange=async()=>{ if(saltandoLub) return; guardarCelda(i,t,p); await pintarLub(); };
+      i.onkeydown=async e=>{
+        if(e.key!=='Tab'&&e.key!=='Enter') return;
+        e.preventDefault();                       // el salto lo manejamos nosotros
+        saltandoLub=true;
+        saltar({shiftKey:e.key==='Tab'&&e.shiftKey},t,p);
+        guardarCelda(i,t,p);
+        await pintarLub();
+      };
+    });
+  });
+  const guardarProd=async()=>{ await guardar('boxes:lubri-productos',S.prodLub); };
+  const dAce=q('#lub-addace'); if(dAce) dAce.ontoggle=()=>{ S.lubAddAce=dAce.open; };
+  const dOtr=q('#lub-addotr'); if(dOtr) dOtr.ontoggle=()=>{ S.lubAddOtr=dOtr.open; };
+  const addAce=q('#lub-addace-ok');
+  if(addAce) addAce.onclick=async()=>{
+    const n=q('#lub-nace').value.trim();
+    if(!n){ toast('Poné el nombre'); return; }
+    if(listaAce().some(x=>norm(x)===norm(n))){ toast('Ese aceite ya está'); return; }
+    S.prodLub.ace.push(n); await guardarProd(); S.lubAddAce=true;
+    await pintarLub(); toast(n+' agregado');
+  };
+  const addOtr=q('#lub-addotr-ok');
+  if(addOtr) addOtr.onclick=async()=>{
+    const n=q('#lub-notr').value.trim();
+    const u=Math.max(1,Math.round(numero(q('#lub-uotr').value)));
+    const cc=Math.max(1,Math.round(numero(q('#lub-cotr').value)));
+    if(!n){ toast('Poné el nombre'); return; }
+    if(!u||!cc){ toast('Faltan las unidades por caja o los cc'); return; }
+    if(listaOtr().some(x=>norm(x.n)===norm(n))){ toast('Ese producto ya está'); return; }
+    S.prodLub.otr.push({n,u,cc}); await guardarProd(); S.lubAddOtr=true;
+    await pintarLub(); toast(`${n} · ${nf(u*cc/1000,1)} L por caja`);
+  };
+  document.querySelectorAll('#app [data-lubcuenta]').forEach(c=>c.onchange=async()=>{
+    const n=c.dataset.lubcuenta, L=S.prodLub.cuenta;
+    S.prodLub.cuenta = c.checked ? [...new Set([...L,n])] : L.filter(x=>x!==n);
+    await guardarProd(); await pintarLub();
+  });
+  document.querySelectorAll('#app [data-lubdelace]').forEach(b=>b.onclick=async()=>{
+    S.prodLub.ace=S.prodLub.ace.filter(x=>x!==b.dataset.lubdelace);
+    await guardarProd(); await pintarLub(); toast('Quitado');
+  });
+  document.querySelectorAll('#app [data-lubdelotr]').forEach(b=>b.onclick=async()=>{
+    S.prodLub.otr=S.prodLub.otr.filter(x=>x.n!==b.dataset.lubdelotr);
+    await guardarProd(); await pintarLub(); toast('Quitado');
+  });
+  const lubG=q('#lub-guardar');
+  if(lubG) lubG.onclick=async()=>{
+    await guardar(claveLub(S.lub.anio,S.lub.trim),S.lub);
+    await guardarProd(); await volcarLubriObjetivo(S.lub);
+    toast('Compra de lubricante guardada');
+  };
+  const lubCrm=q('#lub-crm');
+  if(lubCrm) lubCrm.onchange=async()=>{ mesLub().crm=Math.max(0,Math.round(numero(lubCrm.value)))||null; await pintarLub(); };
+  [['lub-op','premium'],['lub-ot','total'],['lub-oc','crm']].forEach(([id,k])=>{
+    const e=q('#'+id); if(e) e.onchange=async()=>{ S.lub.obj[k]=e.value.trim()===''?null:numero(e.value); await pintarLub(); };
+  });
 
   // ---- reportes de Boxes ----
   const bxa=q('#bx-arch');
@@ -5346,6 +5983,82 @@ function conectar(){
   const cerrarCump=async()=>{ S.cumplesAbierto=null; await render(); };
   const cc1=document.getElementById('cerrarCump'); if(cc1) cc1.onclick=cerrarCump;
   const cc2=document.getElementById('cerrarCumpX'); if(cc2) cc2.onclick=cerrarCump;
+  // ---- tablero de objetivos v2 ----
+  // se redibuja solo el tablero, no toda la página: si no, se pierde el foco al escribir
+  const pintarOb2=()=>{ const c=q('#ob2-cuerpo'); if(c){ c.innerHTML=cuerpoObj2(); conectar(); } };
+  const buscarOb=id=>{ for(const g of S.ob2.grupos){ const it=g.items.find(x=>x.id===id); if(it) return {g,it}; } return null; };
+
+  const obA=q('#ob2-anio'), obM=q('#ob2-mes');
+  const irPeriodo=async()=>{ await cargarObj2(`${obA.value}-${obM.value}`); await render(); };
+  if(obA) obA.onchange=irPeriodo;
+  if(obM) obM.onchange=irPeriodo;
+  const obEd=q('#ob2-editar');
+  if(obEd) obEd.onclick=async()=>{ S.ob2Edit=!S.ob2Edit; await render(); };
+  const obTr=q('#ob2-traer');
+  if(obTr) obTr.onclick=async()=>{
+    await traerFuentesObj(); await guardarObj2(); pintarOb2();
+    toast('Resultados traídos de las ventas');
+  };
+  const obGr=q('#ob2-grupo');
+  if(obGr) obGr.onclick=async()=>{
+    S.ob2.grupos.push({id:uid2(),nombre:'Nuevo grupo',items:[mObj('Nuevo objetivo','num',null,null,null,null)]});
+    await guardarObj2(); pintarOb2();
+  };
+  document.querySelectorAll('#app [data-obres]').forEach(i=>i.onchange=async()=>{
+    buscarOb(i.dataset.obres).it.resultado=i.value.trim()===''?null:numero(i.value);
+    await guardarObj2(); pintarOb2();
+  });
+  document.querySelectorAll('#app [data-obsi]').forEach(b=>b.onclick=async()=>{
+    const it=buscarOb(b.dataset.obsi).it, v=b.dataset.v==='1';
+    it.resultado = it.resultado===v ? null : v;
+    await guardarObj2(); pintarOb2();
+  });
+  document.querySelectorAll('#app [data-obcampo]').forEach(i=>i.onchange=async()=>{
+    const {it}=buscarOb(i.dataset.obid), k=i.dataset.obcampo;
+    if(k==='nombre'||k==='tipo'||k==='fuente'||k==='fuenteMeta'){
+      it[k]=i.value;
+      if(k==='tipo'&&i.value==='si') it.resultado=null;
+      if(k==='fuente'&&i.value){ const v=await valorFuente(i.value,S.ob2.periodo); if(v!==null) it.resultado=Math.round(v*100)/100; }
+      if(k==='fuenteMeta'){ it.detalle='';
+        if(i.value){ const m=await valorMeta(i.value,S.ob2.periodo); if(m){ it.objMin=m.min; it.objMax=m.max; it.detalle=m.detalle||''; } } }
+    } else it[k]=i.value.trim()===''?null:numero(i.value);
+    await guardarObj2(); pintarOb2();
+  });
+  document.querySelectorAll('#app [data-obexc]').forEach(c=>c.onchange=async()=>{
+    buscarOb(c.dataset.obexc).it.exc=c.checked; await guardarObj2(); pintarOb2();
+  });
+  document.querySelectorAll('#app [data-obgnom]').forEach(i=>i.onchange=async()=>{
+    S.ob2.grupos.find(g=>g.id===i.dataset.obgnom).nombre=i.value; await guardarObj2();
+  });
+  document.querySelectorAll('#app [data-obadd]').forEach(b=>b.onclick=async()=>{
+    S.ob2.grupos.find(g=>g.id===b.dataset.obadd).items.push(mObj('Nuevo objetivo','num',null,null,null,null));
+    await guardarObj2(); pintarOb2();
+  });
+  document.querySelectorAll('#app [data-obdel]').forEach(b=>b.onclick=async()=>{
+    const {g,it}=buscarOb(b.dataset.obdel); g.items=g.items.filter(x=>x!==it);
+    await guardarObj2(); pintarOb2();
+  });
+  document.querySelectorAll('#app [data-obgdel]').forEach(b=>b.onclick=async()=>{
+    S.ob2.grupos=S.ob2.grupos.filter(g=>g.id!==b.dataset.obgdel);
+    await guardarObj2(); pintarOb2();
+  });
+  const obCsv=q('#ob2-csv');
+  if(obCsv) obCsv.onclick=()=>{
+    const filas=[['Grupo','Objetivo','Resultado','Minimo','Valor minimo','Maximo','Valor maximo','A cobrar','Excluyente']];
+    S.ob2.grupos.forEach(g=>{
+      const c=calcObjGrupo(g);
+      c.filas.forEach(({it,res})=>filas.push([g.nombre,it.nombre,
+        it.tipo==='si'?(it.resultado===true?'Si':it.resultado===false?'No':''):(it.resultado??''),
+        it.objMin??'',it.valMin??'',it.objMax??'',it.valMax??'',c.falla.length?0:res.pago,it.exc?'Si':'']));
+      filas.push([g.nombre,'TOTAL GRUPO','','','','','',c.total,'']);
+    });
+    const csv=filas.map(f=>f.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
+    a.download=`objetivos-${S.ob2.periodo}.csv`; a.click();
+    toast('CSV descargado');
+  };
+
   const cua=q('#cu-agregar');
   if(cua) cua.onclick=async()=>{
     const nom=q('#cu-nom').value.trim(), ape=q('#cu-ape').value.trim(), nac=q('#cu-nac').value;
