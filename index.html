@@ -13,6 +13,54 @@ body{overscroll-behavior:none}
   --cian:#22E3F5; --cian-suave:#8FF0FB; --violeta:#9D7CFF; --violeta-2:#6D4BE0;
   --ambar:#22E3F5; --alerta:#FF6B85; --ok:#3DE0A0; --r:3px;
 }
+
+/* temas de color: cambian las variables y todo el panel acompaña */
+#app[data-tema="suave"]{
+  --concreto:#0F1520; --panel:#18202E; --panel-2:#1F293A;
+  --petroleo:#16233C; --petroleo-2:#101827;
+  --tinta:#EDF2FA; --tinta-suave:#9DAECA;
+  --linea:#2C3A56; --linea-2:#243046;
+  --cian:#4FD8E8; --cian-suave:#A6ECF5; --violeta:#A98FFF; --violeta-2:#7A5CE6;
+  --ambar:#4FD8E8; --alerta:#FF8296; --ok:#5CE0B0;
+}
+#app[data-tema="ypf"]{
+  --concreto:#14213D; --panel:#1D3159; --panel-2:#24457C;
+  --petroleo:#1B2E52; --petroleo-2:#152443;
+  --tinta:#FFFFFF; --tinta-suave:#A8BDDD;
+  --linea:#2F5290; --linea-2:#26406E;
+  --cian:#3E9BEA; --cian-suave:#8CC6F5; --violeta:#8FB4E8; --violeta-2:#0062BD;
+  --ambar:#3E9BEA; --alerta:#FF8296; --ok:#4FD69B;
+}
+#app[data-tema="claro"]{
+  --concreto:#EEF2F8; --panel:#FFFFFF; --panel-2:#F3F6FB;
+  --petroleo:#E4EBF5; --petroleo-2:#D9E2F0;
+  --tinta:#16233C; --tinta-suave:#5B6B87;
+  --linea:#C9D5E6; --linea-2:#DDE5F0;
+  --cian:#0F7FA8; --cian-suave:#3AA5C9; --violeta:#6D4BE0; --violeta-2:#5638C4;
+  --ambar:#B26A00; --alerta:#C62E4B; --ok:#1B8A5F;
+}
+#app[data-tema="claro"]{background-image:none}
+#app[data-tema="claro"] .barra{background:var(--panel);border-bottom:1px solid var(--linea)}
+#app[data-tema="claro"] .nav button[aria-current="true"]{color:var(--cian)}
+#app[data-tema="claro"] input,#app[data-tema="claro"] select,#app[data-tema="claro"] textarea{
+  background:#fff;color:var(--tinta);border-color:var(--linea)}
+#app[data-tema="claro"] .totem{background:var(--panel)}
+#app[data-tema="claro"] .sino button{background:var(--panel-2)}
+#app[data-tema="claro"] .aviso{background:#E2F1F7;color:#0C3B4C}
+#app[data-tema="claro"] .aviso.mal{background:#FBE4E9;color:#6E1226}
+#app[data-tema="claro"] .aviso.bien{background:#DFF3EA;color:#0C4433}
+#app[data-tema="claro"] .aviso strong{color:inherit}
+#app[data-tema="claro"] .marco,#app[data-tema="claro"] .tarjeta{box-shadow:0 1px 2px rgba(20,35,60,.07)}
+#app[data-tema="claro"] .mtit,#app[data-tema="claro"] .lateral{background:var(--panel)}
+#app[data-tema="claro"] .mgrupo button[aria-current="true"],
+#app[data-tema="claro"] .lateral button[aria-current="true"]{background:#E2F1F7;color:#0C3B4C}
+#app[data-tema="claro"] .subnav button[aria-current="true"]{background:var(--cian);color:#fff}
+#app[data-tema="claro"] .btn{color:#fff}
+#app[data-tema="claro"] .btn.sec{background:var(--panel-2);color:var(--tinta)}
+#app[data-tema="claro"] table th{color:var(--tinta-suave)}
+#app[data-tema="claro"] .totem,#app[data-tema="claro"] .pista{background:var(--panel-2)}
+#app[data-tema="claro"] .ob-chip.vacio{color:#5B6B87}
+#app[data-tema="claro"] .lb-trim button{background:var(--panel-2)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 #app{background:var(--concreto);color:var(--tinta);font-family:'Archivo',system-ui,sans-serif;
   font-size:15px;line-height:1.45;min-height:100vh;padding-bottom:60px;margin:0;
@@ -420,6 +468,121 @@ table.mix tr:nth-child(odd) td{background:rgba(255,255,255,.025)}
 .item .t2{font-size:12px;color:var(--tinta-suave);font-family:'IBM Plex Mono',monospace;margin-top:1px}
 .item .der{text-align:right;flex:0 0 auto}
 .borrar{background:transparent;border:0;color:var(--tinta-suave);cursor:pointer;font-size:16px;padding:2px 5px;line-height:1}
+.libre-ancho{max-width:none;padding:0 16px}
+.ypf-hoja{background:#24457C;border-radius:var(--r);overflow:hidden;color:#fff;
+  font-family:'Barlow Condensed',sans-serif;margin-bottom:14px}
+.ypf-tope{display:flex;align-items:center;gap:18px;padding:16px 18px;position:relative;flex-wrap:wrap}
+.ypf-logo{background:#0063BD;color:#fff;font-weight:800;font-size:30px;letter-spacing:.06em;
+  padding:5px 17px;border-radius:3px}
+.ypf-tit{font-size:23px;font-weight:600;flex:1;min-width:150px}
+.ypf-rot{font-size:17px;letter-spacing:.1em;text-align:right;line-height:1.15;opacity:.95;padding-right:44px}
+.ypf-lapiz{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;
+  font-size:16px;cursor:pointer;line-height:1}
+.ypf-lapiz:hover{background:rgba(255,255,255,.28)}
+.ypf-lapiz.act{background:#0063BD;border-color:#fff}
+.ypf-cuerpo{display:grid;grid-template-columns:1fr;gap:18px;padding:0 18px 20px}
+@media(min-width:900px){.ypf-cuerpo{grid-template-columns:300px minmax(0,1fr)}}
+.ypf-cond h3{font-size:14px;text-decoration:underline;margin:0 0 9px;font-weight:700}
+.ypf-cond ul{list-style:none;padding:0;margin:0;font-size:12.5px;line-height:1.4}
+.ypf-cond li{margin-bottom:7px;padding-left:13px;position:relative}
+.ypf-cond li::before{content:'●';position:absolute;left:0;font-size:9px;top:3px}
+.ypf-t{width:100%;border-collapse:separate;border-spacing:3px;font-size:13.5px}
+.ypf-t th{background:#0062BD;color:#fff;font-weight:600;font-size:12px;padding:6px 6px;
+  text-align:center;border:1px solid #0D6ABE;white-space:nowrap}
+.ypf-t td{background:#24457C;border:1px solid #0D6ABE;padding:7px 7px;text-align:center;
+  color:#fff;font-size:15px;white-space:nowrap}
+.ypf-t td.lb-con{text-align:left;font-size:13.5px;white-space:normal;min-width:180px}
+  .ypf-t td.lb-fec{font-size:10.5px;white-space:nowrap;background:transparent;border:0;color:#dbe6f7;font-style:italic}
+.ypf-t th.lb-fech{background:transparent;border:0;font-style:italic;font-weight:400;
+  white-space:normal;width:74px;font-size:10.5px;line-height:1.15}
+.ypf-t th{white-space:normal}
+.lb-sub-t{font-size:10.5px;opacity:.85}
+.ypf-t td.lb-auto{background:transparent;border:0;width:20px;padding:0 2px}
+.ypf-t th.lb-autoh{background:transparent;border:0;font-size:8.5px;font-weight:400;width:20px;
+  letter-spacing:0;opacity:.75;padding:3px 0}
+.lb-pto{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid rgba(255,255,255,.55)}
+.lb-pto.si{background:#3DE0A0}
+.lb-pto.no{background:#FF6B85}
+.ypf-t tfoot td{background:transparent;border:0;padding:13px 7px 0;text-align:center;vertical-align:top}
+.ypf-t tfoot span{display:block;font-size:22px;font-weight:600;line-height:1.1}
+.ypf-t tfoot small{display:block;font-size:11px;opacity:.9}
+.lb-in{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.45);color:#fff;
+  border-radius:2px;padding:4px 6px;font-size:14px;text-align:center;font-family:inherit;width:100%}
+.lb-in:focus{outline:none;border-color:#fff;background:rgba(255,255,255,.22)}
+.lb-txt{text-align:left}
+.lb-sub{margin-top:3px;font-size:11px}
+.lb-area{width:100%;text-align:left;font-size:12px;resize:vertical}
+.lb-trim{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 9px}
+.lb-trim .et{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta-suave)}
+.lb-trim select{width:auto;padding:4px 8px;font-size:12px}
+.lb-trim button{background:var(--panel-2);border:1px solid var(--linea);color:var(--tinta-suave);
+  padding:4px 11px;font-size:12px;border-radius:2px;cursor:pointer;font-weight:600}
+.lb-trim button:hover{border-color:var(--cian)}
+.lb-trim button.act{background:#0062BD;border-color:#0062BD;color:#fff}
+.lb-trim button.mes{font-weight:500;letter-spacing:.03em}
+.lb-sep{width:1px;height:19px;background:var(--linea);margin:0 3px}
+.lb-vmes{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:12px;
+  font-family:'IBM Plex Mono',monospace;color:var(--tinta);background:var(--panel);
+  border:1px solid var(--linea-2);border-radius:var(--r);padding:5px 11px;white-space:nowrap}
+.lb-vmes b{font-family:'Barlow Condensed',sans-serif;font-size:13px;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--cian)}
+.lb-vmes i{font-style:normal;font-size:10px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--tinta-suave);margin-left:5px}
+.lb-vmes u{text-decoration:none;font-size:14px;font-weight:600;color:var(--cian)}
+.lb-vmes.vacio{color:var(--tinta-suave);font-size:11.5px}
+@media(max-width:900px){.lb-vmes{margin-left:0;width:100%;flex-wrap:wrap;white-space:normal}}
+.lb-trim small{font-size:11px;color:var(--tinta-suave)}
+/* tarjetas plegables y elección de rubros */
+details.tarjeta.plega{padding:0}
+details.tarjeta.plega>summary{list-style:none;cursor:pointer;padding:13px 15px;display:flex;
+  align-items:center;gap:9px}
+details.tarjeta.plega>summary::-webkit-details-marker{display:none}
+details.tarjeta.plega>summary:hover{background:var(--panel-2)}
+details.tarjeta.plega>summary h2{margin:0;border:0;padding:0}
+details.tarjeta.plega[open]>summary .lb-flecha{transform:rotate(90deg)}
+details.tarjeta.plega>*:not(summary){padding-left:15px;padding-right:15px}
+details.tarjeta.plega>*:last-child{padding-bottom:14px}
+.lapiz-min{float:right;width:26px;height:26px;border-radius:50%;background:var(--panel-2);
+  border:1px solid var(--linea);color:var(--tinta-suave);cursor:pointer;font-size:13px;line-height:1}
+.lapiz-min:hover{border-color:var(--cian);color:var(--cian)}
+.lapiz-min.act{background:var(--cian);color:#04121a;border-color:var(--cian)}
+.rub-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:5px;margin:9px 0}
+.rub-item{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:4px 6px;
+  border-radius:2px}
+.rub-item:hover{background:var(--panel-2)}
+.rub-item input{width:15px;height:15px;accent-color:var(--cian)}
+.rub-item .chip{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.lb-plega{background:var(--panel);border:1px solid var(--linea-2);border-radius:var(--r);margin:0 0 10px}
+.lb-plega>summary{list-style:none;cursor:pointer;padding:9px 13px;display:flex;align-items:center;gap:9px;
+  font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
+.lb-plega>summary::-webkit-details-marker{display:none}
+.lb-plega>summary:hover{background:var(--panel-2)}
+.lb-plega>summary strong{font-size:14px;text-transform:uppercase;color:var(--cian)}
+.lb-plega>summary small{color:var(--tinta-suave);font-size:12px;margin-left:auto}
+.lb-flecha{color:var(--tinta-suave);transition:transform .15s;display:inline-block;font-size:12px}
+.lb-plega[open] .lb-flecha{transform:rotate(90deg)}
+.lb-plega .lb-datos{margin:0;padding:0 11px 12px}
+.lb-datos{display:grid;grid-template-columns:1fr;gap:14px;margin:0 0 10px}
+@media(min-width:760px){.lb-datos{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}}
+.lb-col{background:var(--panel);border:1px solid var(--linea-2);border-radius:var(--r);padding:11px 13px}
+.lb-mini{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.lb-mini th{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta-suave);
+  font-weight:600;padding:3px 5px;text-align:left;border-bottom:1px solid var(--linea)}
+.lb-mini th.num,.lb-mini td.num{text-align:right}
+.lb-mini td{padding:3px 5px;border-bottom:1px solid var(--linea)}
+.lb-mini tfoot td{font-weight:700;color:var(--cian);border-bottom:0}
+.lb-cmp{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px}
+.lb-cmp div{background:var(--panel-2);border:1px solid var(--linea);border-radius:2px;padding:5px 9px;font-size:11px}
+.lb-cmp span{display:block;color:var(--tinta-suave);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.lb-cmp b{font-size:14px;font-family:'IBM Plex Mono',monospace}
+.lb-cmp b.ok{color:var(--ok)}
+.lb-cmp small{display:block;color:var(--tinta-suave);font-size:10px}
+.lb-mano{list-style:none;padding:0;margin:6px 0 0;font-size:12px}
+.lb-mano li{display:flex;justify-content:space-between;gap:9px;padding:4px 0;border-bottom:1px solid var(--linea)}
+.lb-mano b{font-family:'IBM Plex Mono',monospace}
+.lb-mano b.falta{color:var(--alerta);font-weight:600;font-size:11px}
+.lb-x{background:none;border:0;color:#FF9CAC;font-size:19px;cursor:pointer;line-height:1}
 .ob-chip{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;
   letter-spacing:.09em;font-family:'IBM Plex Mono',monospace;white-space:nowrap;border:1px solid}
 .ob-chip.max{background:rgba(61,224,160,.16);color:#6CF0BE;border-color:rgba(61,224,160,.5)}
@@ -437,6 +600,16 @@ tr.ob-no td:not(:first-child),tr.ob-vacio td:not(:first-child){box-shadow:none}
 .fila-ed select{width:auto;font-size:11.5px;padding:4px 6px}
 .fila-ed label{display:inline-flex;gap:4px;align-items:center;cursor:pointer;color:var(--tinta-suave)}
 .fila-ed input[type=checkbox]{width:14px;height:14px;accent-color:var(--cian)}
+.temas{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:9px}
+.tema{background:var(--panel-2);border:1px solid var(--linea);border-radius:var(--r);
+  padding:11px;cursor:pointer;text-align:left;color:var(--tinta)}
+.tema:hover{border-color:var(--cian)}
+.tema.act{border-color:var(--cian);box-shadow:inset 0 0 22px rgba(34,227,245,.10)}
+.tema strong{display:block;font-family:'Barlow Condensed',sans-serif;font-size:15px;
+  letter-spacing:.05em;text-transform:uppercase}
+.tema small{display:block;color:var(--tinta-suave);font-size:11.5px}
+.muestra{display:flex;gap:3px;margin-bottom:7px}
+.muestra i{width:22px;height:16px;border-radius:2px;border:1px solid rgba(255,255,255,.16)}
 .sino{display:flex;gap:5px}
 .sino button{padding:5px 12px;background:var(--panel-2);border:1px solid var(--linea);color:var(--tinta-suave);
   cursor:pointer;font-size:12px;border-radius:2px}
@@ -509,6 +682,40 @@ details[open] summary::after{content:'–'}
 }
 @keyframes sube{from{opacity:0;transform:translate(-50%,9px)}to{opacity:1;transform:translate(-50%,0)}}
 @media(min-width:620px){ .envoltorio{padding:18px 16px 0} .rejilla{grid-template-columns:1fr 1fr 1fr} }
+
+/* al imprimir sale solo el recuadro de YPF, con sus colores */
+@media print{
+  html,body{background:#fff !important}
+  body>*:not(#app){display:none !important}
+  #app{background:#fff !important}
+  #app>*:not(.envoltorio){display:none !important}
+  .envoltorio.libre-ancho{padding:0;max-width:none}
+  .envoltorio.libre-ancho>*:not(.ypf-hoja){display:none !important}
+  .ypf-hoja{border-radius:0;margin:0;box-shadow:none;width:100%}
+  .ypf-hoja,.ypf-hoja *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ypf-lapiz{display:none !important}
+  .ypf-tope{padding:9px 10px;gap:10px}
+  .ypf-logo{font-size:21px;padding:3px 11px}
+  .ypf-tit{font-size:16px}
+  .ypf-rot{font-size:12px;padding-right:0}
+  .ypf-cuerpo{grid-template-columns:210px minmax(0,1fr) !important;gap:10px;padding:0 10px 12px}
+  .ypf-cond h3{font-size:10px;margin-bottom:5px}
+  .ypf-cond ul{font-size:8px;line-height:1.28}
+  .ypf-cond li{margin-bottom:4px;padding-left:8px}
+  .ypf-t{border-spacing:2px;table-layout:fixed;width:100%}
+  .ypf-t th{font-size:7.5px;padding:3px 2px;white-space:normal;line-height:1.15}
+  .ypf-t td{font-size:9.5px;padding:4px 2px;white-space:normal}
+  .ypf-t td.lb-con{font-size:8.5px;min-width:0;padding-left:5px}
+  .lb-sub-t{font-size:7px}
+  .ypf-t td.lb-fec,.ypf-t th.lb-fech{font-size:7px}
+  .lb-pto{width:8px;height:8px}
+  .ypf-t td.lb-auto,.ypf-t th.lb-autoh{width:22px}
+  .ypf-t tfoot td{padding:9px 4px 0}
+  .ypf-t tfoot span{font-size:15px}
+  .ypf-t tfoot small{font-size:7.5px}
+  .scroll{overflow:visible !important}
+  @page{size:landscape;margin:7mm}
+}
 </style>
 
 <div id="app"><div class="vacio" style="padding-top:60px">Abriendo el panel…</div></div>
@@ -597,6 +804,7 @@ const SEMILLA={"ops":{"ops:playa:2025-01":{"01":{"T1":{"prod":{"sup":327.86,"d50
 const S={
   cfg:null, vista:'playa', sub:'mes', tab:'importar', abierto:false, cargando:true,
   mes:hoyISO().slice(0,7), cmpAnio:null, cmpMes:'todos', filtro:{}, filtroCorrido:false,
+  rubVer:null, rubEdit:false, plegado:{},
   cargaSec:'playa', cargaFecha:hoyISO(), cargaTurno:'T1', borrador:null,
   previa:null, ops:{}, roll:{}, admin:{}, errorUlt:null, diag:null, adjunto:null, grafDatos:[], turDatos:[],
   facSec:'boxes', facProv:'todos', menuAbierto:false, grupoAbierto:undefined,
@@ -604,7 +812,7 @@ const S={
   maestro:null, previaMaestro:null, mBusca:'', mSoloFalta:false, conv:null,
   gasMes:null, contactos:null, facSel:{}, facMes:'todos', avisoAbierto:false,
   diasAbiertos:{}, ctrl:null, ctrlMes:null, ctrlAbierto:false, ctrlEdit:null, top:null, bx:{}, bxRoll:null, previaBoxes:null, bxmAnio:null, bxmMes:null,
-  lub:null, lubMes:null, lubFoco:null, prodLub:null, lubAddAce:false, lubAddOtr:false, lubAnio:null, lubTrim:null, lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
+  libreDatosAbierto:false, libre:null, libreClave:null, libreAnio:null, libreTrim:null, libreMes:null, libreEdit:false, libreOk:false, lub:null, lubMes:null, lubFoco:null, prodLub:null, lubAddAce:false, lubAddOtr:false, lubAnio:null, lubTrim:null, lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
 };
 
 /* ---------- almacenamiento ---------- */
@@ -621,6 +829,11 @@ const Alm=(()=>{
       if(ws){ const r=await ws.get(k); return r&&r.value!=null?r.value:null; }
       if(ls) return ls.getItem(P+k);
       return k in mem?mem[k]:null;
+    },
+    async del(k){
+      if(ws&&typeof ws.delete==='function'){ try{ await ws.delete(k); }catch(e){} return true; }
+      if(ls){ ls.removeItem(P+k); return true; }
+      delete mem[k]; return true;
     },
     async set(k,txt){
       if(ws){ const r=await ws.set(k,txt); if(!r) throw new Error('el almacén no confirmó la escritura'); return true; }
@@ -823,6 +1036,17 @@ async function guardar(k,v,intentos=3){
   console.error('guardar',k,ult);
   return false;
 }
+// borrar una clave: la deja vacía y avisa a la sincronización
+async function borrar(k){
+  try{ if(Alm.del) await Alm.del(k); else await Alm.set(k,JSON.stringify(null)); }
+  catch(e){ try{ await Alm.set(k,JSON.stringify(null)); }catch(_){ return false; } }
+  Sync.anotar(k);
+  delete S.ops[k];
+  return true;
+}
+// nombres propios y pestañas ocultas, configurables desde Sistema → Configuración
+const rot=(k,def)=>((S.cfg.rotulos||{})[k]||def);
+const oculta=k=>((S.cfg.ocultas||[])).includes(k);
 const claveOps=(s,m)=>`ops:${s}:${m}`;
 async function ops(s,m){ const k=claveOps(s,m); if(!S.ops[k]) S.ops[k]=await leer(k,{}); return S.ops[k]; }
 async function roll(s){ if(!S.roll[s]) S.roll[s]=await leer(`roll:${s}`,{}); return S.roll[s]; }
@@ -1002,7 +1226,9 @@ function arrancarCartel(){
 /* ---------- barra ---------- */
 function barra(){
   const f=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
-  const nav=[['playa','Playa'],['tienda','Tienda Full'],['boxes','Boxes'],['admin','Administración']];
+  const nav=[['playa','Playa'],['tienda','Tienda Full'],['boxes','Boxes'],['admin','Administración'],['libre','Libre']]
+    .filter(([k])=>!oculta('nav/'+k)).map(([k,t])=>[k,rot('nav/'+k,t)]);
+  if(nav.length&&!nav.some(([k])=>k===S.vista)) S.vista=nav[0][0];
   return `<div class="top"><div class="top-fila">
       <div class="marca cond">${esc(S.cfg.estacion)}<span>.</span></div>
       <div class="fecha-hoy"><span class="fecha-linea">${f}<span class="chip-sync ${(S.syncFlag||{}).estado||'off'}" id="chipSync"
@@ -1026,8 +1252,18 @@ function totem(titulo,det,filas,total,unidad,vacio){
 
 /* ---------- consulta por mes (sin carga) ---------- */
 async function vistaMes(sec){
-  const cfg=S.cfg, turnos=cfg.turnos[sec], u=UNIDAD[sec], g=grupoDe(sec), lista=listaDe(sec);
+  const cfg=S.cfg, turnos=cfg.turnos[sec], u=UNIDAD[sec], g=grupoDe(sec);
   const porRubro=sec==='tienda';
+  let lista=listaDe(sec);
+  // en tienda se puede elegir qué rubros mirar, porque son muchos
+  if(porRubro&&!S.rubVer) S.rubVer=await leer('tienda:rubros-ver',null);
+  // los combos se eligen igual que los rubros
+  const verRub=id=>!porRubro||!S.rubVer||!S.rubVer.length||S.rubVer.includes(id);
+  if(porRubro&&S.rubVer&&S.rubVer.length) lista=lista.filter(p=>verRub(p.id));
+  const todosRub=porRubro
+    ? [...listaDe(sec),...TIPOS_COMBO.map(t=>({id:'cb-'+t.id,nombre:t.nombre,color:t.color}))]
+    : listaDe(sec);
+  const edRub=porRubro&&S.rubEdit;
   const serieCombos=porRubro?combosPorDia(await cortesCombos()):{};                       // en tienda no se suman rubros distintos
   const r=await roll(sec);
   const todos=Object.keys(r).sort();
@@ -1092,13 +1328,25 @@ async function vistaMes(sec){
   }
 
   /* --- encabezado: en tienda, un tótem por rubro en lugar de un total --- */
+  const panelRubros = porRubro?`<div class="tarjeta" style="margin-bottom:14px">
+      <h2>Qué rubros mostrar
+        <button class="lapiz-min${edRub?' act':''}" id="rub-editar"
+          title="${edRub?'Listo':'Elegir rubros · pide clave'}" aria-label="Elegir rubros">${edRub?'✓':'✎'}</button></h2>
+      ${edRub?`<p class="sub">Destildá los que no querés ver. Se aplica al tótem, al detalle por turno y al día por día.</p>
+        <div class="rub-lista">${todosRub.map(p=>{
+          const v=!S.rubVer||!S.rubVer.length||S.rubVer.includes(p.id);
+          return `<label class="rub-item"><input type="checkbox" data-rubver="${p.id}"${v?' checked':''}>
+            <span class="chip" style="background:${p.color}"></span>${esc(p.nombre)}</label>`;}).join('')}</div>
+        <button class="btn sec chico" id="rub-todos" style="width:auto">Mostrar todos</button>`
+       :`<p class="sub">${lista.length} de ${todosRub.length} rubros a la vista. Tocá el lápiz para cambiarlo${S.libreOk?'':' (pide clave)'}.</p>`}
+    </div>`:'';
   const cabecera = porRubro
     ? `<div class="totem">
         <div class="totem-cab"><div class="t">Tienda Full · unidades por rubro</div><div class="d">${esc(rotulo)}</div></div>
         ${lista.map(p=>`<div class="linea-totem"><span class="chip" style="background:${p.color}"></span>
           <span class="nom">${esc(p.nombre)}</span><span class="guia"></span>
           <span class="val">${nf(porProd[p.id]||0)}<i>u</i></span></div>`).join('')}
-        ${TIPOS_COMBO.map(t=>`<div class="linea-totem"><span class="chip" style="background:${t.color}"></span>
+        ${TIPOS_COMBO.filter(t=>verRub('cb-'+t.id)).map(t=>`<div class="linea-totem"><span class="chip" style="background:${t.color}"></span>
           <span class="nom">${t.nombre}</span><span class="guia"></span>
           <span class="val">${nf(cbMes[t.id])}<i>u</i></span></div>`).join('')}
         <div class="totem-total"><span class="nom">Tickets</span><span class="val">${nf(tickets)}<i>tk</i></span></div>
@@ -1107,29 +1355,27 @@ async function vistaMes(sec){
         lista.map(p=>({nombre:p.nombre,valor:porProd[p.id]||0,color:p.color})),total,u,'');
 
   /* --- por turno: en tienda, rubro por rubro y turno por turno --- */
+  const plega=(id,titulo,sub,cuerpo)=>`<details class="tarjeta plega"${S.plegado[id]?'':' open'} data-plega="${id}">
+      <summary><span class="lb-flecha">▸</span><h2>${titulo}</h2></summary>
+      ${sub?`<p class="sub">${sub}</p>`:''}${cuerpo}</details>`;
   const tarjetaCombos = porRubro&&(cbMes.comida||cbMes.cafe)
-    ? `<div class="tarjeta">
-        <h2>Combos</h2>
-        <p class="sub">Vendidos en ${esc(rotulo.toLowerCase())}. Salen del reporte acumulado, así que no tienen turno.</p>
-        <div class="scroll"><table>
+    ? plega('combos','Combos',`Vendidos en ${esc(rotulo.toLowerCase())}. Salen del reporte acumulado, así que no tienen turno.`,
+        `<div class="scroll"><table>
           <thead><tr><th>Día</th>${TIPOS_COMBO.map(t=>`<th class="num">${t.nombre}</th>`).join('')}<th class="num">Total</th></tr></thead>
           <tbody>${Object.entries(serieCombos).filter(([f])=>meses.indexOf(f.slice(0,7))>=0)
             .sort((a,b)=>b[0].localeCompare(a[0])).map(([f,v])=>`<tr>
-            <td>${f.split('-').reverse().join('/')}${v.primero?'<small>primer corte: acumulado</small>':''}</td>
+            <td>${f.split('-').reverse().join('/')}${v.primero?`<small>primer corte: acumulado desde ${v.desde?v.desde.split('-').reverse().join('/'):'—'}</small>`:''}${v.desde&&v.desde.slice(0,7)!==f.slice(0,7)&&v.primero?'<small style="color:var(--alerta)">abarca varios meses: todo cae en este</small>':''}</td>
             <td class="num">${nf(Math.max(0,v.comida))}</td><td class="num">${nf(Math.max(0,v.cafe))}</td>
             <td class="num"><strong>${nf(Math.max(0,v.comida)+Math.max(0,v.cafe))}</strong></td></tr>`).join('')}
           </tbody>
           <tfoot><tr class="tot"><td>Total</td><td class="num">${nf(cbMes.comida)}</td>
             <td class="num">${nf(cbMes.cafe)}</td><td class="num">${nf(cbMes.comida+cbMes.cafe)}</td></tr></tfoot>
-        </table></div>
-      </div>`
+        </table></div>`)
     : '';
 
   const tarjetaTurno = porRubro
-    ? `<div class="tarjeta">
-        <h2>Rubro por turno</h2>
-        <p class="sub">Cuánto vendió cada turno de cada rubro en ${esc(rotulo.toLowerCase())}.</p>
-        <div class="scroll"><table>
+    ? plega('turno','Rubro por turno',`Cuánto vendió cada turno de cada rubro en ${esc(rotulo.toLowerCase())}.`,
+        `<div class="scroll"><table>
           <thead><tr><th>Rubro</th>${turnos.map(t=>`<th class="num">${t.nombre}</th>`).join('')}<th class="num">Total</th></tr></thead>
           <tbody>${lista.map(p=>`<tr>
             <td><span class="chip" style="background:${p.color};display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:7px"></span>${esc(p.nombre)}</td>
@@ -1139,8 +1385,7 @@ async function vistaMes(sec){
           <tfoot><tr class="tot"><td>Tickets</td>
             ${turnos.map(t=>`<td class="num">${nf(jornadas.reduce((a,j)=>a+((j.turnos[t.id]||{}).tickets||0),0))}</td>`).join('')}
             <td class="num">${nf(tickets)}</td></tr></tfoot>
-        </table></div>
-      </div>`
+        </table></div>`)
     : `<div class="tarjeta">
         <h2>Por turno</h2>
         <p class="sub">Total de ${esc(rotulo.toLowerCase())} en cada turno.</p>
@@ -1192,18 +1437,19 @@ async function vistaMes(sec){
 
   return `<div class="envoltorio">
     ${filtro}
+    ${porRubro?panelRubros:''}
     ${S.filtroCorrido?`<div class="aviso">${SECTORES[sec]} no tiene datos del mes que estabas mirando, así que te muestro <strong>${esc(rotulo)}</strong>, el último cargado.</div>`:''}
     ${cabecera}
     ${tarjetaCombos}
     ${tarjetaTurno}
-    <div class="tarjeta">
-      <h2>Día por día</h2>
+    <details class="tarjeta plega"${S.plegado['dias']?'':' open'} data-plega="dias">
+      <summary><span class="lb-flecha">▸</span><h2>Día por día</h2></summary>
       <p class="sub">${jornadas.length} día${jornadas.length>1?'s':''} con carga. Tocá uno para ver ${porRubro?'qué vendió cada turno de cada rubro':'los turnos'}.${faltan?` Hay ${faltan} turno${faltan>1?'s':''} sin carga.`:''}</p>
       <div class="acordeon">${filas}
         <div class="fila-mes"><span class="f">${esc(rotulo)}</span>
           <span class="tt">${porRubro?nf(tickets)+'<i>tk</i>':nf(total)+`<i>${u}</i>`}</span></div>
       </div>
-    </div></div>`;
+    </details></div>`;
 }
 
 /* ---------- comparativo ---------- */
@@ -1403,14 +1649,22 @@ async function vistaComparativo(sec){
 
 async function vistaSector(sec){
   const subs=[['mes','Por mes'],['comparativo','Comparativo']];
-  if(sec==='playa'||sec==='tienda') subs.push(['objetivos','Objetivos']);
+  // Playa → Objetivos queda oculta por ahora: lo mismo se ve en Libre.
+  // para volver a mostrarla, cambiar la condición por: sec==='playa'||sec==='tienda'
+  // Objetivos queda oculta en Playa y en Tienda: lo mismo se ve en Objetivos +YPF y en Libre.
+  // para volver a mostrarla, agregar el sector a esta condición
+  if(false) subs.push(['objetivos','Objetivos']);
+  if(sec==='playa'||sec==='tienda') subs.push(['objypf','Objetivos +YPF']);
   if(sec==='tienda') subs.push(['vencimientos','Vencimientos']);
   if(sec==='boxes'){ subs.length=0; subs.push(['servicios','Servicios'],['comparativo','Comparativo'],
     ['objetivos','Objetivos'],['presupuesto','Presupuesto'],['control','Control']); }
+  const subsVis=subs.filter(([k])=>!oculta(`sub/${sec}/${k}`)).map(([k,t])=>[k,rot(`sub/${sec}/${k}`,t)]);
+  if(subsVis.length) subs.length=0, subsVis.forEach(x=>subs.push(x));
   if(!subs.some(s=>s[0]===S.sub)) S.sub=subs[0][0];
   const cuerpo=S.sub==='servicios'?await vistaBoxes()
     :S.sub==='comparativo'?(sec==='boxes'?await vistaCmpBoxes():await vistaComparativo(sec))
     :S.sub==='objetivos'?(sec==='tienda'?await vistaObjTienda():sec==='boxes'?await vistaObjBoxes():await vistaObjetivos(sec))
+    :S.sub==='objypf'?await vistaObjYPF(sec)
     :S.sub==='vencimientos'?await vistaVencimientos()
     :S.sub==='presupuesto'?await vistaPresupuesto()
     :S.sub==='control'?(S.ctrlAbierto?await vistaControl():candadoControl())
@@ -1753,6 +2007,54 @@ async function tabTienda(){
     ${previa}
   </div>
   <div class="tarjeta">
+    <h2>Importes por día</h2>
+    <p class="sub">Lo recaudado en cada cierre. Esto no se muestra en la pestaña Tienda Full.</p>
+    ${dias.length?`<div class="scroll"><table>
+      <thead><tr><th>Fecha</th><th class="num">Mañana</th><th class="num">Tarde</th><th class="num">Total</th></tr></thead>
+      <tbody>${dias.map(f=>{const d=imp[f]||{};
+        const a=(d.T1&&d.T1.rendir)||0, b=(d.T2&&d.T2.rendir)||0;
+        return `<tr><td>${f.split('-').reverse().join('/')}</td>
+          <td class="num">${a?nf(a,2):'—'}</td><td class="num">${b?nf(b,2):'—'}</td>
+          <td class="num"><strong>${nf(a+b,2)}</strong></td></tr>`;}).join('')}
+      </tbody></table></div>`
+    :`<p class="vacio">Todavía no cargaste ningún cierre.</p>`}
+  </div>`;
+}
+
+/* ---------- tablero de objetivos (v2) ---------- */
+
+async function tabCombosTienda(){
+  const p=S.previaTienda, cfg=S.cfg;
+  const conocidos=new Set(cfg.tiendaRubros.map(r=>r.id));
+  const rotRubro=id=>{const r=cfg.tiendaRubros.find(x=>x.id===id);return r?r.nombre:id;};
+  const rotTurno=t=>((cfg.turnos.tienda.find(x=>x.id===t)||{}).nombre||t);
+
+  let previa='';
+  if(p&&p.error) previa=`<div class="aviso mal" style="margin-top:12px">${esc(p.error)}</div>`;
+  else if(p&&p.cierres){
+    const nuevos=[...new Set(p.cierres.flatMap(c=>Object.keys(c.rubro).concat(Object.keys(c.importe))))]
+                  .filter(c=>!conocidos.has(c));
+    previa=`<div class="aviso bien" style="margin-top:12px">Leí <strong>${p.cierres.length} cierre${p.cierres.length>1?'s':''}</strong>.</div>
+      <div class="scroll"><table>
+        <thead><tr><th>Fecha</th><th>Turno</th><th class="num">Tickets</th><th class="num">Unidades</th><th>Estado</th></tr></thead>
+        <tbody>${p.cierres.map(c=>`<tr><td>${c.fecha.split('-').reverse().join('/')}</td><td>${rotTurno(c.turno)}</td>
+          <td class="num">${nf(c.tickets)}</td><td class="num">${nf(sumar(c.rubro))}</td>
+          <td>${c.existe?'<span class="etiq pend">reemplaza</span>':'<span class="etiq pag">nuevo</span>'}</td></tr>`).join('')}
+        </tbody></table></div>
+      ${nuevos.length?`<div class="aviso" style="margin-top:11px">Rubros que no tengo en la lista: <strong>${nuevos.map(c=>esc(c)).join(', ')}</strong>. Se guardan igual; decime si querés que alguno se vea en Tienda Full.</div>`:''}
+      <button class="btn" id="tf-confirmar">Cargar ${p.cierres.length>1?'los cierres':'el cierre'}</button>
+      <button class="btn sec" id="tf-cancelar">Cancelar</button>`;
+  }
+
+  const imp=await admin('tienda-importes',{});
+  const dias=Object.keys(imp).sort().reverse().slice(0,12);
+  const CO=await cortesCombos();
+  const pc=S.previaCombos;
+  const serie=combosPorDia(CO);
+  const cortesOrd=Object.values(CO).sort((a,b)=>(b.desde+b.hasta).localeCompare(a.desde+a.hasta));
+
+  return `<div class="aviso">Subí los <strong>tres reportes juntos</strong>: cafetería, comida elaborada y comida envasada. Vienen <strong>acumulados desde el inicio del trimestre</strong>, así que cada carga se compara con la anterior.</div>
+  <div class="tarjeta">
     <h2>Combos vendidos</h2>
     <p class="sub">Subí los tres reportes juntos: cafetería, comida elaborada y comida envasada. Como el reporte viene acumulado desde el inicio del trimestre, <strong>los combos del día salen de la diferencia</strong> con la carga anterior.</p>
     <label class="archivo"><strong>Elegir reportes</strong><small>.xlsx · los tres del mismo corte</small>
@@ -1776,33 +2078,24 @@ async function tabTienda(){
         <button class="btn" id="cb-confirmar">Cargar el corte</button>
         <button class="btn sec" id="cb-cancelar">Cancelar</button>`):''}
     ${cortesOrd.length?`<div class="scroll" style="margin-top:13px"><table>
-      <thead><tr><th>Corte</th><th class="num">Comida</th><th class="num">Cafetería</th><th class="num">Del día</th><th></th></tr></thead>
+      <thead><tr><th>Corte</th><th class="num">Comida</th><th class="num">Cafetería</th><th class="num">Suma al mes</th><th class="num">Cuánto suma</th><th></th></tr></thead>
       <tbody>${cortesOrd.slice(0,14).map(c=>{
         const d=serie[c.hasta]||{comida:0,cafe:0};
-        return `<tr><td>${c.hasta.split('-').reverse().join('/')}<small>desde ${c.desde.split('-').reverse().join('/')}</small></td>
+        const suma=d.primero?(c.comida||0)+(c.cafe||0):Math.max(0,d.comida)+Math.max(0,d.cafe);
+        return `<tr${d.raro?' style="background:rgba(255,107,133,.08)"':''}>
+          <td>${c.hasta.split('-').reverse().join('/')}<small>desde ${c.desde.split('-').reverse().join('/')}${d.primero?' · primer corte':''}</small></td>
           <td class="num">${nf(c.comida||0)}</td><td class="num">${nf(c.cafe||0)}</td>
-          <td class="num"><strong>${d.primero?'—':nf(d.comida+d.cafe)}</strong></td>
+          <td class="num">${MESES_L[Number(c.hasta.slice(5,7))-1]} ${c.hasta.slice(0,4)}</td>
+          <td class="num"><strong>${nf(suma)}</strong></td>
           <td><button class="borrar" data-cbdel="${esc(c.desde+'|'+c.hasta)}" aria-label="Quitar">×</button></td></tr>`;
       }).join('')}</tbody></table></div>
-      ${cortesOrd.length>14?`<p class="sub" style="margin-top:9px">Mostrando 14 de ${cortesOrd.length} cortes.</p>`:''}`
+      ${cortesOrd.length>14?`<p class="sub" style="margin-top:9px">Mostrando 14 de ${cortesOrd.length} cortes.</p>`:''}
+      <p class="sub" style="margin-top:9px">Cada corte suma <strong>al mes de su fecha de cierre</strong>. El primero de cada período entra completo; los siguientes, por diferencia con el anterior.</p>
+      <button class="btn sec" id="cb-borrartodo">Borrar los ${cortesOrd.length} cortes y empezar de cero</button>`
     :`<p class="vacio" style="margin-top:11px">Todavía no cargaste ningún corte.</p>`}
-  </div>
-  <div class="tarjeta">
-    <h2>Importes por día</h2>
-    <p class="sub">Lo recaudado en cada cierre. Esto no se muestra en la pestaña Tienda Full.</p>
-    ${dias.length?`<div class="scroll"><table>
-      <thead><tr><th>Fecha</th><th class="num">Mañana</th><th class="num">Tarde</th><th class="num">Total</th></tr></thead>
-      <tbody>${dias.map(f=>{const d=imp[f]||{};
-        const a=(d.T1&&d.T1.rendir)||0, b=(d.T2&&d.T2.rendir)||0;
-        return `<tr><td>${f.split('-').reverse().join('/')}</td>
-          <td class="num">${a?nf(a,2):'—'}</td><td class="num">${b?nf(b,2):'—'}</td>
-          <td class="num"><strong>${nf(a+b,2)}</strong></td></tr>`;}).join('')}
-      </tbody></table></div>`
-    :`<p class="vacio">Todavía no cargaste ningún cierre.</p>`}
   </div>`;
 }
 
-/* ---------- tablero de objetivos (v2) ---------- */
 const TIPOS_OBJ={num:'Cantidad',pct:'Porcentaje',money:'Pesos',si:'Sí / No'};
 const uid2=()=>Math.random().toString(36).slice(2,9);
 const mObj=(nombre,tipo,objMin,valMin,objMax,valMax,exc)=>
@@ -1874,16 +2167,7 @@ async function valorFuente(fuente,ym){
 
 // el objetivo del mes solo: la diferencia con el mes previo del trimestre
 function objDelMes(o,ym,met){
-  const anio=ym.slice(0,4), mes=ym.slice(5,7), meses=TRIM[trimDe(mes)-1];
-  let pMin=0,pMax=0,res={min:0,max:0};
-  for(const m of meses){
-    const y=`${anio}-${m}`;
-    const aMin=objV(o,y,met,'min'), aMax=objV(o,y,met,'max');
-    const hay=aMin||aMax;
-    if(m===mes){ res={min:hay?aMin-pMin:0,max:hay?aMax-pMax:0}; break; }
-    if(hay){ pMin=aMin; pMax=aMax; }
-  }
-  return res;
+  return {min:objV(o,ym,met,'min'),max:objV(o,ym,met,'max')};
 }
 // de dónde puede salir solo el mínimo y el máximo de un objetivo
 const FUENTES_META=[
@@ -1895,10 +2179,9 @@ const FUENTES_META=[
 ];
 async function valorMeta(fuente,ym){
   if(!fuente) return null;
-  const o=await admin('objetivos',{});
+  const o=await objComb();
   if(fuente==='obj.mix'){
-    const v=objVigente(o,ym.slice(0,4),TRIM[trimDe(ym.slice(5,7))-1],'mix');
-    return {min:v.min||null,max:v.max||null};
+    return {min:objV(o,ym,'mix','min')||null,max:objV(o,ym,'mix','max')||null};
   }
   const n=objDelMes(o,ym,'naftas'), d=objDelMes(o,ym,'diesel');
   if(fuente==='obj.naftas') return {min:n.min||null,max:n.max||null,detalle:''};
@@ -2451,6 +2734,7 @@ async function vistaBoxes(){
 
   return `<div class="envoltorio">
     ${filtro}
+    ${porRubro?panelRubros:''}
     ${soloTotales?`<div class="aviso">${meses.length>1?'Estos meses se cargaron':'Este mes se cargó'} a mano, con los totales por tipo de servicio. Los horarios, las marcas y el detalle por día salen del reporte del sistema.</div>`
       :aMano?`<div class="aviso">${aMano} de los meses del filtro se cargaron a mano: cuentan en el total y en los tipos, pero no aportan horarios ni marcas.</div>`:''}
     <div class="totem">
@@ -2463,6 +2747,168 @@ async function vistaBoxes(){
     ${bloques.join('')}
   </div>`;
 }
+
+/* ---------- Libre: la performance de red tal como la manda YPF ---------- */
+// YPF puntúa así: por debajo del mínimo 0%, en el mínimo 70%, y de ahí sube lineal hasta 100% en el máximo
+function pctYPF(real,min,max){
+  if(real===null||real===undefined||real==='') return 0;
+  const r=Number(real), mi=Number(min)||0, ma=Number(max)||0;
+  if(!isFinite(r)) return 0;
+  if(!mi&&!ma) return 0;                 // sin objetivo cargado no se puntúa
+  if(mi&&r<mi) return 0;
+  if(ma&&r>=ma) return 100;
+  if(!ma||ma<=mi) return r>=mi?100:0;
+  return 70+30*(r-mi)/(ma-mi);
+}
+const LIBRE_BASE=()=>({
+  titulo:'165-FARMEX SA', rotulo:'PERFORMANCE DE RED', litros:true,
+  filas:[
+    {c:'Volumen diesel',sub:'m3 (Infinia diesel + D500)',min:119600,max:139500,real:117000,pts:20,fecha:'31/08/2026'},
+    {c:'Volumen naftas',sub:'m3 (Infinia + Super)',min:848800,max:990300,real:875900,pts:25,fecha:'31/08/2026'},
+    {c:'Mix nafta infinia',sub:'',min:30.8,max:35.9,real:34.8,pts:10,uni:'%',fecha:'31/08/2026'},
+    {c:'Volumen lubricantes',sub:'m3',min:2610,max:2900,real:2160,pts:10,fecha:'31/08/2026'},
+    {c:'Croselling',sub:'',min:30.7,max:37.6,real:30.6,pts:5,uni:'%',fecha:'30/08/2026'},
+    {c:'Unidades Totales',sub:'(sin tabaco)',min:17603,max:20536,real:17903,pts:10,fecha:'30/08/2026'},
+    {c:'Combos Comida y Cafetería',sub:'',min:3847,max:4252,real:5118,pts:10,fecha:'30/08/2026'},
+    {c:'Cliente incognito',sub:'',min:75,max:100,real:91.78,pts:10,uni:'%',fecha:''},
+  ],
+  condiciones:[
+    'No registrar incumplimientos al acuerdo de bandera ni a acuerdos vinculados.',
+    'No registrar agua en tanques ni producto fuera de especificación, salvo fuerza mayor debidamente documentada, verificado por auditorías de YPF o terceros.',
+    'No haber incurrido en derrames de combustibles ni incidentes ambientales durante el período evaluado, ni mantener reportes de déficit incremental abiertos sin plan cumplido.',
+    'No registrar incumplimientos críticos ni una evaluación inferior al 51% en auditorías del proceso de descarga de combustibles, verificadas por YPF o terceros.',
+    'No registrar observaciones críticas vencidas en materia de seguridad y medio ambiente.',
+    'Contar con el sistema de telemedición integrado en los tanques de almacenamiento de hidrocarburos.',
+    'Asegurar la transmisión regular de información de stock de combustibles, con un máximo de tres (3) días sin transmisión por mes calendario, o carga vía Extranet cuando corresponda.',
+    'Alcanzar una puntuación mayor o igual al 75% en las evaluaciones de Cliente Incógnito realizadas por YPF o terceros designados.',
+  ]
+});
+const claveLibre=(a,m)=>`libre:hoja:${a}-${m}`;
+const esVolumen=f=>/m3/i.test(`${f.c} ${f.sub||''}`);      // se guarda y se muestra en litros
+// si el número viene con coma se entiende que son m3 (139,5 = 139.500 L); entero, ya son litros
+function aLitros(txt){
+  const s=String(txt).trim(), v=numero(s);
+  if(s==='' || v===null || !isFinite(v)) return '';
+  // 139,5 o 2,61 son m3; 2.900 y 990.300 son litros (el punto separa los miles)
+  return /[.,]\d{1,2}$/.test(s) ? Math.round(v*1000) : Math.round(v);
+}
+// cuándo se cargaron por última vez las ventas de playa de esos meses
+async function fechaCargaPlaya(anio,meses){
+  let t=0;
+  for(const m of meses){
+    const d=await leer(`ops:playa:${anio}-${m}`,null);
+    if(!d) continue;
+    Object.values(d).forEach(dia=>Object.values(dia||{}).forEach(tur=>{
+      const x=Number(tur&&tur.ts)||0; if(x>t) t=x;
+    }));
+  }
+  if(!t) return hoyISO().split('-').reverse().join('/');
+  const f=new Date(t);
+  return `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()}`;
+}
+// lo que YPF mide en m3 sale de las ventas de playa: litros / 1000
+async function ventasLibre(anio,trim,hasta){
+  const r=await roll('playa');
+  let meses=TRIM[trim-1];
+  if(hasta) meses=meses.slice(0,meses.indexOf(hasta)+1);   // acumulado del trimestre hasta ese mes
+  const iN=idsFam('Naftas'), iD=idsFam('Diesel');
+  const por=meses.map(m=>{
+    const ym=`${anio}-${m}`;
+    const n=vendFam(r,ym,iN), d=vendFam(r,ym,iD), inf=vendFam(r,ym,[ID_INFINIA]);
+    return {m,ym,naftas:n,diesel:d,inf,hay:!!(n||d)};
+  });
+  // unidades de tienda sin tabaco, de los cierres por turno
+  const C=await combos();
+  for(const x of por){
+    const m=await ventasMesTienda(x.ym);
+    x.unidades=m.unidades;
+    x.uFuente=m.fuente;
+    x.combos=Number(C[x.ym])||0;
+    if(m.unidades||x.combos) x.hay=true;
+  }
+  const sN=por.reduce((a,x)=>a+x.naftas,0), sD=por.reduce((a,x)=>a+x.diesel,0);
+  const sI=por.reduce((a,x)=>a+x.inf,0);
+  const sU=por.reduce((a,x)=>a+x.unidades,0);
+  const sC=por.reduce((a,x)=>a+x.combos,0);
+  return {por,naftas:sN,diesel:sD,mix:sN?sI/sN*100:0,unidades:sU,combos:sC};
+}
+// mete en el cuadro lo que sale de las ventas de playa
+async function volcarVentasLibre(){
+  const d=S.libre; if(!d) return 0;
+  const meses=TRIM[S.libreTrim-1].slice(0,TRIM[S.libreTrim-1].indexOf(S.libreMes)+1);
+  const v=await ventasLibre(S.libreAnio,S.libreTrim,S.libreMes);
+  const fecha=await fechaCargaPlaya(S.libreAnio,meses);
+  let cambio=false, n=0;
+  d.filas.forEach(f=>{
+    const a=LIBRE_AUTO.find(x=>x.re.test(f.c));
+    if(!a) return;
+    if(!v[a.k]){
+      // estas filas las maneja la app: si la fuente quedó sin datos, se limpian.
+      // las que cargás a mano (crosselling, cliente incógnito) no están en esta lista.
+      if(f.real!==''&&f.real!==null&&f.real!==undefined){ f.real=''; f.fecha=''; cambio=true; }
+      return;
+    }
+    const nuevo=(a.m3||a.ent)?Math.round(v[a.k]):Math.round(v[a.k]*10)/10;
+    if(f.real!==nuevo||f.fecha!==fecha||!f.autoReal){
+      f.real=nuevo; f.fecha=fecha; f.autoReal=true; cambio=true;
+    }
+    n++;
+  });
+  if(cambio) await guardarLibre();
+  return n;
+}
+// qué fila del cuadro se llena con cada dato
+const LIBRE_AUTO=[
+  {re:/volumen\s*naftas/i, k:'naftas', rot:'Volumen naftas', m3:true},
+  {re:/volumen\s*diesel/i, k:'diesel', rot:'Volumen diesel', m3:true},
+  {re:/mix/i,              k:'mix',    rot:'Mix nafta infinia', m3:false},
+  {re:/unidades/i,         k:'unidades',rot:'Unidades sin tabaco', m3:false, ent:true},
+  {re:/combos/i,           k:'combos',  rot:'Combos comida y cafetería', m3:false, ent:true},
+];
+async function cargarLibre(){
+  if(!S.libreAnio) S.libreAnio=hoyISO().slice(0,4);
+  if(!S.libreTrim) S.libreTrim=trimDe(hoyISO().slice(5,7));
+  const meses=TRIM[S.libreTrim-1];
+  if(!S.libreMes||meses.indexOf(S.libreMes)<0){
+    const hm=hoyISO().slice(5,7);
+    S.libreMes=meses.includes(hm)?hm:meses[0];
+  }
+  const k=claveLibre(S.libreAnio,S.libreMes);
+  if(S.libre&&S.libreClave===k) return S.libre;
+  let d=await leer(k,null);
+  if(!d){
+    // lo que estaba guardado antes de separar por mes
+    const previo=await leer('libre:tablero',null)||await leer(`libre:tablero:${S.libreAnio}-T${S.libreTrim}`,null);
+    if(previo&&S.libreMes===hoyISO().slice(5,7)&&S.libreAnio===hoyISO().slice(0,4)) d=previo;
+  }
+  if(!d){
+    // hereda del mes anterior los conceptos y los puntos, sin los reales
+    const i=meses.indexOf(S.libreMes);
+    let pa=S.libreAnio, pm;
+    if(i>0) pm=meses[i-1];
+    else { const t=S.libreTrim>1?S.libreTrim-1:4; if(S.libreTrim===1) pa=String(Number(S.libreAnio)-1); pm=TRIM[t-1][2]; }
+    const p=await leer(claveLibre(pa,pm),null);
+    if(p){ d=JSON.parse(JSON.stringify(p)); d.filas.forEach(f=>{ f.real=''; f.fecha=''; }); }
+  }
+  const nuevo=!d;
+  S.libre=d||LIBRE_BASE();
+  if(!S.libre.litros){                       // lo viejo estaba en m3: pasa a litros una sola vez
+    S.libre.filas.forEach(f=>{
+      if(!esVolumen(f)) return;
+      ['min','max','real'].forEach(k=>{
+        const v=Number(f[k]);
+        if(f[k]!==''&&f[k]!==null&&isFinite(v)&&v>0&&v<10000) f[k]=Math.round(v*1000);
+      });
+    });
+    S.libre.litros=true;
+    await guardar(k,S.libre);
+  }
+  S.libreClave=k;
+  if(nuevo) await guardar(k,S.libre);   // queda guardado para que el mes siguiente lo herede
+  await volcarVentasLibre();            // los datos verdes entran solos
+  return S.libre;
+}
+const guardarLibre=()=>guardar(claveLibre(S.libreAnio,S.libreMes),S.libre);
 
 /* ---------- compra de lubricante por trimestre ---------- */
 // caja de 4L: 4 unidades de 4 litros = 16 L · caja de 1L: 12 unidades de 1 litro = 12 L
@@ -3031,7 +3477,7 @@ function cuerpoLub(){
             <td class="num"><strong>${nf(p.total,1)}</strong></td>
             <td class="num">${nf(Number((d.meses[x]||{}).crm)||0)}</td></tr>`;}).join('')}
         </tbody>
-        <tfoot><tr class="tot"><td>Trimestre</td><td class="num">${nf(t.premium)}</td><td class="num">${nf(t.otros,1)}</td>
+        <tfoot><tr class="tot"><td>Trimestre · en litros</td><td class="num">${nf(t.premium)}</td><td class="num">${nf(t.otros,1)}</td>
           <td class="num">${nf(t.total,1)}</td><td class="num">${nf(t.crm)}</td></tr></tfoot>
       </table></div>
       <p class="sub" style="margin-top:9px">Estos litros alimentan solos el objetivo de <strong>Lubricante</strong> en Boxes → Objetivos.</p>
@@ -3442,6 +3888,44 @@ function vendFam(r,ym,ids){
   const x=r[ym]; if(!x||!x.porProd) return 0;
   return ids.reduce((a,id)=>a+(x.porProd[id]||0),0);
 }
+// los objetivos de combustible ahora son del mes, no acumulados del trimestre.
+// lo que estaba cargado en el formato viejo se convierte una sola vez.
+async function objComb(){
+  const o=await admin('objetivos',{});
+  if(o.__mensual) return o;
+  [...new Set(Object.keys(o).filter(k=>/^\d{4}-\d{2}$/.test(k)).map(k=>k.slice(0,4)))].forEach(a=>{
+    [1,2,3,4].forEach(t=>{
+      const prev={naftas:{min:0,max:0},diesel:{min:0,max:0}};
+      TRIM[t-1].forEach(m=>{
+        const reg=o[`${a}-${m}`]; if(!reg) return;
+        ['naftas','diesel'].forEach(met=>{
+          const v=reg[met]; if(!v) return;
+          const mi=Number(v.min)||0, ma=Number(v.max)||0;
+          if(!mi&&!ma) return;
+          reg[met]={min:mi-prev[met].min,max:ma-prev[met].max};
+          prev[met]={min:mi,max:ma};
+        });
+      });
+    });
+  });
+  o.__mensual=true;
+  await guardar('admin:objetivos',o); S.admin.objetivos=o;
+  return o;
+}
+// suma de los objetivos del trimestre
+function objTrim(o,anio,meses,met){
+  const s=meses.reduce((a,m)=>({min:a.min+objV(o,`${anio}-${m}`,met,'min'),
+                                max:a.max+objV(o,`${anio}-${m}`,met,'max')}),{min:0,max:0});
+  if(s.max&&s.max<s.min) s.max=s.min;   // algún mes quedó sin máximo cargado
+  return s;
+}
+// promedio de los meses cargados, para el mix que es porcentaje
+function objProm(o,anio,meses,met){
+  const c=meses.map(m=>({min:objV(o,`${anio}-${m}`,met,'min'),max:objV(o,`${anio}-${m}`,met,'max')}))
+               .filter(x=>x.min||x.max);
+  if(!c.length) return {min:0,max:0};
+  return {min:c.reduce((a,x)=>a+x.min,0)/c.length, max:c.reduce((a,x)=>a+x.max,0)/c.length};
+}
 // el objetivo que llega ya viene acumulado del trimestre: vale el del último mes cargado
 function objVigente(o,anio,meses,met){
   let mes=null;
@@ -3509,25 +3993,42 @@ function bloqueMeta(o,anio,meses,met,real,uni,leerObj,vigente){
 
 async function vistaObjetivos(sec){
   if(sec!=='playa') return `<div class="envoltorio"><div class="tarjeta"><h2>Objetivos</h2>
-    <p class="vacio">Los objetivos están definidos para combustible.<br>Si Tienda Full o Boxes también tienen, decime cómo son y los agrego.</p></div></div>`;
-  const o=await admin('objetivos',{}), r=await roll('playa');
-  const anios=[...new Set([...Object.keys(r),...Object.keys(o)].map(k=>k.slice(0,4)))].sort();
+    <p class="vacio">Los objetivos están definidos para combustible.</p></div></div>`;
+  const o=await objComb(), r=await roll('playa');
+  const anios=[...new Set([...Object.keys(r),...Object.keys(o)].filter(k=>/^\d{4}-/.test(k)).map(k=>k.slice(0,4)))].sort();
   if(!anios.length) return `<div class="envoltorio"><div class="tarjeta"><h2>Objetivos</h2>
-    <p class="vacio">Todavía no hay objetivos cargados.<br>Se cargan desde Administración → Objetivos.</p></div></div>`;
+    <p class="vacio">Todavía no hay objetivos cargados.<br>Se cargan desde Administración → Combustible → Objetivos.</p></div></div>`;
   const anio=(S.objVerAnio&&anios.includes(S.objVerAnio))?S.objVerAnio:anios[anios.length-1];
   const t=S.objVerTrim||trimPorDefecto(Object.keys(r),anio), meses=TRIM[t-1];
   const iN=idsFam('Naftas'), iD=idsFam('Diesel');
 
-  const vN=m=>m==='trim'?meses.reduce((a,x)=>a+vendFam(r,`${anio}-${x}`,iN),0):vendFam(r,`${anio}-${m}`,iN);
-  const vD=m=>m==='trim'?meses.reduce((a,x)=>a+vendFam(r,`${anio}-${x}`,iD),0):vendFam(r,`${anio}-${m}`,iD);
-  const vI=m=>m==='trim'?meses.reduce((a,x)=>a+vendFam(r,`${anio}-${x}`,[ID_INFINIA]),0):vendFam(r,`${anio}-${m}`,[ID_INFINIA]);
-  const vMix=m=>{const n=vN(m);return n?vI(m)/n*100:0;};
+  const real={
+    naftas:m=>vendFam(r,`${anio}-${m}`,iN),
+    diesel:m=>vendFam(r,`${anio}-${m}`,iD),
+    mix:m=>{const n=vendFam(r,`${anio}-${m}`,iN); return n?vendFam(r,`${anio}-${m}`,[ID_INFINIA])/n*100:0;}
+  };
+  const sum=(f)=>meses.reduce((a,m)=>a+f(m),0);
+  const trimReal={
+    naftas:sum(real.naftas), diesel:sum(real.diesel),
+    mix:(()=>{const n=sum(real.naftas); return n?meses.reduce((a,m)=>a+vendFam(r,`${anio}-${m}`,[ID_INFINIA]),0)/n*100:0;})()
+  };
 
-  const acumF=ids=>ms=>ms.reduce((a,m)=>a+vendFam(r,`${anio}-${m}`,ids),0);
-  const bN=bloqueMeta(o,anio,meses,'naftas',{mes:vN,acum:acumF(iN)},'L');
-  const bD=bloqueMeta(o,anio,meses,'diesel',{mes:vD,acum:acumF(iD)},'L');
-  const bM=bloqueMeta(o,anio,meses,'mix',{mes:vMix,acum:ms=>{
-    const n=acumF(iN)(ms); return n?acumF([ID_INFINIA])(ms)/n*100:0; }},'%');
+  const bloque=(met,titulo,sub,uni)=>{
+    const porMes=meses.map(m=>{
+      const mi=objV(o,`${anio}-${m}`,met,'min'), ma=objV(o,`${anio}-${m}`,met,'max');
+      const v=real[met](m);
+      return `<div style="margin-bottom:14px">
+        <div class="eyebrow" style="margin-bottom:5px">${MESES_L[Number(m)-1]}</div>
+        ${(mi||ma)?barraMeta(v,mi,ma,uni)
+          :`<p class="sub" style="margin:0">Sin objetivo cargado${v?` · vendido ${uni==='%'?nf(v,1)+'%':nf(v)+' L'}`:''}.</p>`}
+      </div>`;
+    }).join('');
+    return `<div class="tarjeta">
+      <h2>${titulo}</h2>
+      <p class="sub">${sub}</p>
+      ${porMes}
+    </div>`;
+  };
 
   return `<div class="envoltorio">
     <div class="filtro"><span class="et">Trimestre</span>
@@ -3538,34 +4039,18 @@ async function vistaObjetivos(sec){
       <div class="totem-cab"><div class="t">${ROMANO[t-1]} trimestre ${anio}</div>
         <div class="d">${meses.map(m=>MESES[Number(m)-1]).join(' · ')}</div></div>
       <div class="linea-totem"><span class="chip" style="background:#22E3F5"></span><span class="nom">Naftas</span>
-        <span class="guia"></span><span class="val">${nf(bN.RT)}<i>L</i></span></div>
+        <span class="guia"></span><span class="val">${nf(trimReal.naftas)}<i>L</i></span></div>
       <div class="linea-totem"><span class="chip" style="background:#3DE0A0"></span><span class="nom">Diesel</span>
-        <span class="guia"></span><span class="val">${nf(bD.RT)}<i>L</i></span></div>
+        <span class="guia"></span><span class="val">${nf(trimReal.diesel)}<i>L</i></span></div>
       <div class="totem-total"><span class="nom">Mix Infinia</span>
-        <span class="val">${nf(bM.RT,1)}<i>%</i></span></div>
+        <span class="val">${nf(trimReal.mix,1)}<i>%</i></span></div>
     </div>
-    <div class="tarjeta">
-      <h2>Volumen naftas</h2>
-      <p class="sub">Súper + Infinia Nafta. El objetivo ya viene acumulado, así que vale el del último mes cargado.</p>
-      ${barraMeta(bN.RT,bN.vig.min,bN.vig.max,'L')}
-      ${bN.html}
-    </div>
-    <div class="tarjeta">
-      <h2>Volumen diesel</h2>
-      <p class="sub">Diesel 500 + Infinia Diesel. El objetivo ya viene acumulado, así que vale el del último mes cargado.</p>
-      ${barraMeta(bD.RT,bD.vig.min,bD.vig.max,'L')}
-      ${bD.html}
-    </div>
-    <div class="tarjeta">
-      <h2>Mix Infinia</h2>
-      <p class="sub">Cuánto pesa Infinia Nafta dentro del total de naftas, sobre los meses que cubre el objetivo vigente.</p>
-      ${barraMeta(bM.RT,bM.vig.min,bM.vig.max,'%')}
-      ${bM.html}
-    </div>
+    ${bloque('naftas','Volumen naftas','Súper + Infinia Nafta. El objetivo es de cada mes.','L')}
+    ${bloque('diesel','Volumen diesel','Diesel 500 + Infinia Diesel. El objetivo es de cada mes.','L')}
+    ${bloque('mix','Mix Infinia','Infinia sobre el total de naftas.','%')}
   </div>`;
 }
 
-/* ---------- administración ---------- */
 function portada(){
   return `<div class="envoltorio"><div class="candado" style="margin-top:64px">
     <div class="ic" style="color:var(--cian);text-shadow:0 0 18px var(--cian);font-size:38px">⬢</div>
@@ -3757,10 +4242,11 @@ async function tabCombustible(){
     </div>`;
 }
 
-const MENU_ADMIN=[
+const MENU_ADMIN_BASE=[
   ['Ventas',[['importar','Importar Excel'],['manual','Carga manual']]],
   ['Combustible',[['combustible','Cierre mensual'],['remitos','Remitos cisterna'],['objetivos','Objetivos']]],
-  ['Tienda Full',[['tienda','Cierres de caja'],['objtienda','Objetivos']]],
+  ['Tienda Full',[['tienda','Carga de turno'],['combostienda','Carga de combos'],
+                  ['ventastienda','Ventas'],['objtienda','Objetivos']]],
   ['Facturas',[['facturas','Facturas'],['gastos','Gastos'],['maestro','Maestro Debo'],
                ['convertir','Renova a Debo'],['ypf','YPF lubricantes'],['topaes','Topaes a Debo'],
                ['andreani','Andreani a Debo']]],
@@ -3768,17 +4254,24 @@ const MENU_ADMIN=[
              ['objboxes','Objetivos'],['precios','Listas de precios']]],
   ['Sistema',[['objetivos2','Objetivos v2'],['cumples','Cumpleaños'],['sync','Sincronización'],['config','Configuración']]]
 ];
-const TODAS_TABS=MENU_ADMIN.flatMap(g=>g[1]);
-const rotTab=k=>(TODAS_TABS.find(t=>t[0]===k)||[,k])[1];
-const grupoTab=k=>(MENU_ADMIN.find(g=>g[1].some(t=>t[0]===k))||[''])[0];
+// se arma en cada dibujo: aplica los nombres propios y saca las pestañas ocultas
+const MENU_ADMIN=()=>MENU_ADMIN_BASE
+  .map(([g,ts])=>[rot('grupo/'+g,g), ts.filter(([k])=>!oculta('tab/'+k)).map(([k,t])=>[k,rot('tab/'+k,t)])])
+  .filter(([,ts])=>ts.length);
+const TODAS_TABS=()=>MENU_ADMIN().flatMap(g=>g[1]);
+const rotTab=k=>(TODAS_TABS().find(t=>t[0]===k)||[,k])[1];
+const grupoTab=k=>(MENU_ADMIN().find(g=>g[1].some(t=>t[0]===k))||[''])[0];
 
 async function vistaAdmin(){
-  if(!TODAS_TABS.some(t=>t[0]===S.tab)) S.tab='importar';
+  const menuA=MENU_ADMIN();
+  if(!TODAS_TABS().some(t=>t[0]===S.tab)) S.tab=(menuA[0]&&menuA[0][1][0][0])||'importar';
   let c='';
   if(S.tab==='importar')    c=tabImportar();
   if(S.tab==='manual')      c=await tabManual();
   if(S.tab==='objetivos')   c=await tabObjetivos();
   if(S.tab==='tienda')      c=await tabTienda();
+  if(S.tab==='combostienda') c=await tabCombosTienda();
+  if(S.tab==='ventastienda') c=await tabVentasTienda();
   if(S.tab==='objtienda')   c=await tabObjTienda();
   if(S.tab==='combustible') c=await tabCombustible();
   if(S.tab==='boxes')       c=await tabBoxes();
@@ -3804,7 +4297,7 @@ async function vistaAdmin(){
   const av=(Alm.modo==='visor'||Sync.dentro)?'':`<div class="aviso ${Alm.modo==='memoria'?'mal':''}">
     <strong>${Alm.modo==='memoria'?'Sin guardado':'Guardado local'}.</strong> ${ALM_TXT[Alm.modo]}</div>`;
 
-  const menu=MENU_ADMIN.map(([grupo,items])=>{
+  const menu=menuA.map(([grupo,items])=>{
     const activo=items.some(([k])=>k===S.tab);
     const abierto=S.grupoAbierto===grupo||(S.grupoAbierto===undefined&&activo);
     return `<div class="mgrupo${abierto?' abierto':''}">
@@ -3844,92 +4337,64 @@ async function tabPrecios(){
 }
 
 async function tabObjetivos(){
-  const o=await admin('objetivos',{}), r=await roll('playa');
-  const anio=S.objAnio||hoyISO().slice(0,4), mes=S.objMes||hoyISO().slice(5,7);
-  const ym=`${anio}-${mes}`, x=objNorm(o,ym), t=trimDe(mes), meses=TRIM[t-1];
-  const anios=[...new Set([...Object.keys(r),...Object.keys(o)].map(k=>k.slice(0,4)).concat(hoyISO().slice(0,4)))].sort();
+  const o=await objComb(), r=await roll('playa');
+  const anio=S.objAnio||hoyISO().slice(0,4);
+  const anios=[...new Set([...Object.keys(r),...Object.keys(o)].filter(k=>/^\d{4}-/.test(k))
+    .map(k=>k.slice(0,4)).concat(hoyISO().slice(0,4)))].sort();
   const iN=idsFam('Naftas'), iD=idsFam('Diesel');
-  const fila=(met,rot,ayuda,uni)=>`<tr>
-    <td>${rot}<small style="display:block;font-size:11px;color:var(--tinta-suave);font-weight:400">${ayuda}</small></td>
-    <td><input type="text" inputmode="decimal" class="n" data-obj="${met}" data-k="min" value="${x[met].min}" placeholder="0"><span class="uni">${uni}</span></td>
-    <td><input type="text" inputmode="decimal" class="n" data-obj="${met}" data-k="max" value="${x[met].max}" placeholder="0"><span class="uni">${uni}</span></td></tr>`;
+  // los litros se cargan en miles: 59,7 son 59.700 litros
+  const val=(ym,met,k)=>{ const v=objV(o,ym,met,k); if(!v) return '';
+    return met==='mix'?String(v).replace('.',','):String(v/1000).replace('.',','); };
+  const celda=(ym,met,k)=>`<input type="text" inputmode="decimal" class="n"
+      data-ob="${ym}" data-met="${met}" data-k="${k}" value="${val(ym,met,k)}" placeholder="0" style="width:74px">`;
 
-  const rN=objVigente(o,anio,meses,'naftas'), rD=objVigente(o,anio,meses,'diesel'), rM=objVigente(o,anio,meses,'mix');
-  const realN=meses.reduce((a,m)=>a+vendFam(r,`${anio}-${m}`,iN),0);
-  const realD=meses.reduce((a,m)=>a+vendFam(r,`${anio}-${m}`,iD),0);
-  const realI=meses.reduce((a,m)=>a+vendFam(r,`${anio}-${m}`,[ID_INFINIA]),0);
+  const trimestre=t=>{
+    const meses=TRIM[t-1];
+    let sN={min:0,max:0}, sD={min:0,max:0}, vN=0, vD=0;
+    const filas=meses.map(m=>{
+      const ym=`${anio}-${m}`;
+      sN.min+=objV(o,ym,'naftas','min'); sN.max+=objV(o,ym,'naftas','max');
+      sD.min+=objV(o,ym,'diesel','min'); sD.max+=objV(o,ym,'diesel','max');
+      const n=vendFam(r,ym,iN), d=vendFam(r,ym,iD);
+      vN+=n; vD+=d;
+      return `<tr>
+        <td><strong>${MESES_L[Number(m)-1]}</strong></td>
+        <td>${celda(ym,'naftas','min')}</td><td>${celda(ym,'naftas','max')}</td>
+        <td class="num" style="color:var(--tinta-suave)">${n?nf(n):'—'}</td>
+        <td>${celda(ym,'diesel','min')}</td><td>${celda(ym,'diesel','max')}</td>
+        <td class="num" style="color:var(--tinta-suave)">${d?nf(d):'—'}</td>
+        <td>${celda(ym,'mix','min')}</td><td>${celda(ym,'mix','max')}</td></tr>`;
+    }).join('');
+    const lt=v=>v?nf(v):'—';
+    return `<div class="tarjeta">
+      <h2>${ROMANO[t-1]} trimestre ${anio}</h2>
+      <div class="scroll"><table class="obj">
+        <thead>
+          <tr><th rowspan="2">Mes</th><th colspan="3" style="text-align:center">Naftas</th>
+              <th colspan="3" style="text-align:center">Diesel</th>
+              <th colspan="2" style="text-align:center">Mix Infinia</th></tr>
+          <tr><th>Mín · mil L</th><th>Máx · mil L</th><th class="num">Vendido · L</th>
+              <th>Mín · mil L</th><th>Máx · mil L</th><th class="num">Vendido · L</th>
+              <th>Mín · %</th><th>Máx · %</th></tr>
+        </thead>
+        <tbody>${filas}</tbody>
+        <tfoot><tr class="tot"><td>Trimestre · en litros</td>
+          <td class="num">${lt(sN.min)}</td><td class="num">${lt(sN.max)}</td><td class="num">${lt(vN)}</td>
+          <td class="num">${lt(sD.min)}</td><td class="num">${lt(sD.max)}</td><td class="num">${lt(vD)}</td>
+          <td colspan="2"></td></tr></tfoot>
+      </table></div>
+    </div>`;
+  };
 
-  return `<div class="aviso">Cargá el objetivo <strong>tal como te llega</strong>, con el número completo. Como YPF ya te lo manda acumulado del trimestre, el objetivo del mes nuevo <strong>reemplaza</strong> al anterior en lugar de sumarse. En la tabla de abajo vas a ver, entre paréntesis, cuánto te agregaron respecto del mes previo.</div>
-  <div class="tarjeta">
-    <h2>Objetivo del mes</h2>
-    <div class="filtro">
-      <select id="objAnio">${anios.map(a=>`<option value="${a}"${a===anio?' selected':''}>${a}</option>`).join('')}</select>
-      <select id="objMes">${MESES_L.map((n,i)=>{const v=String(i+1).padStart(2,'0');
-        return `<option value="${v}"${v===mes?' selected':''}>${n}</option>`;}).join('')}</select>
-    </div>
-    <p class="sub">${MESES_L[Number(mes)-1]} ${anio} · ${ROMANO[t-1]} trimestre (${meses.map(m=>MESES[Number(m)-1]).join(', ')})</p>
-    <div class="scroll"><table class="obj">
-      <thead><tr><th>Objetivo</th><th class="num">Mínimo</th><th class="num">Máximo</th></tr></thead>
-      <tbody>
-        ${fila('naftas','Volumen naftas','Súper + Infinia Nafta','L')}
-        ${fila('diesel','Volumen diesel','Diesel 500 + Infinia Diesel','L')}
-        ${fila('mix','Mix Infinia','Infinia sobre el total de naftas','%')}
-      </tbody></table></div>
-    <button class="btn" id="guardarObj">Guardar objetivo de ${MESES_L[Number(mes)-1]}</button>
-    ${o[ym]?`<button class="btn sec" id="borrarObj">Borrar el objetivo de este mes</button>`:''}
+  return `<div class="aviso">Los litros van <strong>en miles, como te los manda YPF</strong>: si dice <strong>59,7</strong> escribí 59,7 y se guardan 59.700 litros. El mix va en porcentaje normal. Cada objetivo es <strong>de ese mes solo</strong>.</div>
+  <div class="filtro">
+    <span class="et">Año</span>
+    <select id="objAnio">${anios.map(a=>`<option value="${a}"${a===anio?' selected':''}>${a}</option>`).join('')}</select>
+    <button class="btn sec chico" id="guardarObj" style="width:auto;margin:0">Guardar</button>
   </div>
-  <div class="tarjeta">
-    <h2>${ROMANO[t-1]} trimestre ${anio}</h2>
-    <p class="sub">El objetivo se carga acumulado, así que <strong>lo del mes solo</strong> es la diferencia con el mes anterior del trimestre. El mes que estás editando va resaltado.</p>
-    ${['naftas','diesel'].map(met=>{
-      const rot=met==='naftas'?'Volumen naftas':'Volumen diesel';
-      let pMin=0,pMax=0;                       // acumulado del mes previo del trimestre
-      const filas=meses.map(m=>{
-        const y=`${anio}-${m}`;
-        const aMin=objV(o,y,met,'min'), aMax=objV(o,y,met,'max');
-        const hay=aMin||aMax;
-        const dMin=hay?aMin-pMin:0, dMax=hay?aMax-pMax:0;
-        if(hay){ pMin=aMin; pMax=aMax; }
-        return `<tr${m===mes?' style="background:rgba(34,227,245,.09)"':''}>
-          <td>${MESES_L[Number(m)-1]}</td>
-          <td class="num"><strong>${hay?nf(dMin):'—'}</strong></td>
-          <td class="num"><strong>${hay?nf(dMax):'—'}</strong></td>
-          <td class="num" style="color:var(--tinta-suave)">${aMin?nf(aMin):'—'}</td>
-          <td class="num" style="color:var(--tinta-suave)">${aMax?nf(aMax):'—'}</td></tr>`;
-      }).join('');
-      const v=met==='naftas'?rN:rD;
-      return `<div style="margin-top:13px">
-        <div class="eyebrow">${rot} · litros</div>
-        <div class="scroll"><table>
-          <thead><tr><th>Mes</th><th class="num">Mín del mes</th><th class="num">Máx del mes</th>
-            <th class="num">Mín acum.</th><th class="num">Máx acum.</th></tr></thead>
-          <tbody>${filas}</tbody>
-          <tfoot><tr class="tot"><td>Trimestre</td>
-            <td class="num">${v.min?nf(v.min):'—'}</td><td class="num">${v.max?nf(v.max):'—'}</td>
-            <td class="num">${v.min?nf(v.min):'—'}</td><td class="num">${v.max?nf(v.max):'—'}</td></tr></tfoot>
-        </table></div></div>`;
-    }).join('')}
-    <div style="margin-top:13px">
-      <div class="eyebrow">Mix Infinia · porcentaje</div>
-      <p class="sub" style="margin:4px 0 0">El mix es un porcentaje, así que no se reparte por mes: rige el del último mes cargado.</p>
-      <div class="scroll"><table>
-        <thead><tr><th>Mes</th><th class="num">Mínimo</th><th class="num">Máximo</th></tr></thead>
-        <tbody>${meses.map(m=>{const y=`${anio}-${m}`;
-          return `<tr${m===mes?' style="background:rgba(34,227,245,.09)"':''}><td>${MESES_L[Number(m)-1]}</td>
-            <td class="num">${objV(o,y,'mix','min')?nf(objV(o,y,'mix','min'),1)+'%':'—'}</td>
-            <td class="num">${objV(o,y,'mix','max')?nf(objV(o,y,'mix','max'),1)+'%':'—'}</td></tr>`;}).join('')}
-        </tbody>
-        <tfoot><tr class="tot"><td>Vigente</td>
-          <td class="num">${rM.min?nf(rM.min,1)+'%':'—'}</td>
-          <td class="num">${rM.max?nf(rM.max,1)+'%':'—'}</td></tr></tfoot>
-      </table></div></div>
-    <div class="campo" style="margin-top:11px"><label>Vendido naftas</label><strong class="num">${nf(realN)} L</strong></div>
-    <div class="campo"><label>Vendido diesel</label><strong class="num">${nf(realD)} L</strong></div>
-    <div class="campo"><label>Mix Infinia real</label><strong class="num">${realN?nf(realI/realN*100,1):'0,0'} %</strong></div>
-  </div>`;
+  ${[1,2,3,4].map(trimestre).join('')}`;
 }
 
-// metricas de objetivo de tienda: total de unidades, tickets y los rubros principales
 const RUBROS_TABACO=['02-238','02-214'];
 const METS_TIENDA=()=>[
   {k:'unidades',rot:'Unidades totales',uni:'u',ayuda:'Todos los rubros menos Cigarrillos y Otros Tabacos'},
@@ -3954,13 +4419,17 @@ async function objTienda(){
 }
 async function combos(){
   if(!S.combos) S.combos=await leer('tienda:combos',{});
-  return S.combos;
+  if(!S.combosMano) S.combosMano=await leer('tienda:combos-mano',{});
+  return {...S.combos,...S.combosMano};      // lo cargado a mano manda
 }
+const combosCalc=async()=>{ if(!S.combos) S.combos=await leer('tienda:combos',{}); return S.combos; };
+const combosMano=async()=>{ if(!S.combosMano) S.combosMano=await leer('tienda:combos-mano',{}); return S.combosMano; };
 // recalcula el total de combos de cada mes a partir de los cortes cargados
 async function recalcularCombosMes(){
   const CO=await cortesCombos(), dias=combosPorDia(CO);
-  const C=await combos();
   const meses=[...new Set(Object.keys(dias).map(f=>f.slice(0,7)))];
+  // se rehace de cero: si se borró un corte, el mes tiene que quedar sin ese número
+  const C={};
   meses.forEach(ym=>{ const x=combosDelMes(dias,ym); C[ym]=Math.round(x.comida+x.cafe); });
   if(await guardar('tienda:combos',C)) S.combos=C;
 }
@@ -3985,6 +4454,154 @@ const realTienda=(r,anio,meses,k,C)=>(meses||[]).reduce((a,m)=>{
   }
   return a+((x.porProd||{})[k]||0);
 },0);
+
+// unidades y pesos que cuentan para YPF: solo los rubros 02-, sin cigarrillos ni otros tabacos
+const RUBRO_CUENTA=c=>String(c).startsWith('02-')&&!RUBROS_TABACO.includes(c);
+function sinTabaco(mapa){
+  let dentro=0, tabaco=0, fuera=0;
+  Object.entries(mapa||{}).forEach(([c,v])=>{
+    const n=Number(v)||0;
+    if(RUBRO_CUENTA(c)) dentro+=n;
+    else if(RUBROS_TABACO.includes(c)) tabaco+=n;
+    else fuera+=n;
+  });
+  return {dentro,tabaco,fuera,total:dentro+tabaco+fuera};
+}
+
+// lee el consolidado del mes: un solo archivo con el resumen por rubros de todo el período
+function leerMesTienda(texto,nombreArch){
+  const plano=String(texto).replace(/<[^>]+>/g,'\n').replace(/&nbsp;/g,' ');
+  const lineas=plano.split('\n').map(l=>l.trim()).filter(Boolean);
+  const rubro={}, importe={};
+  const RE=/^(\d{2}-\d{3})\s+(.+?)\s+(-?[\d.]+,\d+)\s+(-?[\d.]+,\d{2})$/;
+  lineas.forEach(l=>{
+    const m=l.match(RE); if(!m) return;
+    const cod=m[1], cant=numeroSig(m[3]), imp=numeroSig(m[4]);
+    if(cant) rubro[cod]=(rubro[cod]||0)+cant;
+    if(imp) importe[cod]=(importe[cod]||0)+imp;
+  });
+  if(!Object.keys(rubro).length) return {error:`En “${nombreArch}” no encontré el resumen por rubros.`};
+  const fechas=[...plano.matchAll(/(\d{2})\/(\d{2})\/(\d{4})/g)].map(m=>`${m[3]}-${m[2]}-${m[1]}`).sort();
+  const rango=plano.match(/CIERRE DE CAJA NRO:\s*(\d+)\s*al\s*(\d+)/i);
+  const tk=plano.match(/FACTURAS?\s*\([A-Z]\)\s*:?\s*PRIM:?\s*(\d+)\s*ULT:?\s*(\d+)/i);
+  return {rubro,importe,
+    desde:fechas[0]||'', hasta:fechas[fechas.length-1]||'',
+    ym:(fechas[0]||'').slice(0,7),
+    cierres:rango?`${rango[1]} al ${rango[2]}`:'',
+    tickets:tk?Math.max(0,Number(tk[2])-Number(tk[1])+1):0, arch:nombreArch};
+}
+// el mes sale de los cierres diarios; si no hay, del consolidado cargado a mano
+async function ventasMesTienda(ym){
+  const ops=await leer(`ops:tienda:${ym}`,{});
+  const imp=await admin('tienda-importes',{});
+  let u=0,i=0,tab=0,fue=0,tk=0,turnos=0;
+  Object.values(ops).forEach(dia=>Object.values(dia||{}).forEach(t=>{
+    const s=sinTabaco(t&&t.rubro); u+=s.dentro; tab+=s.tabaco; fue+=s.fuera;
+    tk+=Number(t&&t.tickets)||0; turnos++;
+  }));
+  Object.entries(imp).forEach(([f,v])=>{ if(!f.startsWith(ym+'-')) return;
+    Object.values(v||{}).forEach(t=>{ i+=sinTabaco(t&&t.porRubro).dentro; }); });
+  if(turnos) return {unidades:u,importe:i,tabaco:tab,fuera:fue,tickets:tk,turnos,fuente:'diarios'};
+  const m=await leer(`tienda:mes:${ym}`,null);
+  if(m){ const s=sinTabaco(m.rubro), p=sinTabaco(m.importe);
+    return {unidades:s.dentro,importe:p.dentro,tabaco:s.tabaco,fuera:s.fuera,
+            tickets:m.tickets||0,turnos:0,fuente:'mes',cierres:m.cierres||'',arch:m.arch||''}; }
+  return {unidades:0,importe:0,tabaco:0,fuera:0,tickets:0,turnos:0,fuente:'vacio'};
+}
+
+async function tabVentasTienda(){
+  const ym=S.vtMes||hoyISO().slice(0,7);
+  const [anio,mes]=ym.split('-');
+  const ops=await leer(`ops:tienda:${ym}`,{});
+  const imp=await admin('tienda-importes',{});
+  const turnos=S.cfg.turnos.tienda;
+  const rotT=t=>((turnos.find(x=>x.id===t)||{}).nombre||t);
+  const dias=[...new Set([...Object.keys(ops),
+    ...Object.keys(imp).filter(k=>k.startsWith(ym+'-')).map(k=>k.slice(8))])].sort();
+
+  const vm=await ventasMesTienda(ym);
+  const cCalc=await combosCalc(), cMano=await combosMano(), cUsa=await combos();
+  let tU=0,tI=0,tTab=0,tFue=0,tTk=0;
+  const filas=dias.map(d=>{
+    const fecha=`${ym}-${d}`;
+    return turnos.map(tt=>{
+      const o=(ops[d]||{})[tt.id], im=(imp[fecha]||{})[tt.id];
+      if(!o&&!im) return '';
+      const u=sinTabaco(o?o.rubro:{}), p=sinTabaco(im?im.porRubro:{});
+      const tk=Number(o&&o.tickets)||0;
+      tU+=u.dentro; tI+=p.dentro; tTab+=u.tabaco; tFue+=u.fuera; tTk+=tk;
+      return `<tr>
+        <td>${d}/${mes}</td><td>${esc(rotT(tt.id))}</td>
+        <td class="num" style="color:var(--tinta-suave)">${im&&im.cierre?esc(im.cierre):'—'}</td>
+        <td class="num"><strong>${nf(u.dentro)}</strong></td>
+        <td class="num"><strong>${p.dentro?nf(p.dentro):'—'}</strong></td>
+        <td class="num" style="color:var(--tinta-suave)">${u.tabaco?nf(u.tabaco):'—'}</td>
+        <td class="num" style="color:var(--tinta-suave)">${u.fuera?nf(u.fuera):'—'}</td>
+        <td class="num" style="color:var(--tinta-suave)">${tk?nf(tk):'—'}</td></tr>`;
+    }).join('');
+  }).join('');
+
+  const anios=[...new Set(Object.keys(imp).map(k=>k.slice(0,4)).concat(hoyISO().slice(0,4)))].sort();
+  return `<div class="aviso">Cuenta <strong>solo los rubros 02-</strong> y deja afuera Cigarrillos, Otros Tabacos, Tienda Residual y No Asignado. Es la forma en que da el consolidado del mes.</div>
+  <div class="filtro"><span class="et">Mes</span>
+    <select id="vt-anio">${anios.map(a=>`<option value="${a}"${a===anio?' selected':''}>${a}</option>`).join('')}</select>
+    <select id="vt-mes">${MESES_L.map((n,i)=>{const v=String(i+1).padStart(2,'0');
+      return `<option value="${v}"${v===mes?' selected':''}>${n}</option>`;}).join('')}</select>
+  </div>
+  <div class="totem">
+    <div class="totem-cab"><div class="t">Ventas sin tabaco</div><div class="d">${MESES_L[Number(mes)-1]} ${anio}</div></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--cian)"></span>
+      <span class="nom">Unidades</span><span class="guia"></span><span class="val">${nf(vm.unidades)}<i>u</i></span></div>
+    <div class="linea-totem"><span class="chip" style="background:#3DE0A0"></span>
+      <span class="nom">Importe</span><span class="guia"></span><span class="val">${nf(vm.importe)}<i>$</i></span></div>
+    <div class="totem-total"><span class="nom">${vm.fuente==='mes'?'Del mes completo':vm.fuente==='diarios'?vm.turnos+' turnos cargados':'Sin datos'}</span>
+      <span class="val">${nf(vm.tickets)}<i>tk</i></span></div>
+  </div>
+  <div class="tarjeta">
+    <h2>Mes completo</h2>
+    <p class="sub">Si no tenés los cierres día por día, cargá el consolidado del mes. <strong>Manda lo diario</strong>: si hay turnos cargados, el consolidado queda de reserva.</p>
+    <input type="file" id="vt-arch" accept=".htm,.html">
+    ${S.vtPrevia?(S.vtPrevia.error
+      ? `<div class="aviso mal" style="margin-top:11px">${esc(S.vtPrevia.error)}</div>`
+      : (()=>{const s=sinTabaco(S.vtPrevia.rubro), p=sinTabaco(S.vtPrevia.importe);
+          return `<div class="aviso bien" style="margin-top:11px">
+            Leí del <strong>${S.vtPrevia.desde.split('-').reverse().join('/')}</strong> al
+            <strong>${S.vtPrevia.hasta.split('-').reverse().join('/')}</strong>${S.vtPrevia.cierres?` · cajas ${esc(S.vtPrevia.cierres)}`:''}.
+            <br>Unidades sin tabaco: <strong>${nf(s.dentro)}</strong> · importe <strong>${nf(p.dentro)}</strong>
+            · tabaco ${nf(s.tabaco)} · residual ${nf(s.fuera)}.</div>
+          <button class="btn" id="vt-guardar">Guardar como ${MESES_L[Number(S.vtPrevia.ym.slice(5,7))-1]} ${S.vtPrevia.ym.slice(0,4)}</button>`;})()
+      ):''}
+    ${vm&&vm.fuente==='mes'?`<div class="aviso" style="margin-top:11px">Cargado el mes completo${vm.cierres?` · cajas ${esc(vm.cierres)}`:''}. 
+      <button class="btn sec chico" id="vt-borrar-mes" style="width:auto;margin:7px 0 0">Borrar el mes completo</button></div>`:''}
+  </div>
+  <div class="tarjeta">
+    <h2>Combos del mes</h2>
+    <p class="sub">Salen de los reportes de combos. Si un reporte abarca varios meses, el total cae entero en el último y los anteriores quedan en cero: acá lo corregís.</p>
+    <div class="rejilla">
+      <div><label>Calculado de los reportes</label>
+        <strong class="num">${cCalc[ym]?nf(cCalc[ym]):'—'}</strong></div>
+      <div><label for="vt-combos">A mano (manda sobre lo calculado)</label>
+        <input type="text" inputmode="numeric" class="n" id="vt-combos" value="${cMano[ym]??''}" placeholder="0"></div>
+      <div><label>Queda</label>
+        <strong class="num" style="color:var(--cian)">${cUsa[ym]?nf(cUsa[ym]):'—'}</strong></div>
+    </div>
+    ${cMano[ym]!==undefined?`<button class="btn sec chico" id="vt-combos-borrar" style="width:auto">Volver a lo calculado</button>`:''}
+  </div>
+  ${dias.length?`<div class="tarjeta">
+    <h2>Turno por turno</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Día</th><th>Turno</th><th class="num">Caja</th>
+        <th class="num">Unidades</th><th class="num">Importe</th>
+        <th class="num">Tabaco</th><th class="num">Residual</th><th class="num">Tickets</th></tr></thead>
+      <tbody>${filas}</tbody>
+      <tfoot><tr class="tot"><td colspan="3">Total del mes</td>
+        <td class="num">${nf(tU)}</td><td class="num">${nf(tI)}</td>
+        <td class="num">${nf(tTab)}</td><td class="num">${nf(tFue)}</td><td class="num">${nf(tTk)}</td></tr></tfoot>
+    </table></div>
+    <p class="sub" style="margin-top:9px">Tabaco y Residual se muestran al costado solo para controlar; no entran en el total.</p>
+    <button class="btn sec" id="vt-borrar-dias">Borrar los ${dias.length} días cargados de ${MESES_L[Number(mes)-1]}</button>
+  </div>`:`<div class="tarjeta"><p class="vacio">No hay cierres cargados en ${MESES_L[Number(mes)-1]} ${anio}.<br>Se cargan desde Tienda Full → Cierres de caja.</p></div>`}`;
+}
 
 async function tabObjTienda(){
   const o=await objTienda(), r=await roll('tienda'), C=await combos();
@@ -4035,6 +4652,291 @@ async function tabObjTienda(){
           <td class="num">${v.min?nf(v.min):'—'}</td><td class="num">${v.max?nf(v.max):'—'}</td>
           <td class="num"><strong>${nf(real)}</strong></td></tr>`;}).join('')}
       </tbody></table></div>
+  </div>`;
+}
+
+
+async function vistaLibre(){
+  const d=await cargarLibre(), ed=S.libreEdit;
+  const v=await ventasLibre(S.libreAnio,S.libreTrim,S.libreMes);
+  const nfd=(v,dec)=>v===''||v===null||v===undefined?'—':nf(Number(v),dec);
+  let posibles=0, obtenidos=0;
+  const filas=d.filas.map((f,i)=>{
+    const p=pctYPF(f.real,f.min,f.max);
+    const pts=(Number(f.pts)||0)*p/100;
+    posibles+=Number(f.pts)||0; obtenidos+=pts;
+    // los decimales salen del propio número, como los manda YPF
+    const decDe=v=>{ const s=String(v??''); const i=s.indexOf('.'); return i<0?0:Math.min(2,s.length-i-1); };
+    const dec=Math.max(decDe(f.min),decDe(f.max),decDe(f.real));
+    const cel=(k,ancho)=>ed
+      ? `<input type="text" inputmode="decimal" class="lb-in" data-lb="${i}" data-k="${k}"
+           value="${f[k]===''||f[k]===null||f[k]===undefined?'':String(f[k]).replace('.',',')}" style="width:${ancho}px">`
+      // los m3 se muestran en litros; los números grandes van redondos
+      : (()=>{ const v=f[k];
+          if(v===''||v===null||v===undefined) return '—';
+          if(esVolumen(f)) return nf(Number(v),0);
+          return `${nfd(v,Math.abs(Number(v))>=1000?0:Math.max(dec,decDe(v)))}${f.uni==='%'?' %':''}`;
+        })();
+    return `<tr>
+      <td class="lb-con">${ed
+        ? `<input type="text" class="lb-in lb-txt" data-lb="${i}" data-k="c" value="${esc(f.c)}">
+           <input type="text" class="lb-in lb-txt lb-sub" data-lb="${i}" data-k="sub" value="${esc(f.sub||'')}" placeholder="aclaración">`
+        : `${esc(f.c)}${f.sub?` <span class="lb-sub-t">${esc(f.sub)}</span>`:''}`}</td>
+      <td>${cel('min',82)}</td>
+      <td>${cel('max',82)}</td>
+      <td class="lb-real">${cel('real',82)}</td>
+      <td>${nf(p,1)} %</td>
+      <td>${ed?`<input type="text" inputmode="numeric" class="lb-in" data-lb="${i}" data-k="pts" value="${f.pts??''}" style="width:56px">`:nf(Number(f.pts)||0,0)}</td>
+      <td>${nf(pts,1)}</td>
+      <td class="lb-auto"><span class="lb-pto ${LIBRE_AUTO.some(x=>x.re.test(f.c))?'si':'no'}"
+        title="${LIBRE_AUTO.some(x=>x.re.test(f.c))?'Entra solo desde las ventas de playa':'Lo cargás a mano'}"></span></td>
+      <td class="lb-fec">${ed
+        ? `<input type="text" class="lb-in lb-txt" data-lb="${i}" data-k="fecha" value="${esc(f.fecha||'')}" style="width:92px">`
+        : esc(f.fecha||'')}</td>
+      ${ed?`<td><button class="lb-x" data-lbdel="${i}" aria-label="Quitar">×</button></td>`:''}
+    </tr>`;
+  }).join('');
+
+  return `<div class="envoltorio libre-ancho">
+    <div class="ypf-hoja">
+      <div class="ypf-tope">
+        <div class="ypf-logo">YPF</div>
+        <div class="ypf-tit">${ed?`<input type="text" class="lb-in lb-txt" id="lb-titulo" value="${esc(d.titulo)}">`:esc(d.titulo)}</div>
+        <div class="ypf-rot">${esc(d.rotulo)}<br><small style="font-size:12px;letter-spacing:.04em;opacity:.85">${MESES_L[Number(S.libreMes)-1]} ${S.libreAnio} · ${ROMANO[S.libreTrim-1]} trimestre</small></div>
+        <button class="ypf-lapiz" id="lb-imprimir" title="Imprimir" aria-label="Imprimir" style="right:54px">⎙</button>
+        <button class="ypf-lapiz${ed?' act':''}" id="lb-editar" title="${ed?'Listo':(S.libreOk?'Modificar':'Modificar · pide clave')}" aria-label="${ed?'Listo':'Modificar'}">${ed?'✓':'✎'}</button>
+      </div>
+      <div class="ypf-cuerpo">
+        <div class="ypf-cond">
+          <h3>Condiciones básicas solicitadas</h3>
+          <ul>${d.condiciones.map((c,i)=>`<li>${ed
+            ? `<textarea class="lb-in lb-area" data-cond="${i}" rows="3">${esc(c)}</textarea>`
+            : esc(c)}</li>`).join('')}</ul>
+          ${ed?`<button class="btn sec chico" id="lb-addcond" style="width:auto">Agregar condición</button>`:''}
+        </div>
+        <div class="ypf-tabla">
+          <div class="scroll"><table class="ypf-t">
+            <thead><tr>${ed?'<th class="lb-autoh">Ver</th>':''}<th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
+              <th>% Cumplimiento</th><th>Puntos posibles</th><th>Puntos obtenidos</th>
+              <th class="lb-autoh" title="Verde: entra solo. Rojo: a mano.">Auto</th>
+              <th class="lb-fech">Fecha de actualización</th>${ed?'<th></th>':''}</tr></thead>
+            <tbody>${filas}</tbody>
+            <tfoot><tr class="ypf-pie">
+              <td colspan="5"></td>
+              <td><span>${nf(posibles,0)}</span><small>Puntos Posibles</small></td>
+              <td><span>${nf(obtenidos,1)}</span><small>Puntos obtenidos</small></td>
+              <td colspan="${ed?3:2}"></td>
+            </tr></tfoot>
+          </table></div>
+          ${ed?`<button class="btn sec chico" id="lb-addfila" style="width:auto;margin-top:9px">Agregar concepto</button>`:''}
+
+        </div>
+      </div>
+    </div>
+    <div class="lb-trim">
+      <span class="et">Trimestre</span>
+      <select id="lb-anio">${[Number(S.libreAnio)-1,Number(S.libreAnio),Number(S.libreAnio)+1].map(a=>
+        `<option value="${a}"${String(a)===S.libreAnio?' selected':''}>${a}</option>`).join('')}</select>
+      ${[1,2,3,4].map(x=>`<button data-lbtrim="${x}"${x===S.libreTrim?' class="act"':''}
+        title="${TRIM[x-1].map(m=>MESES[Number(m)-1]).join(' · ')}">${x}°</button>`).join('')}
+      <span class="lb-sep"></span>
+      <span class="et">Mes</span>
+      ${TRIM[S.libreTrim-1].map(m=>`<button data-lbmes="${m}"${m===S.libreMes?' class="act mes"':' class="mes"'}
+        >${MESES[Number(m)-1]}</button>`).join('')}
+      ${(()=>{ const p=v.por.find(x=>x.m===S.libreMes);
+        if(!p||!p.hay) return `<span class="lb-vmes vacio">${MESES_L[Number(S.libreMes)-1]} sin ventas cargadas</span>`;
+        return `<span class="lb-vmes">
+          <b>${MESES_L[Number(S.libreMes)-1]}</b>
+          <i>Total</i> <u>${nf(p.naftas+p.diesel)} L</u>
+          <i>Naftas</i> ${nf(p.naftas)}
+          <i>Diesel</i> ${nf(p.diesel)}
+          <i>Mix</i> ${nf(p.naftas?p.inf/p.naftas*100:0,1)} %</span>`; })()}
+    </div>
+    ${bloqueDatosLibre(d,v)}
+    <p class="sub">Los volúmenes van en litros. Si escribís con coma se toma como m3: <strong>139,5</strong> queda en <strong>139.500</strong>; si escribís <strong>139500</strong> queda igual. Cada mes guarda sus propios objetivos. El porcentaje sale de la regla de YPF: por debajo del mínimo es 0, en el mínimo vale 70% y sube hasta 100% en el máximo.</p>
+  </div>`;
+}
+
+// debajo del cuadro: lo que sale solo de las ventas y lo que hay que cargar a mano
+function bloqueDatosLibre(d,v){
+  const auto=[], mano=[];
+  d.filas.forEach((f,i)=>{
+    const a=LIBRE_AUTO.find(x=>x.re.test(f.c));
+    if(a) auto.push({i,f,a}); else mano.push({i,f});
+  });
+  const val=a=>v[a.k];                           // todo en litros
+  const fmt=(x,a)=>(a.m3||a.ent)?nf(x):nf(x,1)+' %';
+  const filasMes=v.por.map(p=>`<tr${p.hay?'':' style="opacity:.5"'}>
+      <td>${MESES_L[Number(p.m)-1]}</td>
+      <td class="num">${p.naftas?nf(p.naftas):'—'}</td>
+      <td class="num">${p.diesel?nf(p.diesel):'—'}</td>
+      <td class="num">${p.naftas?nf(p.inf/p.naftas*100,1)+' %':'—'}</td>
+      <td class="num">${p.unidades?nf(p.unidades):'—'}</td>
+      <td class="num">${p.combos?nf(p.combos):'—'}</td></tr>`).join('');
+
+  const faltan=mano.filter(({f})=>f.real===''||f.real===null).length;
+  return `<details class="lb-plega"${S.libreDatosAbierto?' open':''} id="lb-datos">
+    <summary>
+      <span class="lb-flecha">▸</span>
+      <strong>Datos del mes</strong>
+      <small>${auto.length} entran solos${faltan?` · faltan cargar ${faltan}`:' · todo cargado'}</small>
+    </summary>
+    <div class="lb-datos">
+    <div class="lb-col">
+      <div class="eyebrow">Sale de las ventas de playa</div>
+      <p class="sub" style="margin:3px 0 0;font-size:11px">Acumulado del trimestre hasta ${MESES_L[Number(S.libreMes)-1]}, que es como lo mide YPF.</p>
+      <table class="lb-mini">
+        <thead><tr><th>Mes</th><th class="num">Naftas L</th><th class="num">Diesel L</th><th class="num">Mix</th><th class="num">Unid. s/tabaco</th><th class="num">Combos</th></tr></thead>
+        <tbody>${filasMes}</tbody>
+        <tfoot><tr><td>Hasta ${MESES[Number(S.libreMes)-1]}</td><td class="num">${nf(v.naftas)}</td>
+          <td class="num">${nf(v.diesel)}</td><td class="num">${nf(v.mix,1)} %</td>
+          <td class="num">${nf(v.unidades)}</td><td class="num">${nf(v.combos)}</td></tr></tfoot>
+      </table>
+      ${auto.length?`<div class="lb-cmp">${auto.map(({f,a})=>{
+        const nuevo=val(a), act=Number(f.real);
+        const igual=isFinite(act)&&Math.abs(act-nuevo)<0.05;
+        return `<div><span>${esc(a.rot)}</span><b class="${igual?'ok':''}">${fmt(nuevo,a)}</b>
+          <small>${f.real===''||f.real===null?'sin cargar':'ahora '+fmt(act,a)}</small></div>`;}).join('')}</div>
+        <button class="btn sec chico" id="lb-traer" style="width:auto;margin:7px 0 0">${S.libreOk?'':'🔒 '}Actualizar desde las ventas</button>`:''}
+    </div>
+    <div class="lb-col">
+      <div class="eyebrow">Lo cargás a mano</div>
+      <ul class="lb-mano">${mano.map(({f})=>`<li><span>${esc(f.c)}</span>
+        <b class="${f.real===''||f.real===null?'falta':''}">${f.real===''||f.real===null?'sin cargar':nf(Number(f.real),Math.abs(Number(f.real))>=1000?0:2)}</b></li>`).join('')}</ul>
+    </div>
+  </div>`;
+}
+
+// el objetivo del mes solo, cuando lo que está cargado es acumulado del trimestre
+function mesDeAcum(o,anio,mes,k){
+  const meses=TRIM[trimDe(mes)-1];
+  let pMin=0,pMax=0,r={min:0,max:0};
+  for(const m of meses){
+    const v=(o[`${anio}-${m}`]||{})[k]||{};
+    const mi=Number(v.min)||0, ma=Number(v.max)||0;
+    if(m===mes){ r=(mi||ma)?{min:mi-pMin,max:ma-pMax}:{min:0,max:0}; break; }
+    if(mi||ma){ pMin=mi; pMax=ma; }
+  }
+  return r;
+}
+
+// el mismo cuadro de YPF pero con el objetivo del mes, para que se entienda más fácil.
+// los objetivos salen de Libre, que los tiene acumulados del trimestre: acá se resta el mes anterior.
+async function vistaObjYPF(sec){
+  sec=sec||'playa';
+  const hoy=hoyISO();
+  const ym=S.oyMes||hoy.slice(0,7), anio=ym.slice(0,4), mes=ym.slice(5,7);
+  const hoja=await leer(claveLibre(anio,mes),null);
+  const kOc=`objypf:ocultos:${sec}`;
+  if(!S.oyOcultos) S.oyOcultos={};
+  if(!S.oyOcultos[sec]){
+    let v=await leer(kOc,null);
+    if(!v&&sec==='playa') v=await leer('objypf:ocultos',[]);   // lo que ya estaba configurado
+    S.oyOcultos[sec]=v||[];
+  }
+  const ocultos=S.oyOcultos[sec];
+  const oculto=c=>ocultos.includes(norm(c));
+  const ed=S.oyEdit;
+  const meses=TRIM[trimDe(mes)-1], i=meses.indexOf(mes);
+  const previa=i>0?await leer(claveLibre(anio,meses[i-1]),null):null;
+
+  const r=await roll('playa'), C=await combos(), L=await litrosLubri();
+  const iN=idsFam('Naftas'), iD=idsFam('Diesel');
+  const vt=await ventasMesTienda(ym);
+  const nafta=vendFam(r,ym,iN), diesel=vendFam(r,ym,iD), inf=vendFam(r,ym,[ID_INFINIA]);
+  const REAL=[
+    {re:/diesel/i,      v:diesel},
+    {re:/naftas/i,      v:nafta},
+    {re:/mix/i,         v:nafta?inf/nafta*100:0},
+    {re:/lubricante/i,  v:Number(L[ym])||0},
+    {re:/unidades/i,    v:vt.unidades},
+    {re:/combos/i,      v:Number(C[ym])||0},
+  ];
+
+  const anios=[...new Set(Object.keys(r).map(k=>k.slice(0,4)).concat(hoy.slice(0,4)))].sort();
+  const barra=`<div class="lb-trim">
+      <span class="et">Mes</span>
+      <select id="oy-anio">${anios.map(a=>`<option value="${a}"${a===anio?' selected':''}>${a}</option>`).join('')}</select>
+      <select id="oy-mes">${MESES_L.map((n,k)=>{const v=String(k+1).padStart(2,'0');
+        return `<option value="${v}"${v===mes?' selected':''}>${n}</option>`;}).join('')}</select>
+      <span class="lb-vmes"><b>${MESES_L[Number(mes)-1]}</b>
+        <i>Total</i> <u>${nf(nafta+diesel)} L</u>
+        <i>Naftas</i> ${nf(nafta)} <i>Diesel</i> ${nf(diesel)}</span>
+    </div>`;
+
+  if(!hoja||!hoja.filas||!hoja.filas.length)
+    return `<div class="envoltorio libre-ancho">
+      <div class="aviso mal">Todavía no hay un cuadro de <strong>${MESES_L[Number(mes)-1]} ${anio}</strong>.
+      Los objetivos salen de la pestaña <strong>Libre</strong>: entrá ahí, elegí ese mes y cargalos.</div>
+      ${barra}</div>`;
+
+  let pos=0, obt=0, sinObj=0;
+  const cuerpo=hoja.filas.map(f=>{
+    const oc=oculto(f.c);
+    if(oc&&!ed) return '';
+    const pct100=f.uni==='%';
+    // no se acumulan: los porcentajes y el lubricante, que va igual todo el trimestre
+    const noAcum=pct100||/lubricante/i.test(f.c);
+    const ant=previa&&previa.filas?previa.filas.find(x=>norm(x.c)===norm(f.c)):null;
+    // los porcentajes no se acumulan; los volúmenes y las unidades sí
+    const baja=(k)=>{
+      const v=Number(f[k]); if(!isFinite(v)||f[k]===''||f[k]===null) return '';
+      if(noAcum||!ant) return v;
+      const a=Number(ant[k]);
+      return (isFinite(a)&&ant[k]!==''&&ant[k]!==null)?Math.round((v-a)*100)/100:v;
+    };
+    const auto=REAL.find(x=>x.re.test(f.c));
+    const min=baja('min'), max=baja('max');
+    const real=auto?(auto.v||''):f.real;
+    const p=pctYPF(real,min,max);
+    const pts=(Number(f.pts)||0)*p/100;
+    if(!oc){ pos+=Number(f.pts)||0; obt+=pts; if(!min&&!max) sinObj++; }
+    const esVol=/m3/i.test(`${f.c} ${f.sub||''}`);
+    const dec=v=>{const s=String(v??'');const j=s.indexOf('.');return j<0?0:Math.min(2,s.length-j-1);};
+    const cel=v=>{ if(v===''||v===null||v===undefined) return '—';
+      if(esVol) return nf(Number(v),0);
+      if(pct100) return nf(Number(v),Math.max(1,dec(v)))+' %';
+      return nf(Number(v),Math.abs(Number(v))>=1000?0:dec(v)); };
+    return `<tr${oc?' style="opacity:.42"':''}>
+      ${ed?`<td class="lb-auto"><input type="checkbox" data-oyver="${esc(f.c)}"${oc?'':' checked'}
+             title="${oc?'Oculto: no se muestra ni suma':'Se muestra'}"></td>`:''}
+      <td class="lb-con">${esc(f.c)}${f.sub?` <span class="lb-sub-t">${esc(f.sub)}</span>`:''}${oc&&ed?' <span class="lb-sub-t">(oculto)</span>':''}</td>
+      <td>${cel(min)}</td><td>${cel(max)}</td><td>${cel(real)}</td>
+      <td>${nf(p,1)} %</td><td>${nf(Number(f.pts)||0,0)}</td><td>${nf(pts,1)}</td>
+      <td class="lb-auto"><span class="lb-pto ${auto?'si':'no'}"
+        title="${auto?'Sale solo de lo cargado':'Sale de lo que cargaste en Libre'}"></span></td></tr>`;
+  }).join('');
+
+  return `<div class="envoltorio libre-ancho">
+    ${sinObj?`<div class="aviso mal">Faltan objetivos de ${MESES_L[Number(mes)-1]} en ${sinObj} concepto${sinObj>1?'s':''}. Se cargan en la pestaña <strong>Libre</strong>, en ese mes.</div>`:''}
+    <div class="ypf-hoja">
+      <div class="ypf-tope">
+        <div class="ypf-logo">YPF</div>
+        <div class="ypf-tit">${esc(hoja.titulo||S.cfg.estacion)}</div>
+        <div class="ypf-rot">OBJETIVOS DEL MES<br>
+          <small style="font-size:12px;letter-spacing:.04em;opacity:.85">${MESES_L[Number(mes)-1]} ${anio}</small></div>
+        <button class="ypf-lapiz" id="oy-imprimir" title="Imprimir" aria-label="Imprimir" style="right:54px">⎙</button>
+        <button class="ypf-lapiz${ed?' act':''}" id="oy-editar" style="right:12px"
+          title="${ed?'Listo':'Ocultar conceptos · pide clave'}" aria-label="Ocultar conceptos">${ed?'✓':'✎'}</button>
+      </div>
+      <div class="ypf-cuerpo" style="grid-template-columns:minmax(0,1fr)">
+        <div class="ypf-tabla">
+          <div class="scroll"><table class="ypf-t">
+            <thead><tr>${ed?'<th class="lb-autoh">Ver</th>':''}<th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
+              <th>% Cumplimiento</th><th>Puntos posibles</th><th>Puntos obtenidos</th>
+              <th class="lb-autoh" title="Verde: entra solo. Rojo: sale de Libre.">Auto</th></tr></thead>
+            <tbody>${cuerpo}</tbody>
+            <tfoot><tr class="ypf-pie"><td colspan="${ed?6:5}"></td>
+              <td><span>${nf(pos,0)}</span><small>Puntos Posibles</small></td>
+              <td><span>${nf(obt,1)}</span><small>Puntos obtenidos</small></td>
+              <td></td></tr></tfoot>
+          </table></div>
+        </div>
+      </div>
+    </div>
+    ${barra}
+    ${ed?`<div class="aviso">Destildá los conceptos que no querés mostrar. Los ocultos <strong>tampoco suman puntos</strong>. Se aplica a todos los meses.</div>`:''}
+    <p class="sub">Los objetivos salen de <strong>Libre</strong>. Como YPF los manda acumulados del trimestre, acá se resta ${i>0?`lo de ${MESES_L[Number(meses[i-1])-1]}`:'nada, porque es el primer mes del trimestre'} para mostrar <strong>lo que hay que hacer en ${MESES_L[Number(mes)-1]}</strong>. El <strong>lubricante</strong> y los porcentajes van tal cual: no se acumulan.</p>
   </div>`;
 }
 
@@ -4864,6 +5766,12 @@ async function espacioUsado(){
   }
   return {total,adj};
 }
+const TEMAS=[
+  {id:'oscuro',rot:'Oscuro',sub:'El de siempre',cols:['#070A12','#0E1422','#22E3F5','#E6EDF8']},
+  {id:'suave', rot:'Suave', sub:'Igual pero más claro',cols:['#0F1520','#18202E','#4FD8E8','#EDF2FA']},
+  {id:'ypf',   rot:'YPF',   sub:'Los azules de YPF',cols:['#14213D','#24457C','#3E9BEA','#FFFFFF']},
+  {id:'claro', rot:'Claro', sub:'Fondo blanco',cols:['#EEF2F8','#FFFFFF','#0F7FA8','#16233C']},
+];
 async function tabConfig(){
   const esp=await espacioUsado();
   const tope=5*1024*1024, pc=Math.min(100,Math.round(esp.total/tope*100));
@@ -4876,6 +5784,13 @@ async function tabConfig(){
       <div><label for="cf-c">Clave de administración</label><input type="text" id="cf-c" value="${esc(c.clave)}"></div>
     </div>
     <button class="btn" id="guardarConfig">Guardar</button></div>
+  <div class="tarjeta"><h2>Colores del panel</h2>
+    <p class="sub">Se aplica al toque y queda guardado.</p>
+    <div class="temas">${TEMAS.map(t=>`
+      <button class="tema${(c.tema||'oscuro')===t.id?' act':''}" data-tema="${t.id}">
+        <span class="muestra">${t.cols.map(x=>`<i style="background:${x}"></i>`).join('')}</span>
+        <strong>${t.rot}</strong><small>${t.sub}</small>
+      </button>`).join('')}</div></div>
   <div class="tarjeta"><h2>Turnos</h2>
     <p class="sub">Playa ${c.turnos.playa.length} · Tienda Full ${c.turnos.tienda.length} · Boxes ${c.turnos.boxes.length}</p>
     ${Object.entries(c.turnos).map(([k,ts])=>`<div class="campo"><label>${SECTORES[k]}</label>
@@ -4909,6 +5824,7 @@ async function tabConfig(){
 /* ---------- render ---------- */
 async function render(){
   const app=document.getElementById('app');
+  app.dataset.tema=S.cfg.tema||'oscuro';
   if(S.cargando){ app.innerHTML=`<div class="vacio" style="padding-top:60px">Abriendo el panel…</div>`; return; }
   if(!S.entrado){ app.innerHTML=portada(); conectar(); return; }
   const agenda=await agendaCumples();
@@ -4916,6 +5832,7 @@ async function render(){
   const hayFestejo=agenda.some(x=>x.p.dias===0);
   let c='';
   if(S.vista==='admin') c=S.abierto?await vistaAdmin():candado();
+  else if(S.vista==='libre') c=await vistaLibre();
   else c=await vistaSector(S.vista);
   app.innerHTML=barra()+c+(S.ctrlEdit?panelCarga():'')+(S.avisoAbierto?panelAviso():'')+(S.cumplesAbierto?panelCumples():'');
   conectar();
@@ -5009,6 +5926,75 @@ function conectar(){
     }catch(e){ S.syncEstado={ok:false,msg:'No se pudo traer: '+((e&&e.message)||'error')}; }
     syb.disabled=false; syb.textContent='Traer lo de la planilla a esta computadora'; await render();
   };
+
+  // ---- Libre ----
+  // pide la clave una vez por sesión, para modificar o para actualizar
+  const pedirClave=()=>{
+    if(S.libreOk) return true;
+    const v=prompt('Clave para modificar el cuadro de YPF');
+    if(v===null) return false;
+    if(v.trim()===(S.cfg.claveLibre||'2025')){ S.libreOk=true; return true; }
+    toast('Clave incorrecta');
+    return false;
+  };
+  const abLib=q('#abrirLibre'), clLib=q('#claveLibre');
+  const entrarLibre=async()=>{
+    if(clLib.value.trim()===(S.cfg.claveLibre||'2025')){ S.libreOk=true; await render(); }
+    else { toast('Clave incorrecta'); clLib.value=''; clLib.focus(); }
+  };
+  if(abLib) abLib.onclick=entrarLibre;
+  if(clLib) clLib.onkeydown=e=>{ if(e.key==='Enter') entrarLibre(); };
+  const lbDat=q('#lb-datos');
+  if(lbDat) lbDat.ontoggle=()=>{ S.libreDatosAbierto=lbDat.open; };
+  const lbTr=q('#lb-traer');
+  if(lbTr) lbTr.onclick=async()=>{
+    if(!pedirClave()) return;
+    const n=await volcarVentasLibre(); await render();
+    toast(n?`${n} datos actualizados desde las ventas`:'No hay ventas cargadas en esos meses');
+  };
+  const lbAn=q('#lb-anio');
+  if(lbAn) lbAn.onchange=async()=>{ S.libreAnio=lbAn.value; S.libreMes=null; S.libre=null; await render(); };
+  document.querySelectorAll('#app [data-lbtrim]').forEach(b=>b.onclick=async()=>{
+    S.libreTrim=Number(b.dataset.lbtrim); S.libreMes=null; S.libre=null; await render();
+  });
+  document.querySelectorAll('#app [data-lbmes]').forEach(b=>b.onclick=async()=>{
+    S.libreMes=b.dataset.lbmes; S.libre=null; await render();
+  });
+  const lbPr=q('#lb-imprimir');
+  if(lbPr) lbPr.onclick=async()=>{
+    if(S.libreEdit){ S.libreEdit=false; await guardarLibre(); await render(); }  // sin los campos de edición
+    setTimeout(()=>window.print(),120);
+  };
+  const lbEd=q('#lb-editar');
+  if(lbEd) lbEd.onclick=async()=>{
+    if(!S.libreEdit&&!pedirClave()) return;        // para modificar hace falta la clave
+    S.libreEdit=!S.libreEdit;
+    if(!S.libreEdit) await guardarLibre();
+    await render();
+  };
+  document.querySelectorAll('#app [data-lb]').forEach(i=>i.onchange=async()=>{
+    const f=S.libre.filas[Number(i.dataset.lb)], k=i.dataset.k;
+    f[k]=(k==='c'||k==='sub'||k==='fecha') ? i.value
+       : (i.value.trim()==='' ? ''
+         : (esVolumen(f) ? aLitros(i.value) : numero(i.value)));
+    await guardarLibre();
+    const t=q('.ypf-tabla'); if(t) await render();
+  });
+  document.querySelectorAll('#app [data-cond]').forEach(t=>t.onchange=async()=>{
+    S.libre.condiciones[Number(t.dataset.cond)]=t.value; await guardarLibre();
+  });
+  const lbT=q('#lb-titulo');
+  if(lbT) lbT.onchange=async()=>{ S.libre.titulo=lbT.value; await guardarLibre(); };
+  const lbAF=q('#lb-addfila');
+  if(lbAF) lbAF.onclick=async()=>{
+    S.libre.filas.push({c:'Nuevo concepto',sub:'',min:'',max:'',real:'',pts:0,fecha:''});
+    await guardarLibre(); await render();
+  };
+  const lbAC=q('#lb-addcond');
+  if(lbAC) lbAC.onclick=async()=>{ S.libre.condiciones.push('Nueva condición'); await guardarLibre(); await render(); };
+  document.querySelectorAll('#app [data-lbdel]').forEach(b=>b.onclick=async()=>{
+    S.libre.filas.splice(Number(b.dataset.lbdel),1); await guardarLibre(); await render();
+  });
 
   // ---- compra de lubricante ----
   // se repinta solo el cuerpo: si redibujara todo, se perdería el foco al tipear
@@ -5514,14 +6500,24 @@ function conectar(){
     const p=S.previaCombos; if(!p||p.error) return;
     cbc.disabled=true; cbc.textContent='Cargando…';
     const CO=await cortesCombos();
-    CO[p.desde+'|'+p.hasta]={desde:p.desde,hasta:p.hasta,comida:p.acum.comida,cafe:p.acum.cafe,ts:Date.now()};
+    const k=p.desde+'|'+p.hasta;
+    const pisa=!!CO[k];
+    CO[k]={desde:p.desde,hasta:p.hasta,comida:p.acum.comida,cafe:p.acum.cafe,ts:Date.now()};
     if(await guardar('tienda:combos-cortes',CO)){
       S.cortes=CO; S.previaCombos=null;
       await recalcularCombosMes();
-      toast('Corte cargado'); await render();
+      toast(pisa?'Corte reemplazado':'Corte cargado'); await render();
     } else { cbc.disabled=false; cbc.textContent='Reintentar'; }
   };
   const cbx=q('#cb-cancelar'); if(cbx) cbx.onclick=async()=>{ S.previaCombos=null; await render(); };
+  const cbt=q('#cb-borrartodo');
+  if(cbt) cbt.onclick=async()=>{
+    if(!confirm('¿Borrar todos los cortes de combos?\n\nLos totales por mes quedan en cero hasta que vuelvas a cargarlos.')) return;
+    if(await guardar('tienda:combos-cortes',{})){
+      S.cortes={}; await recalcularCombosMes();
+      toast('Cortes borrados'); await render();
+    }
+  };
   document.querySelectorAll('#app [data-cbdel]').forEach(b=>b.onclick=async()=>{
     const CO=await cortesCombos(); delete CO[b.dataset.cbdel];
     if(await guardar('tienda:combos-cortes',CO)){ S.cortes=CO; await recalcularCombosMes(); toast('Corte quitado'); await render(); }
@@ -5894,26 +6890,27 @@ function conectar(){
   const vt=q('#objVerTrim'); if(vt) vt.onchange=async()=>{ S.objVerTrim=Number(vt.value); await render(); };
   const go=q('#guardarObj');
   if(go) go.onclick=async()=>{
-    const o=await admin('objetivos',{});
-    const anio=S.objAnio||hoyISO().slice(0,4), mes=S.objMes||hoyISO().slice(5,7), ym=`${anio}-${mes}`;
-    const reg={naftas:{},diesel:{},mix:{}};
-    let algo=false;
-    document.querySelectorAll('#app input[data-obj]').forEach(i=>{
-      const v=numero(i.value);
+    const o=await objComb();
+    const tocados={};
+    let mal=false;
+    document.querySelectorAll('#app input[data-ob]').forEach(i=>{
+      const ym=i.dataset.ob, met=i.dataset.met, k=i.dataset.k;
+      tocados[ym]=tocados[ym]||{naftas:{},diesel:{},mix:{}};
+      let v=numero(i.value);
       if(!v) return;
-      reg[i.dataset.obj][i.dataset.k]=v; algo=true;
+      if(met==='mix'){ if(v>100){ mal=true; return; } }
+      else v=Math.round(v*1000);          // se carga en miles de litros
+      tocados[ym][met][k]=v;
     });
-    if(!algo){ toast('Cargá al menos un objetivo'); return; }
-    if(reg.mix.min>100||reg.mix.max>100){ toast('El mix es un porcentaje: no puede pasar de 100'); return; }
-    o[ym]=reg;
-    if(await guardar('admin:objetivos',o)){ toast('Objetivo de '+MESES_L[Number(mes)-1]+' guardado'); await render(); }
+    if(mal){ toast('El mix es un porcentaje: no puede pasar de 100'); return; }
+    Object.entries(tocados).forEach(([ym,reg])=>{
+      const hay=['naftas','diesel','mix'].some(m=>Object.keys(reg[m]).length);
+      if(hay) o[ym]=reg; else delete o[ym];
+    });
+    if(await guardar('admin:objetivos',o)){ S.admin.objetivos=o; toast('Objetivos guardados'); await render(); }
   };
-  const bo=q('#borrarObj');
-  if(bo) bo.onclick=async()=>{
-    const o=await admin('objetivos',{});
-    delete o[`${S.objAnio||hoyISO().slice(0,4)}-${S.objMes||hoyISO().slice(5,7)}`];
-    if(await guardar('admin:objetivos',o)){ toast('Objetivo borrado'); await render(); }
-  };
+  const objA=q('#objAnio');
+  if(objA) objA.onchange=async()=>{ S.objAnio=objA.value; await render(); };
   const cmes=q('#cmpMes'); if(cmes) cmes.onchange=async()=>{ S.cmpMes=cmes.value; await render(); };
   document.querySelectorAll('#app [data-anio]').forEach(b=>b.onclick=async()=>{ S.cmpAnio=b.dataset.anio; await render(); });
   document.querySelectorAll('#app [data-csec]').forEach(b=>b.onclick=async()=>{ S.cargaSec=b.dataset.csec; S.borrador=null; await render(); });
@@ -6059,6 +7056,91 @@ function conectar(){
     toast('CSV descargado');
   };
 
+  const oyEd=q('#oy-editar');
+  if(oyEd) oyEd.onclick=async()=>{
+    if(!S.oyEdit&&!pedirClave()) return;
+    S.oyEdit=!S.oyEdit; await render();
+  };
+  document.querySelectorAll('#app [data-oyver]').forEach(c=>c.onchange=async()=>{
+    const sec=S.vista, n=norm(c.dataset.oyver), L=S.oyOcultos[sec]||[];
+    S.oyOcultos[sec] = c.checked ? L.filter(x=>x!==n) : [...new Set([...L,n])];
+    await guardar(`objypf:ocultos:${sec}`,S.oyOcultos[sec]); await render();
+  });
+  const oyA=q('#oy-anio'), oyM=q('#oy-mes');
+  const irOy=async()=>{ S.oyMes=`${oyA.value}-${oyM.value}`; await render(); };
+  if(oyA) oyA.onchange=irOy;
+  if(oyM) oyM.onchange=irOy;
+  const oyP=q('#oy-imprimir');
+  if(oyP) oyP.onclick=()=>window.print();
+  const rubEd=q('#rub-editar');
+  if(rubEd) rubEd.onclick=async()=>{
+    if(!S.rubEdit&&!pedirClave()) return;      // elegir rubros pide clave
+    S.rubEdit=!S.rubEdit; await render();
+  };
+  document.querySelectorAll('#app [data-rubver]').forEach(c=>c.onchange=async()=>{
+    const todos=[...listaDe('tienda').map(p=>p.id),...TIPOS_COMBO.map(t=>'cb-'+t.id)];
+    let L=(S.rubVer&&S.rubVer.length)?S.rubVer.slice():todos.slice();
+    L = c.checked ? [...new Set([...L,c.dataset.rubver])] : L.filter(x=>x!==c.dataset.rubver);
+    S.rubVer=L;
+    await guardar('tienda:rubros-ver',L); await render();
+  });
+  const rubT=q('#rub-todos');
+  if(rubT) rubT.onclick=async()=>{ S.rubVer=[]; await guardar('tienda:rubros-ver',[]); await render(); };
+  document.querySelectorAll('#app details[data-plega]').forEach(d=>d.ontoggle=()=>{
+    S.plegado[d.dataset.plega]=!d.open;
+  });
+  const vtC=q('#vt-combos');
+  if(vtC) vtC.onchange=async()=>{
+    const ym=S.vtMes||hoyISO().slice(0,7);
+    const M=await combosMano();
+    if(vtC.value.trim()==='') delete M[ym];
+    else M[ym]=Math.max(0,Math.round(numero(vtC.value)))||0;
+    if(await guardar('tienda:combos-mano',M)){ S.combosMano=M; toast('Combos actualizados'); await render(); }
+  };
+  const vtCB=q('#vt-combos-borrar');
+  if(vtCB) vtCB.onclick=async()=>{
+    const ym=S.vtMes||hoyISO().slice(0,7);
+    const M=await combosMano(); delete M[ym];
+    if(await guardar('tienda:combos-mano',M)){ S.combosMano=M; toast('Vuelve a lo calculado'); await render(); }
+  };
+  const vtF=q('#vt-arch');
+  if(vtF) vtF.onchange=async()=>{
+    const f=vtF.files&&vtF.files[0]; if(!f) return;
+    const txt=await f.text();
+    S.vtPrevia=leerMesTienda(txt,f.name);
+    if(!S.vtPrevia.error&&!S.vtPrevia.ym) S.vtPrevia={error:`En “${f.name}” no encontré las fechas del período.`};
+    await render();
+  };
+  const vtG=q('#vt-guardar');
+  if(vtG) vtG.onclick=async()=>{
+    const p=S.vtPrevia;
+    await guardar(`tienda:mes:${p.ym}`,{rubro:p.rubro,importe:p.importe,tickets:p.tickets,
+      cierres:p.cierres,desde:p.desde,hasta:p.hasta,arch:p.arch});
+    S.vtPrevia=null; S.vtMes=p.ym;
+    toast('Mes completo guardado'); await render();
+  };
+  const vtBM=q('#vt-borrar-mes');
+  if(vtBM) vtBM.onclick=async()=>{
+    const ym=S.vtMes||hoyISO().slice(0,7);
+    if(!confirm(`¿Borrar el mes completo de ${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}?`)) return;
+    await borrar(`tienda:mes:${ym}`); toast('Borrado'); await render();
+  };
+  const vtBD=q('#vt-borrar-dias');
+  if(vtBD) vtBD.onclick=async()=>{
+    const ym=S.vtMes||hoyISO().slice(0,7);
+    const rot=`${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}`;
+    if(!confirm(`¿Borrar todos los cierres diarios de ${rot}?\n\nNo se puede deshacer.`)) return;
+    await borrar(`ops:tienda:${ym}`);
+    const imp=await admin('tienda-importes',{});
+    Object.keys(imp).filter(k=>k.startsWith(ym+'-')).forEach(k=>delete imp[k]);
+    if(await guardar('admin:tienda-importes',imp)) S.admin['tienda-importes']=imp;
+    const roll=await leer('roll:tienda',{}); delete roll[ym]; await guardar('roll:tienda',roll);
+    toast(`Cierres de ${rot} borrados`); await render();
+  };
+  const vtA=q('#vt-anio'), vtM=q('#vt-mes');
+  const irVt=async()=>{ S.vtMes=`${vtA.value}-${vtM.value}`; await render(); };
+  if(vtA) vtA.onchange=irVt;
+  if(vtM) vtM.onchange=irVt;
   const cua=q('#cu-agregar');
   if(cua) cua.onclick=async()=>{
     const nom=q('#cu-nom').value.trim(), ape=q('#cu-ape').value.trim(), nac=q('#cu-nac').value;
@@ -6406,6 +7488,11 @@ function conectar(){
     }catch(e){ msg='Falló: '+((e&&e.message)||String(e)); }
     S.diag={ok,msg}; await render();
   };
+  document.querySelectorAll('#app .tema[data-tema]').forEach(b=>b.onclick=async()=>{
+    S.cfg.tema=b.dataset.tema;
+    if(await guardar('config',S.cfg)) toast('Colores cambiados');
+    await render();
+  });
   const gcf=q('#guardarConfig');
   if(gcf) gcf.onclick=async()=>{
     S.cfg.estacion=q('#cf-n').value.trim()||'Mi Estación';
