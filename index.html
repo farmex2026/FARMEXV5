@@ -4713,6 +4713,30 @@ const PREMIOS_SEC={playa:[
 
 // unidades de comida elaborada, envasada y cafetería del mes
 const RUBROS_CC=['02-241','02-198','02-232'];
+const dmy=t=>{ const f=new Date(t);
+  return `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()}`; };
+const maxTs=obj=>{ let t=0;
+  Object.values(obj||{}).forEach(dia=>Object.values(dia||{}).forEach(x=>{
+    const v=Number(x&&x.ts)||0; if(v>t) t=v; }));
+  return t; };
+// cuándo se cargó por última vez lo que alimenta cada fila
+async function fechaFuente(concepto,ym){
+  const c=norm(concepto);
+  if(/DIESEL|NAFTA|MIX/.test(c)) return (t=>t?dmy(t):'')(maxTs(await leer(`ops:playa:${ym}`,{})));
+  if(/UNIDADES/.test(c)){
+    const t=maxTs(await leer(`ops:tienda:${ym}`,{}));
+    if(t) return dmy(t);
+    const m=await leer(`tienda:mes:${ym}`,null);
+    return (m&&m.ts)?dmy(m.ts):'';
+  }
+  if(/COMBOS/.test(c)){
+    const CO=await cortesCombos();
+    let t=0;
+    Object.values(CO).forEach(x=>{ if((x.hasta||'').slice(0,7)===ym){ const v=Number(x.ts)||0; if(v>t) t=v; } });
+    return t?dmy(t):'';
+  }
+  return '';
+}
 async function ventaCafeComida(ym){
   const ops=await leer(`ops:tienda:${ym}`,{});
   let u=0, hay=false;
@@ -4841,6 +4865,8 @@ async function vistaObjYPF(sec){
 
   let pos=0, obt=0, sinObj=0;
   const delMes={};                       // lo del mes, para los objetivos por plata
+  const fechas={};
+  for(const f of hoja.filas) fechas[norm(f.c)]=await fechaFuente(f.c,ym);
   const cuerpo=hoja.filas.map(f=>{
     const oc=oculto(f.c);
     if(oc&&!ed) return '';
@@ -4873,7 +4899,7 @@ async function vistaObjYPF(sec){
              title="${oc?'Oculto: no se muestra ni suma':'Se muestra'}"></td>`:''}
       <td class="lb-auto"><span class="lb-pto ${auto?'si':'no'}"
         title="${auto?'Sale solo de lo cargado':'Sale de lo que cargaste en Libre'}"></span>
-        ${f.fecha?`<small>${esc(f.fecha)}</small>`:''}</td>
+        ${fechas[norm(f.c)]?`<small>${esc(fechas[norm(f.c)])}</small>`:''}</td>
       <td class="lb-con">${esc(f.c)}${f.sub?` <span class="lb-sub-t">${esc(f.sub)}</span>`:''}${oc&&ed?' <span class="lb-sub-t">(oculto)</span>':''}</td>
       <td>${cel(min)}</td><td>${cel(max)}</td><td>${cel(real)}</td>
       <td>${nf(p,1)} %</td><td>${nf(Number(f.pts)||0,0)}</td><td>${nf(pts,1)}</td></tr>`;
@@ -6923,7 +6949,7 @@ function conectar(){
   if(vtG) vtG.onclick=async()=>{
     const p=S.vtPrevia;
     await guardar(`tienda:mes:${p.ym}`,{rubro:p.rubro,importe:p.importe,tickets:p.tickets,
-      cierres:p.cierres,desde:p.desde,hasta:p.hasta,arch:p.arch});
+      cierres:p.cierres,desde:p.desde,hasta:p.hasta,arch:p.arch,ts:Date.now()});
     S.vtPrevia=null; S.vtMes=p.ym;
     toast('Mes completo guardado'); await render();
   };
