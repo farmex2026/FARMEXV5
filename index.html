@@ -475,13 +475,14 @@ table.mix tr:nth-child(odd) td{background:rgba(255,255,255,.025)}
 .ypf-logo{background:#0063BD;color:#fff;font-weight:800;font-size:30px;letter-spacing:.06em;
   padding:5px 17px;border-radius:3px}
 .ypf-tit{font-size:23px;font-weight:600;flex:1;min-width:150px}
-.ypf-rot{font-size:17px;letter-spacing:.1em;text-align:right;line-height:1.15;opacity:.95;padding-right:44px}
-.ypf-lapiz{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;
+.ypf-rot{font-size:17px;letter-spacing:.1em;text-align:right;line-height:1.15;opacity:.95;padding-right:96px}
+.ypf-lapiz{position:absolute;top:14px;right:12px;width:34px;height:34px;border-radius:50%;
   background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;
   font-size:16px;cursor:pointer;line-height:1}
 .ypf-lapiz:hover{background:rgba(255,255,255,.28)}
 .ypf-lapiz.act{background:#0063BD;border-color:#fff}
 .ypf-cuerpo{display:grid;grid-template-columns:1fr;gap:18px;padding:0 18px 20px}
+.ypf-cuerpo.una-col{grid-template-columns:minmax(0,1fr)}
 @media(min-width:900px){.ypf-cuerpo{grid-template-columns:300px minmax(0,1fr)}}
 .ypf-cond h3{font-size:14px;text-decoration:underline;margin:0 0 9px;font-weight:700}
 .ypf-cond ul{list-style:none;padding:0;margin:0;font-size:12.5px;line-height:1.4}
@@ -553,6 +554,18 @@ details.tarjeta.plega>*:last-child{padding-bottom:14px}
 .rub-item:hover{background:var(--panel-2)}
 .rub-item input{width:15px;height:15px;accent-color:var(--cian)}
 .rub-item .chip{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+.plata-caja{margin:2px 0 12px}
+tr.pl-max td{background:rgba(61,224,160,.07)}
+tr.pl-min td{background:rgba(34,227,245,.06)}
+.plata-btn{width:15px;height:15px;background:#fff;border:1px solid rgba(255,255,255,.55);
+  border-radius:2px;cursor:pointer;padding:0;display:block}
+.plata-btn:hover{box-shadow:0 0 0 3px rgba(255,255,255,.16)}
+.plata-btn.act{background:var(--cian);border-color:var(--cian)}
+.plata-panel{margin-top:9px;max-width:58%}
+.plata-panel table{font-size:13px}
+.plata-panel td,.plata-panel th{padding:6px 6px;white-space:nowrap}
+.plata-panel th{font-size:10px}
+@media(max-width:1100px){.plata-panel{max-width:100%}}
 .lb-plega{background:var(--panel);border:1px solid var(--linea-2);border-radius:var(--r);margin:0 0 10px}
 .lb-plega>summary{list-style:none;cursor:pointer;padding:9px 13px;display:flex;align-items:center;gap:9px;
   font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
@@ -694,11 +707,16 @@ details[open] summary::after{content:'–'}
   .ypf-hoja{border-radius:0;margin:0;box-shadow:none;width:100%}
   .ypf-hoja,.ypf-hoja *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .ypf-lapiz{display:none !important}
+  .lb-trim,.plata-panel,.plata-caja,.lb-plega,.aviso{display:none !important}
+  .top,.nav,.subnav,.filtro,.barra{display:none !important}
+  .ypf-t td.lb-auto,.ypf-t th.lb-autoh{display:none !important}
+  .envoltorio>p.sub{display:none !important}
   .ypf-tope{padding:9px 10px;gap:10px}
   .ypf-logo{font-size:21px;padding:3px 11px}
   .ypf-tit{font-size:16px}
   .ypf-rot{font-size:12px;padding-right:0}
   .ypf-cuerpo{grid-template-columns:210px minmax(0,1fr) !important;gap:10px;padding:0 10px 12px}
+  .ypf-cuerpo.una-col{grid-template-columns:minmax(0,1fr) !important}
   .ypf-cond h3{font-size:10px;margin-bottom:5px}
   .ypf-cond ul{font-size:8px;line-height:1.28}
   .ypf-cond li{margin-bottom:4px;padding-left:8px}
@@ -2096,170 +2114,6 @@ async function tabCombosTienda(){
   </div>`;
 }
 
-const TIPOS_OBJ={num:'Cantidad',pct:'Porcentaje',money:'Pesos',si:'Sí / No'};
-const uid2=()=>Math.random().toString(36).slice(2,9);
-const mObj=(nombre,tipo,objMin,valMin,objMax,valMax,exc)=>
-  ({id:uid2(),nombre,tipo,objMin,valMin,objMax,valMax,exc:!!exc,resultado:null,fuente:'',fuenteMeta:''});
-
-const PLANTILLA_OBJ=()=>[
-  {id:uid2(),nombre:'Vendedores — Combustibles',items:[
-    {...mObj('Combustibles Lts','num',75000,41420,null,72485),
-      fuente:'playa.total',fuenteMeta:'obj.comb'},
-    mObj('Infinias Lts','pct',0,31065,0,51775),
-    mObj('Elaion Lts.','num',175,20710,201,0),
-    mObj('Crosselling','money',500000,14497,800000,20710),
-    mObj('Crosselling unidades café','num',null,15862,null,22660),
-    mObj('Cliente incógnito','pct',90,18639,null,null,true),
-    mObj('Desempeño','pct',null,null,null,null),
-  ]},
-  {id:uid2(),nombre:'Vendedores — Cafetería y comidas',items:[
-    mObj('Ventas cafetería y comidas','money',18000000,54000,null,null),
-    mObj('Unidades totales s/tabaco','num',null,38000,null,57000),
-    mObj('Combos café y comidas','num',950,38000,1050,57000),
-    mObj('Crosselling','pct',27,26600,30,38000),
-    mObj('Bromatología','pct',90,19000,null,null,true),
-    mObj('Cliente incógnito','pct',90,19000,null,null,true),
-  ]},
-  {id:uid2(),nombre:'RRPP',items:[
-    mObj('Ventas naftas','num',50000,414200,null,486685),
-    mObj('Ventas diesel','num',25000,207100,null,283250),
-    mObj('Infinias Lts','pct',null,207100,null,486685),
-    mObj('Elaion Lts.','num',175,82840,null,103550),
-    mObj('Carga media','num',0,186390,0,258875),
-    mObj('GNC mts3','num',null,186390,null,258875),
-    mObj('Cliente incógnito','pct',90,62130,100,94240),
-    mObj('Trimestre + YPF','si',null,0,null,null,true),
-  ]},
-  {id:uid2(),nombre:'RRFF',items:[
-    mObj('Margen bruto','pct',43,152000,46,171000),
-    mObj('Cafetería unidades','num',40,152000,45,171000),
-    mObj('Comidas unidades','num',15,57000,20,76000),
-    mObj('Crosselling','pct',27,57000,30,76000),
-    mObj('Bromatología','pct',90,76000,100,114000,true),
-    mObj('Cliente incógnito','pct',90,76000,100,114000,true),
-    mObj('Trimestre + YPF','si',null,0,null,null,true),
-  ]},
-];
-
-// de dónde puede salir solo el resultado de un objetivo
-const FUENTES_OBJ=[
-  {id:'',            rot:'A mano'},
-  {id:'playa.total', rot:'Playa · litros totales'},
-  {id:'playa.naftas',rot:'Playa · litros naftas'},
-  {id:'playa.diesel',rot:'Playa · litros diesel'},
-  {id:'playa.mixinf',rot:'Playa · % Infinia sobre el total'},
-];
-async function valorFuente(fuente,ym){
-  if(!fuente) return null;
-  const r=await roll('playa'), x=r[ym];
-  if(!x) return null;
-  const suma=ids=>ids.reduce((a,c)=>a+((x.porProd||{})[c]||0),0);
-  const naftas=suma(idsFam('Naftas')), diesel=suma(idsFam('Diesel'));
-  if(fuente==='playa.total')  return x.total||0;
-  if(fuente==='playa.naftas') return naftas;
-  if(fuente==='playa.diesel') return diesel;
-  if(fuente==='playa.mixinf'){
-    const inf=suma(['inf','ind']);
-    return (x.total? inf/x.total*100 : 0);
-  }
-  return null;
-}
-
-// el objetivo del mes solo: la diferencia con el mes previo del trimestre
-function objDelMes(o,ym,met){
-  return {min:objV(o,ym,met,'min'),max:objV(o,ym,met,'max')};
-}
-// de dónde puede salir solo el mínimo y el máximo de un objetivo
-const FUENTES_META=[
-  {id:'',           rot:'Objetivo a mano'},
-  {id:'obj.comb',   rot:'Objetivo · naftas + diesel del mes'},
-  {id:'obj.naftas', rot:'Objetivo · naftas del mes'},
-  {id:'obj.diesel', rot:'Objetivo · diesel del mes'},
-  {id:'obj.mix',    rot:'Objetivo · mix Infinia vigente'},
-];
-async function valorMeta(fuente,ym){
-  if(!fuente) return null;
-  const o=await objComb();
-  if(fuente==='obj.mix'){
-    return {min:objV(o,ym,'mix','min')||null,max:objV(o,ym,'mix','max')||null};
-  }
-  const n=objDelMes(o,ym,'naftas'), d=objDelMes(o,ym,'diesel');
-  if(fuente==='obj.naftas') return {min:n.min||null,max:n.max||null,detalle:''};
-  if(fuente==='obj.diesel') return {min:d.min||null,max:d.max||null,detalle:''};
-  if(fuente==='obj.comb') return {
-    min:(n.min+d.min)||null, max:(n.max+d.max)||null,
-    detalle:(n.min||d.min)?`mín ${nf(n.min)} naftas + ${nf(d.min)} diesel · máx ${nf(n.max)} + ${nf(d.max)}`:''
-  };
-  return null;
-}
-
-function calcObjItem(it){
-  const r=it.resultado;
-  if(it.tipo==='si'){ const ok=r===true; return {cumple:ok,nivel:ok?'min':'no',pago:ok?(it.valMin||0):0}; }
-  if(r===null||r===undefined) return {cumple:false,nivel:'no',pago:0};
-  const hayMax=it.objMax!==null&&it.objMax!==undefined&&it.objMax>0;
-  if(hayMax&&r>=it.objMax) return {cumple:true,nivel:'max',pago:it.valMax||it.valMin||0};
-  if(it.objMin===null||it.objMin===undefined) return {cumple:false,nivel:'no',pago:0};
-  if(r>=it.objMin) return {cumple:true,nivel:'min',pago:it.valMin||0};
-  return {cumple:false,nivel:'no',pago:0};
-}
-function calcObjGrupo(g){
-  const filas=g.items.map(it=>({it,res:calcObjItem(it)}));
-  const falla=filas.filter(f=>f.it.exc&&!f.res.cumple).map(f=>f.it.nombre);
-  const bruto=filas.reduce((a,f)=>a+f.res.pago,0);
-  return {filas,falla,bruto,total:falla.length?0:bruto};
-}
-
-async function cargarObj2(per){
-  let base=await leer('objetivos:'+per,null);
-  if(!base){
-    // hereda los objetivos del último período cargado, sin los resultados
-    const idx=await leer('objetivos:indice',[]);
-    const previos=idx.filter(p=>p<per).sort();
-    if(previos.length){
-      const p=await leer('objetivos:'+previos[previos.length-1],null);
-      if(p){ base={periodo:per,grupos:JSON.parse(JSON.stringify(p.grupos))};
-        base.grupos.forEach(g=>g.items.forEach(it=>it.resultado=null)); }
-    }
-    if(!base) base={periodo:per,grupos:PLANTILLA_OBJ()};
-  }
-  base.periodo=per;
-  base.grupos.forEach(g=>g.items.forEach(it=>{
-    if(it.fuente===undefined) it.fuente='';
-    if(it.fuenteMeta===undefined) it.fuenteMeta='';
-    // corrige los tableros viejos que habían quedado con la fuente de naftas sola
-    if(/combustible/i.test(it.nombre)&&it.tipo==='num'){
-      if(!it.fuenteMeta||it.fuenteMeta==='obj.naftas'||it.fuenteMeta==='obj.diesel') it.fuenteMeta='obj.comb';
-      if(!it.fuente) it.fuente='playa.total';
-    }
-  }));
-  S.ob2=base;
-  await traerFuentesObj();
-}
-// completa los resultados que tienen fuente automática
-async function traerFuentesObj(){
-  if(!S.ob2) return;
-  for(const g of S.ob2.grupos)
-    for(const it of g.items){
-      // los litros de combustible siempre son naftas + diesel del mes
-      if(/combustible/i.test(it.nombre)&&it.tipo==='num'&&!it.fuenteMeta) it.fuenteMeta='obj.comb';
-      if(/combustible/i.test(it.nombre)&&it.tipo==='num'&&!it.fuente)     it.fuente='playa.total';
-      if(it.fuenteMeta){
-        const m=await valorMeta(it.fuenteMeta,S.ob2.periodo);
-        if(m){ it.objMin=m.min; it.objMax=m.max; it.detalle=m.detalle||''; }
-      }
-      if(!it.fuente) continue;
-      const v=await valorFuente(it.fuente,S.ob2.periodo);
-      if(v!==null) it.resultado=Math.round(v*100)/100;
-    }
-}
-async function guardarObj2(){
-  if(!S.ob2) return;
-  await guardar('objetivos:'+S.ob2.periodo,S.ob2);
-  const idx=await leer('objetivos:indice',[]);
-  if(!idx.includes(S.ob2.periodo)){ idx.push(S.ob2.periodo); idx.sort(); await guardar('objetivos:indice',idx); }
-}
-
 /* ---------- control de comisiones ---------- */
 const OPERARIOS=[{id:'juan',nombre:'Juan Cruz',escala:true},{id:'maxi',nombre:'Maxi',escala:false}];
 const TIPOS_SERV=[{id:'Express',nombre:'Express'},{id:'Completo',nombre:'Completo'},{id:'Premium',nombre:'Premium'}];
@@ -2734,7 +2588,6 @@ async function vistaBoxes(){
 
   return `<div class="envoltorio">
     ${filtro}
-    ${porRubro?panelRubros:''}
     ${soloTotales?`<div class="aviso">${meses.length>1?'Estos meses se cargaron':'Este mes se cargó'} a mano, con los totales por tipo de servicio. Los horarios, las marcas y el detalle por día salen del reporte del sistema.</div>`
       :aMano?`<div class="aviso">${aMano} de los meses del filtro se cargaron a mano: cuentan en el total y en los tipos, pero no aportan horarios ni marcas.</div>`:''}
     <div class="totem">
@@ -4252,7 +4105,7 @@ const MENU_ADMIN_BASE=[
                ['andreani','Andreani a Debo']]],
   ['Boxes',[['boxes','Reportes de servicios'],['lubricante','Compra de lubricante'],
              ['objboxes','Objetivos'],['precios','Listas de precios']]],
-  ['Sistema',[['objetivos2','Objetivos v2'],['cumples','Cumpleaños'],['sync','Sincronización'],['config','Configuración']]]
+  ['Sistema',[['cumples','Cumpleaños'],['sync','Sincronización'],['config','Configuración']]]
 ];
 // se arma en cada dibujo: aplica los nombres propios y saca las pestañas ocultas
 const MENU_ADMIN=()=>MENU_ADMIN_BASE
@@ -4289,7 +4142,6 @@ async function vistaAdmin(){
   if(S.tab==='gastos')      c=await tabGastos();
   if(S.tab==='gastos')      c=await tabGastos();
   if(S.tab==='gastos')      c=await tabGastos();
-  if(S.tab==='objetivos2')  c=await tabObj2();
   if(S.tab==='cumples')     c=await tabCumples();
   if(S.tab==='sync')        c=await tabSync();
   if(S.tab==='config')      c=await tabConfig();
@@ -4822,6 +4674,121 @@ function mesDeAcum(o,anio,mes,k){
 
 // el mismo cuadro de YPF pero con el objetivo del mes, para que se entienda más fácil.
 // los objetivos salen de Libre, que los tiene acumulados del trimestre: acá se resta el mes anterior.
+// premios en pesos por llegar al objetivo; se heredan del mes anterior
+async function cargarPlata(anio,mes){
+  const k=`plata:${anio}-${mes}`;
+  if(S.plata&&S.plataClave===k) return S.plata;
+  let d=await leer(k,null);
+  if(!d){
+    const m=Number(mes), pa=m>1?anio:String(Number(anio)-1), pm=String(m>1?m-1:12).padStart(2,'0');
+    const p=await leer(`plata:${pa}-${pm}`,null);
+    d=p?JSON.parse(JSON.stringify(p)):{};
+  }
+  S.plata=d; S.plataClave=k;
+  return d;
+}
+const guardarPlata=()=>guardar(`plata:${S.plataClave.split(':')[1]}`,S.plata);
+
+// qué objetivo mira cada premio
+const PREMIOS_SEC={playa:[
+  {id:'combustible', rot:'Combustible', sub:'Diesel + naftas del mes',
+   partes:[/volumen\s*diesel/i,/volumen\s*naftas/i]},
+  {id:'mix', rot:'Mix Infinia', sub:'Infinia sobre el total de naftas',
+   partes:[/mix/i], pct:true},
+  // el mínimo para cobrar arranca en 90, no en el 75 que pide YPF
+  {id:'incognito', rot:'Cliente incógnito', sub:'Puntaje de la evaluación · paga desde 90%',
+   partes:[/incognito|incógnito/i], pct:true, minFijo:90},
+],tienda:[
+  {id:'unidades', rot:'Unidades sin tabaco', sub:'Todos los rubros menos cigarrillos y tabacos',
+   partes:[/unidades/i]},
+  {id:'combos', rot:'Combos', sub:'Comida y cafetería del mes',
+   partes:[/combos/i]},
+  {id:'ventacc', rot:'Venta comida y cafetería', sub:'Las dos juntas, en unidades · objetivo propio',
+   partes:[], fuente:'ventacc', objPropio:true},
+  {id:'incognito', rot:'Cliente incógnito', sub:'Puntaje de la evaluación · paga desde 90%',
+   partes:[/incognito|incógnito/i], pct:true, minFijo:90},
+]};
+
+// unidades de comida elaborada, envasada y cafetería del mes
+const RUBROS_CC=['02-241','02-198','02-232'];
+async function ventaCafeComida(ym){
+  const ops=await leer(`ops:tienda:${ym}`,{});
+  let u=0, hay=false;
+  Object.values(ops).forEach(dia=>Object.values(dia||{}).forEach(t=>{
+    RUBROS_CC.forEach(r=>{ const v=Number((t&&t.rubro||{})[r])||0; if(v){ u+=v; hay=true; } });
+  }));
+  if(hay) return u;
+  const m=await leer(`tienda:mes:${ym}`,null);
+  if(m) return RUBROS_CC.reduce((a,r)=>a+(Number((m.rubro||{})[r])||0),0);
+  return 0;
+}
+
+async function panelPlata(anio,mes,delMes,sec){
+  const P=await cargarPlata(anio,mes), ed=S.plataEdit;
+  const PREMIOS=PREMIOS_SEC[sec]||PREMIOS_SEC.playa;
+  const ccMes=await ventaCafeComida(`${anio}-${mes}`);
+  let total=0;
+  const filas=PREMIOS.map(p=>{
+    // se suman los objetivos y lo vendido de las partes que lo componen
+    let mi=0,ma=0,re=0,falta=false;
+    if(p.fuente==='ventacc'){ re=ccMes; }
+    p.partes.forEach(re2=>{
+      const k=Object.keys(delMes).find(x=>re2.test(x));
+      const d=k?delMes[k]:null;
+      if(!d||(!d.min&&!d.max)){ falta=true; return; }
+      mi+=Number(d.min)||0; ma+=Number(d.max)||0;
+      if(p.fuente!=='ventacc') re+=Number(d.real)||0;
+    });
+    if(p.objPropio){                        // YPF no lo mide: el objetivo se carga acá
+      const o=P[p.id]||{};
+      mi=Number(o.objMin)||0; ma=Number(o.objMax)||0; falta=!mi&&!ma;
+    }
+    if(p.minFijo!=null) mi=p.minFijo;      // el piso para cobrar puede ser distinto al de YPF
+    if(p.maxFijo!=null) ma=p.maxFijo;
+    const fmtP=x=>p.pct?nf(x,1)+' %':nf(x);
+    const v=P[p.id]||{};
+    const pMin=Number(v.min)||0, pMax=Number(v.max)||0;
+    const nivel = (ma&&re>=ma)?'max' : (mi&&re>=mi)?'min' : 'no';
+    // pasado el mínimo, el premio sube derecho hasta el máximo
+    let cobra=0, avance=0;
+    if(nivel==='max') cobra=pMax||pMin;
+    else if(nivel==='min'){
+      avance = (ma&&ma>mi) ? (re-mi)/(ma-mi) : 0;
+      cobra = Math.round(pMin + ((pMax||pMin)-pMin)*avance);
+    }
+    total+=cobra;
+    const cel=k=>ed
+      ? `<input type="text" inputmode="numeric" class="n" data-plata="${p.id}" data-k="${k}"
+           value="${v[k]??''}" placeholder="0" style="width:84px">`
+      : `<span>${Number(v[k])?nf(Number(v[k])):'—'}</span>`;
+    return `<tr class="pl-${nivel}">
+      <td><strong>${esc(p.rot)}</strong><small>${esc(p.sub)}</small>
+        <span class="ob-chip ${nivel==='max'?'max':nivel==='min'?'min':'no'}" style="margin-top:4px">${
+        falta?'SIN OBJETIVO':nivel==='max'?'MÁXIMO':nivel==='min'?'MÍNIMO':'NO LLEGA'}</span></td>
+      <td class="num">${p.objPropio?cel('objMin'):(mi?fmtP(mi):'—')}</td>
+      <td class="num">${p.objPropio?cel('objMax'):(ma?fmtP(ma):'—')}</td>
+      <td class="num"><strong>${re?fmtP(re):'—'}</strong></td>
+      <td class="num">${cel('min')}</td>
+      <td class="num">${cel('max')}</td>
+      <td class="num"><strong style="color:${cobra?'var(--ok)':'var(--tinta-suave)'}">${nf(cobra)}</strong>
+        ${nivel==='min'&&avance?`<small>${nf(avance*100,0)}% del tramo</small>`:''}</td></tr>`;
+  }).join('');
+
+  return `<div class="plata-panel">
+    <div class="eyebrow">Objetivos por plata · ${MESES_L[Number(mes)-1]} ${anio}
+      <button class="lapiz-min${ed?' act':''}" id="pl-editar" style="float:right"
+        title="${ed?'Listo':'Modificar los montos · pide clave'}" aria-label="Modificar montos">${ed?'✓':'✎'}</button></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Objetivo</th><th class="num">Mínimo</th><th class="num">Máximo</th><th class="num">Vendido</th>
+        <th class="num">Paga al mín.</th><th class="num">Paga al máx.</th><th class="num">A cobrar</th></tr></thead>
+      <tbody>${filas}</tbody>
+      <tfoot><tr class="tot"><td colspan="6">Total a cobrar</td>
+        <td class="num"><strong>${nf(total)}</strong></td></tr></tfoot>
+    </table></div>
+    <p class="sub">Debajo del mínimo no cobra. Pasado el mínimo cobra ese monto y <strong>va subiendo derecho</strong> hasta el máximo: si vendió la mitad del camino entre los dos, cobra la mitad de la diferencia. Los montos se heredan del mes anterior.</p>
+  </div>`;
+}
+
 async function vistaObjYPF(sec){
   sec=sec||'playa';
   const hoy=hoyISO();
@@ -4859,9 +4826,9 @@ async function vistaObjYPF(sec){
       <select id="oy-anio">${anios.map(a=>`<option value="${a}"${a===anio?' selected':''}>${a}</option>`).join('')}</select>
       <select id="oy-mes">${MESES_L.map((n,k)=>{const v=String(k+1).padStart(2,'0');
         return `<option value="${v}"${v===mes?' selected':''}>${n}</option>`;}).join('')}</select>
-      <span class="lb-vmes"><b>${MESES_L[Number(mes)-1]}</b>
+      ${sec==='playa'?`<span class="lb-vmes"><b>${MESES_L[Number(mes)-1]}</b>
         <i>Total</i> <u>${nf(nafta+diesel)} L</u>
-        <i>Naftas</i> ${nf(nafta)} <i>Diesel</i> ${nf(diesel)}</span>
+        <i>Naftas</i> ${nf(nafta)} <i>Diesel</i> ${nf(diesel)}</span>`:''}
     </div>`;
 
   if(!hoja||!hoja.filas||!hoja.filas.length)
@@ -4871,6 +4838,7 @@ async function vistaObjYPF(sec){
       ${barra}</div>`;
 
   let pos=0, obt=0, sinObj=0;
+  const delMes={};                       // lo del mes, para los objetivos por plata
   const cuerpo=hoja.filas.map(f=>{
     const oc=oculto(f.c);
     if(oc&&!ed) return '';
@@ -4891,6 +4859,7 @@ async function vistaObjYPF(sec){
     const p=pctYPF(real,min,max);
     const pts=(Number(f.pts)||0)*p/100;
     if(!oc){ pos+=Number(f.pts)||0; obt+=pts; if(!min&&!max) sinObj++; }
+    delMes[norm(f.c)]={min,max,real};
     const esVol=/m3/i.test(`${f.c} ${f.sub||''}`);
     const dec=v=>{const s=String(v??'');const j=s.indexOf('.');return j<0?0:Math.min(2,s.length-j-1);};
     const cel=v=>{ if(v===''||v===null||v===undefined) return '—';
@@ -4919,7 +4888,7 @@ async function vistaObjYPF(sec){
         <button class="ypf-lapiz${ed?' act':''}" id="oy-editar" style="right:12px"
           title="${ed?'Listo':'Ocultar conceptos · pide clave'}" aria-label="Ocultar conceptos">${ed?'✓':'✎'}</button>
       </div>
-      <div class="ypf-cuerpo" style="grid-template-columns:minmax(0,1fr)">
+      <div class="ypf-cuerpo una-col">
         <div class="ypf-tabla">
           <div class="scroll"><table class="ypf-t">
             <thead><tr>${ed?'<th class="lb-autoh">Ver</th>':''}<th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
@@ -4937,6 +4906,11 @@ async function vistaObjYPF(sec){
     ${barra}
     ${ed?`<div class="aviso">Destildá los conceptos que no querés mostrar. Los ocultos <strong>tampoco suman puntos</strong>. Se aplica a todos los meses.</div>`:''}
     <p class="sub">Los objetivos salen de <strong>Libre</strong>. Como YPF los manda acumulados del trimestre, acá se resta ${i>0?`lo de ${MESES_L[Number(meses[i-1])-1]}`:'nada, porque es el primer mes del trimestre'} para mostrar <strong>lo que hay que hacer en ${MESES_L[Number(mes)-1]}</strong>. El <strong>lubricante</strong> y los porcentajes van tal cual: no se acumulan.</p>
+    <div class="plata-caja">
+      <button class="plata-btn${S.oyPlata?' act':''}" id="oy-plata"
+        title="${S.oyPlata?'Cerrar':'Objetivos por plata · pide clave'}" aria-label="Objetivos por plata"></button>
+      ${S.oyPlata?await panelPlata(anio,mes,delMes,sec):''}
+    </div>
   </div>`;
 }
 
@@ -5540,116 +5514,6 @@ async function tabFacturas(){
         <span class="tt">${nf(vistas.reduce((a,f)=>a+(Number(f.importe)||0),0),2)}<i>$</i></span></div>`
     :`<p class="vacio">Sin facturas de ${nomSect(sec)}${fp!=='todos'?' para '+esc(fp):''}.</p>`}
   </div>`;
-}
-
-async function tabObj2(){
-  if(!S.ob2) await cargarObj2(hoyISO().slice(0,7));
-  const hoyA=Number(hoyISO().slice(0,4));
-  const anios=[hoyA-2,hoyA-1,hoyA,hoyA+1].map(String);
-  const [pa,pm]=S.ob2.periodo.split('-');
-  return `<div class="filtro">
-      <span class="et">Período</span>
-      <select id="ob2-anio">${anios.map(a=>`<option value="${a}"${a===pa?' selected':''}>${a}</option>`).join('')}</select>
-      <select id="ob2-mes">${MESES_L.map((n,i)=>{const v=String(i+1).padStart(2,'0');
-        return `<option value="${v}"${v===pm?' selected':''}>${n}</option>`;}).join('')}</select>
-      <button class="btn sec chico" id="ob2-editar" style="width:auto;margin:0">${S.ob2Edit?'Listo':'Editar objetivos'}</button>
-      <button class="btn sec chico" id="ob2-traer" style="width:auto;margin:0">Traer de ventas</button>
-      <button class="btn sec chico" id="ob2-csv" style="width:auto;margin:0">Descargar CSV</button>
-    </div>
-    <div id="ob2-cuerpo">${cuerpoObj2()}</div>`;
-}
-
-function cuerpoObj2(){
-  const d=S.ob2; if(!d) return '';
-  const ed=S.ob2Edit;
-  let total=0;
-  const secciones=d.grupos.map(g=>{
-    const c=calcObjGrupo(g); total+=c.total;
-    const filas=c.filas.map(({it,res})=>{
-      const celdaRes = it.tipo==='si'
-        ? `<div class="sino">
-             <button data-obsi="${it.id}" data-v="1" class="${it.resultado===true?'act':''}">Sí</button>
-             <button data-obsi="${it.id}" data-v="0" class="${it.resultado===false?'act':''}">No</button>
-           </div>`
-        : `<input type="text" inputmode="decimal" class="n" data-obres="${it.id}"
-             value="${it.resultado===null||it.resultado===undefined?'':nf(it.resultado,it.tipo==='pct'?1:0)}"
-             ${it.fuente?'readonly title="Sale de las ventas"':''} style="width:104px">`;
-      const ligado=k=>it.fuenteMeta&&(k==='objMin'||k==='objMax');
-      const campo=(k,ancho)=>ed&&!ligado(k)
-        ? `<input type="text" inputmode="decimal" class="n" data-obcampo="${k}" data-obid="${it.id}"
-             value="${it[k]===null||it[k]===undefined||it[k]===''?'':it[k]}" style="width:${ancho}px;max-width:100%">`
-        : `<span class="num">${it[k]===null||it[k]===undefined||it[k]===''?'—'
-            :(k==='objMin'||k==='objMax')
-              ? (it.tipo==='pct'?nf(it[k],1)+'%':it.tipo==='money'?nf(it[k]):nf(it[k]))
-              : nf(it[k])}</span>`;
-      const vacio=it.tipo==='si'?it.resultado===null||it.resultado===undefined
-                                :it.resultado===null||it.resultado===undefined;
-      const estado=vacio?'vacio':res.nivel;                 // max / min / no / vacio
-      const ROT={max:'MÁXIMO',min:'MÍNIMO',no:'NO LLEGA',vacio:'SIN CARGAR'};
-      const clase=res.nivel==='max'?'cumple':(res.nivel==='min'?'ok':'nocumple');
-      return `<tr class="ob-${estado}">
-        <td>${ed
-          ? `<input type="text" data-obcampo="nombre" data-obid="${it.id}" value="${esc(it.nombre)}" style="width:100%;max-width:230px">
-             <div class="fila-ed">
-               <select data-obcampo="tipo" data-obid="${it.id}">
-                 ${Object.entries(TIPOS_OBJ).map(([k,v])=>`<option value="${k}"${it.tipo===k?' selected':''}>${v}</option>`).join('')}
-               </select>
-               <select data-obcampo="fuente" data-obid="${it.id}" title="De dónde sale el resultado">
-                 ${FUENTES_OBJ.map(f=>`<option value="${f.id}"${it.fuente===f.id?' selected':''}>${esc(f.rot)}</option>`).join('')}
-               </select>
-               <select data-obcampo="fuenteMeta" data-obid="${it.id}" title="De dónde salen el mínimo y el máximo">
-                 ${FUENTES_META.map(f=>`<option value="${f.id}"${it.fuenteMeta===f.id?' selected':''}>${esc(f.rot)}</option>`).join('')}
-               </select>
-               <label><input type="checkbox" data-obexc="${it.id}"${it.exc?' checked':''}><small>excl.</small></label>
-             </div>`
-          : `<strong>${esc(it.nombre)}</strong>${it.exc?'<span class="etiq pend" style="margin-left:6px">excluyente</span>':''}
-             ${it.fuente?`<small>${esc((FUENTES_OBJ.find(f=>f.id===it.fuente)||{}).rot||'')}</small>`:''}
-             ${it.fuenteMeta?`<small>${esc((FUENTES_META.find(f=>f.id===it.fuenteMeta)||{}).rot||'')}</small>`:''}
-             ${it.detalle?`<small style="color:var(--cian)">${esc(it.detalle)}</small>`:''}`}</td>
-        <td>${celdaRes}</td>
-        <td>${campo('objMin',82)}</td>
-        <td>${campo('valMin',92)}</td>
-        <td>${campo('objMax',82)}</td>
-        <td>${campo('valMax',92)}</td>
-        <td><span class="ob-chip ${estado}">${ROT[estado]}</span></td>
-        <td class="num ${clase}"><strong>${nf(res.pago)}</strong></td>
-        ${ed?`<td><button class="borrar" data-obdel="${it.id}" aria-label="Quitar">×</button></td>`:''}
-      </tr>`;
-    }).join('');
-    const cuenta={max:0,min:0,no:0,vacio:0};
-    c.filas.forEach(({it,res})=>{
-      const v=it.resultado===null||it.resultado===undefined;
-      cuenta[v?'vacio':res.nivel]++;
-    });
-    return `<div class="tarjeta">
-      <h2>${ed?`<input type="text" data-obgnom="${g.id}" value="${esc(g.nombre)}" style="width:280px">`:esc(g.nombre)}
-        <span style="float:right;color:${c.total?'var(--cian)':'var(--alerta)'}">${nf(c.total)}</span></h2>
-      <div class="ob-resumen">
-        <span class="ob-chip max">${cuenta.max} al máximo</span>
-        <span class="ob-chip min">${cuenta.min} al mínimo</span>
-        <span class="ob-chip no">${cuenta.no} sin llegar</span>
-        <span class="ob-chip vacio">${cuenta.vacio} sin cargar</span>
-      </div>
-      ${c.falla.length?`<div class="aviso mal">No se paga el grupo: falta cumplir <strong>${c.falla.map(esc).join(', ')}</strong> (excluyente). Si se cumpliera, cobraría ${nf(c.bruto)}.</div>`:''}
-      <div class="scroll"><table>
-        <thead><tr><th>Objetivo</th><th>Resultado</th><th class="num">Mínimo</th><th class="num">Valor mín.</th>
-          <th class="num">Máximo</th><th class="num">Valor máx.</th><th>Estado</th><th class="num">A cobrar</th>${ed?'<th></th>':''}</tr></thead>
-        <tbody>${filas}</tbody>
-      </table></div>
-      ${ed?`<button class="btn sec" data-obadd="${g.id}">Agregar objetivo</button>
-            <button class="btn sec" data-obgdel="${g.id}">Quitar el grupo</button>`:''}
-    </div>`;
-  }).join('');
-
-  const ligados=d.grupos.some(g=>g.items.some(it=>it.fuenteMeta));
-  const sinObj=ligados&&d.grupos.some(g=>g.items.some(it=>it.fuenteMeta&&!it.objMin&&!it.objMax));
-  return `${sinObj?`<div class="aviso mal">Hay objetivos que salen de <strong>Combustible → Objetivos</strong> y ese mes todavía no está cargado, por eso quedan en blanco.</div>`:''}
-    <div class="totem">
-      <div class="totem-cab"><div class="t">Total a pagar</div><div class="d">${nombreMes(d.periodo)}</div></div>
-      <div class="totem-total"><span class="nom">Todos los grupos</span><span class="val">${nf(total)}<i>$</i></span></div>
-    </div>
-    ${secciones}
-    ${S.ob2Edit?`<button class="btn sec" id="ob2-grupo">Agregar grupo</button>`:''}`;
 }
 
 async function tabCumples(){
@@ -6980,82 +6844,22 @@ function conectar(){
   const cerrarCump=async()=>{ S.cumplesAbierto=null; await render(); };
   const cc1=document.getElementById('cerrarCump'); if(cc1) cc1.onclick=cerrarCump;
   const cc2=document.getElementById('cerrarCumpX'); if(cc2) cc2.onclick=cerrarCump;
-  // ---- tablero de objetivos v2 ----
-  // se redibuja solo el tablero, no toda la página: si no, se pierde el foco al escribir
-  const pintarOb2=()=>{ const c=q('#ob2-cuerpo'); if(c){ c.innerHTML=cuerpoObj2(); conectar(); } };
-  const buscarOb=id=>{ for(const g of S.ob2.grupos){ const it=g.items.find(x=>x.id===id); if(it) return {g,it}; } return null; };
-
-  const obA=q('#ob2-anio'), obM=q('#ob2-mes');
-  const irPeriodo=async()=>{ await cargarObj2(`${obA.value}-${obM.value}`); await render(); };
-  if(obA) obA.onchange=irPeriodo;
-  if(obM) obM.onchange=irPeriodo;
-  const obEd=q('#ob2-editar');
-  if(obEd) obEd.onclick=async()=>{ S.ob2Edit=!S.ob2Edit; await render(); };
-  const obTr=q('#ob2-traer');
-  if(obTr) obTr.onclick=async()=>{
-    await traerFuentesObj(); await guardarObj2(); pintarOb2();
-    toast('Resultados traídos de las ventas');
+  const plEd=q('#pl-editar');
+  if(plEd) plEd.onclick=async()=>{
+    if(!S.plataEdit&&!pedirClave()) return;
+    S.plataEdit=!S.plataEdit; await render();
   };
-  const obGr=q('#ob2-grupo');
-  if(obGr) obGr.onclick=async()=>{
-    S.ob2.grupos.push({id:uid2(),nombre:'Nuevo grupo',items:[mObj('Nuevo objetivo','num',null,null,null,null)]});
-    await guardarObj2(); pintarOb2();
+  document.querySelectorAll('#app [data-plata]').forEach(i=>i.onchange=async()=>{
+    const id=i.dataset.plata, k=i.dataset.k;
+    S.plata[id]=S.plata[id]||{};
+    S.plata[id][k]=i.value.trim()===''?'':Math.max(0,Math.round(numero(i.value)));
+    await guardarPlata(); await render();
+  });
+  const oyPl=q('#oy-plata');
+  if(oyPl) oyPl.onclick=async()=>{
+    if(!S.oyPlata&&!pedirClave()) return;
+    S.oyPlata=!S.oyPlata; await render();
   };
-  document.querySelectorAll('#app [data-obres]').forEach(i=>i.onchange=async()=>{
-    buscarOb(i.dataset.obres).it.resultado=i.value.trim()===''?null:numero(i.value);
-    await guardarObj2(); pintarOb2();
-  });
-  document.querySelectorAll('#app [data-obsi]').forEach(b=>b.onclick=async()=>{
-    const it=buscarOb(b.dataset.obsi).it, v=b.dataset.v==='1';
-    it.resultado = it.resultado===v ? null : v;
-    await guardarObj2(); pintarOb2();
-  });
-  document.querySelectorAll('#app [data-obcampo]').forEach(i=>i.onchange=async()=>{
-    const {it}=buscarOb(i.dataset.obid), k=i.dataset.obcampo;
-    if(k==='nombre'||k==='tipo'||k==='fuente'||k==='fuenteMeta'){
-      it[k]=i.value;
-      if(k==='tipo'&&i.value==='si') it.resultado=null;
-      if(k==='fuente'&&i.value){ const v=await valorFuente(i.value,S.ob2.periodo); if(v!==null) it.resultado=Math.round(v*100)/100; }
-      if(k==='fuenteMeta'){ it.detalle='';
-        if(i.value){ const m=await valorMeta(i.value,S.ob2.periodo); if(m){ it.objMin=m.min; it.objMax=m.max; it.detalle=m.detalle||''; } } }
-    } else it[k]=i.value.trim()===''?null:numero(i.value);
-    await guardarObj2(); pintarOb2();
-  });
-  document.querySelectorAll('#app [data-obexc]').forEach(c=>c.onchange=async()=>{
-    buscarOb(c.dataset.obexc).it.exc=c.checked; await guardarObj2(); pintarOb2();
-  });
-  document.querySelectorAll('#app [data-obgnom]').forEach(i=>i.onchange=async()=>{
-    S.ob2.grupos.find(g=>g.id===i.dataset.obgnom).nombre=i.value; await guardarObj2();
-  });
-  document.querySelectorAll('#app [data-obadd]').forEach(b=>b.onclick=async()=>{
-    S.ob2.grupos.find(g=>g.id===b.dataset.obadd).items.push(mObj('Nuevo objetivo','num',null,null,null,null));
-    await guardarObj2(); pintarOb2();
-  });
-  document.querySelectorAll('#app [data-obdel]').forEach(b=>b.onclick=async()=>{
-    const {g,it}=buscarOb(b.dataset.obdel); g.items=g.items.filter(x=>x!==it);
-    await guardarObj2(); pintarOb2();
-  });
-  document.querySelectorAll('#app [data-obgdel]').forEach(b=>b.onclick=async()=>{
-    S.ob2.grupos=S.ob2.grupos.filter(g=>g.id!==b.dataset.obgdel);
-    await guardarObj2(); pintarOb2();
-  });
-  const obCsv=q('#ob2-csv');
-  if(obCsv) obCsv.onclick=()=>{
-    const filas=[['Grupo','Objetivo','Resultado','Minimo','Valor minimo','Maximo','Valor maximo','A cobrar','Excluyente']];
-    S.ob2.grupos.forEach(g=>{
-      const c=calcObjGrupo(g);
-      c.filas.forEach(({it,res})=>filas.push([g.nombre,it.nombre,
-        it.tipo==='si'?(it.resultado===true?'Si':it.resultado===false?'No':''):(it.resultado??''),
-        it.objMin??'',it.valMin??'',it.objMax??'',it.valMax??'',c.falla.length?0:res.pago,it.exc?'Si':'']));
-      filas.push([g.nombre,'TOTAL GRUPO','','','','','',c.total,'']);
-    });
-    const csv=filas.map(f=>f.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
-    a.download=`objetivos-${S.ob2.periodo}.csv`; a.click();
-    toast('CSV descargado');
-  };
-
   const oyEd=q('#oy-editar');
   if(oyEd) oyEd.onclick=async()=>{
     if(!S.oyEdit&&!pedirClave()) return;
