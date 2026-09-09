@@ -3012,8 +3012,6 @@ async function vistaAdmTienda(){
   const V=await vencimientos();
   const todos=Object.entries(V).map(([k,v])=>({k,...v,est:estadoVenc(v.vence)}));
   const activos=todos.filter(x=>!x.consumido&&x.est.dias>=-DIAS_GRACIA);
-  const paraRevisar=activos.filter(x=>x.est.dias<=DIAS_AVISO)
-    .sort((a,b)=>a.vence.localeCompare(b.vence));
 
   const secc=S.admTSec||'vencimientos';
   const menu=`<div class="subnav" style="margin-bottom:14px">
@@ -3060,29 +3058,12 @@ async function vistaAdmTienda(){
 
   return `<div class="envoltorio">
     ${menu}
-    <div class="hoja-venc">
-      <h1>Control de vencimientos</h1>
-      <p>Productos vencidos y los que vencen dentro de ${DIAS_AVISO} días · ${esc(S.cfg.estacion)} · ${hoyISO().split('-').reverse().join('/')}</p>
-      <table>
-        <thead><tr><th>Producto</th><th>Código</th><th>Cant.</th><th>Ingresó</th><th>Vence</th><th>Estado</th><th>Revisado</th></tr></thead>
-        <tbody>${paraRevisar.map(x=>`<tr>
-          <td>${esc(x.desc||x.barra)}</td><td>${esc(x.barra||x.cod||'')}</td>
-          <td class="num">${nf(x.cant)}</td>
-          <td class="num">${x.ingreso?x.ingreso.split('-').reverse().join('/'):'—'}</td>
-          <td class="num">${x.vence.split('-').reverse().join('/')}</td>
-          <td>${x.est.clave==='vencido'?`vencido hace ${-x.est.dias} d`:x.est.rot}</td>
-          <td class="tilde"></td></tr>`).join('')}</tbody>
-      </table>
-      ${paraRevisar.length?'':'<p>No hay nada por vencer en este plazo.</p>'}
-    </div>
     <div class="tarjeta">
       <h2>Vencimientos</h2>
-      <p class="sub">${nf(activos.length)} partida${activos.length===1?'':'s'} en control · ${nf(paraRevisar.length)} para revisar.</p>
+      <p class="sub">${nf(activos.length)} partida${activos.length===1?'':'s'} en control · ${nf(activos.filter(x=>x.est.dias<=DIAS_AVISO).length)} para revisar.</p>
       <div class="filtro">
         <button class="btn sec chico" id="venc-bajar" style="width:auto;margin:0">Descargar Excel</button>
-        <button class="btn sec chico" id="venc-imprimir" style="width:auto;margin:0">Imprimir para revisar</button>
       </div>
-      <p class="sub">La hoja para imprimir trae lo vencido y lo que vence dentro de ${DIAS_AVISO} días, con una columna para tildar.</p>
     </div>
     <div class="tarjeta">
       <h2>Agregar mercadería a mano</h2>
@@ -3134,6 +3115,21 @@ async function vistaVencimientos(){
   const paraRevisar=activos.filter(x=>x.est.dias<=DIAS_AVISO)
     .sort((a,b)=>a.vence.localeCompare(b.vence));
   return `<div class="envoltorio">
+    <div class="hoja-venc">
+      <h1>Control de vencimientos</h1>
+      <p>Productos vencidos y los que vencen dentro de ${DIAS_AVISO} días · ${esc(S.cfg.estacion)} · ${hoyISO().split('-').reverse().join('/')}</p>
+      <table>
+        <thead><tr><th>Producto</th><th>Código</th><th>Cant.</th><th>Ingresó</th><th>Vence</th><th>Estado</th><th>Revisado</th></tr></thead>
+        <tbody>${paraRevisar.map(x=>`<tr>
+          <td>${esc(x.desc||x.barra)}</td><td>${esc(x.barra||x.cod||'')}</td>
+          <td class="num">${nf(x.cant)}</td>
+          <td class="num">${x.ingreso?x.ingreso.split('-').reverse().join('/'):'—'}</td>
+          <td class="num">${x.vence.split('-').reverse().join('/')}</td>
+          <td>${x.est.clave==='vencido'?`vencido hace ${-x.est.dias} d`:x.est.rot}</td>
+          <td class="tilde"></td></tr>`).join('')}</tbody>
+      </table>
+      ${paraRevisar.length?'':'<p>No hay nada por vencer en este plazo.</p>'}
+    </div>
     <div class="totem">
       <div class="totem-cab"><div class="t">Vencimientos</div><div class="d">${activos.length} partida${activos.length===1?'':'s'} en control</div></div>
       <div class="linea-totem"><span class="chip" style="background:var(--alerta)"></span>
@@ -3156,6 +3152,7 @@ async function vistaVencimientos(){
             `<option value="${esc(p)}"${S.vencProv===p?' selected':''}>${esc(p)}</option>`).join('')}
         </select>
         <button class="btn sec chico" id="venc-todo" style="width:auto;margin:0">${verTodo?'Ver solo lo activo':'Ver todo el historial'}</button>
+        <button class="btn sec chico" id="venc-imprimir" style="width:auto;margin:0">Imprimir para revisar</button>
       </div>
 
       ${lista.length?`<div class="scroll"><table>
@@ -6460,6 +6457,17 @@ function conectar(){
       actualizarBotonVenc();
     };
     i.oninput=guardar1; i.onchange=guardar1;   // sin redibujar: te sacaba del campo
+    // Enter baja al vencimiento del renglón siguiente
+    i.onkeydown=e=>{
+      if(e.key!=='Enter') return;
+      e.preventDefault();
+      guardar1();
+      const todos=[...document.querySelectorAll('#app [data-anvence]')];
+      const j=todos.indexOf(i);
+      const sig=todos[j+1];
+      if(sig){ sig.focus(); sig.select&&sig.select(); }
+      else i.blur();
+    };
   });
   // el botón se actualiza solo, sin rehacer la tabla
   function actualizarBotonVenc(){
