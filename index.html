@@ -698,6 +698,25 @@ details[open] summary::after{content:'–'}
 @keyframes sube{from{opacity:0;transform:translate(-50%,9px)}to{opacity:1;transform:translate(-50%,0)}}
 @media(min-width:620px){ .envoltorio{padding:18px 16px 0} .rejilla{grid-template-columns:1fr 1fr 1fr} }
 
+.hoja-venc{display:none}
+@media print{
+  body.imp-venc .hoja-venc{display:block !important;background:#fff}
+  body.imp-venc .hoja-venc,body.imp-venc .hoja-venc *{color:#000 !important;
+    font-family:Arial,Helvetica,sans-serif !important;letter-spacing:0 !important;text-transform:none !important}
+  body.imp-venc .hoja-venc h1{font-size:19px;margin:0 0 3px}
+  body.imp-venc .hoja-venc p{font-size:12px;margin:0 0 11px}
+  body.imp-venc .hoja-venc table{width:100%;border-collapse:collapse;font-size:12px}
+  body.imp-venc .hoja-venc th{background:#e4e4e4 !important;border:1px solid #666;padding:6px;text-align:left;font-weight:700;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.imp-venc .hoja-venc td{border:1px solid #666;padding:6px}
+  body.imp-venc .hoja-venc td.num{text-align:right}
+  body.imp-venc .hoja-venc td.tilde{width:74px}
+  body.imp-venc .envoltorio>*:not(.hoja-venc){display:none !important}
+  body.imp-venc .top,body.imp-venc .nav,body.imp-venc .subnav{display:none !important}
+  body.imp-venc{background:#fff}
+  body.imp-venc #app{background:#fff !important}
+  @page{margin:12mm}
+}
 /* al imprimir sale solo el recuadro de YPF, con sus colores */
 @media print{
   html,body{background:#fff !important}
@@ -825,6 +844,7 @@ const S={
   cfg:null, vista:'playa', sub:'mes', tab:'importar', abierto:false, cargando:true,
   mes:hoyISO().slice(0,7), cmpAnio:null, cmpMes:'todos', filtro:{}, filtroCorrido:false,
   rubVer:null, rubEdit:false, plegado:{},
+  vencAlta:true, vencOk:false, admTSec:'vencimientos', provV:null, provSel:null, vencProv:'', vencNuevo:{}, vencBusca:'', admTOk:false,
   cargaSec:'playa', cargaFecha:hoyISO(), cargaTurno:'T1', borrador:null,
   previa:null, ops:{}, roll:{}, admin:{}, errorUlt:null, diag:null, adjunto:null, grafDatos:[], turDatos:[],
   facSec:'boxes', facProv:'todos', menuAbierto:false, grupoAbierto:undefined,
@@ -832,7 +852,7 @@ const S={
   maestro:null, previaMaestro:null, mBusca:'', mSoloFalta:false, conv:null,
   gasMes:null, contactos:null, facSel:{}, facMes:'todos', avisoAbierto:false,
   diasAbiertos:{}, ctrl:null, ctrlMes:null, ctrlAbierto:false, ctrlEdit:null, top:null, bx:{}, bxRoll:null, previaBoxes:null, bxmAnio:null, bxmMes:null,
-  libreDatosAbierto:false, libre:null, libreClave:null, libreAnio:null, libreTrim:null, libreMes:null, libreEdit:false, libreOk:false, lub:null, lubMes:null, lubFoco:null, prodLub:null, lubAddAce:false, lubAddOtr:false, lubAnio:null, lubTrim:null, lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
+  libreDatosAbierto:false, comi:null, comiClave:null, comiEdit:false, comiAbierta:false, libre:null, libreClave:null, libreAnio:null, libreTrim:null, libreMes:null, libreEdit:false, libreOk:false, lub:null, lubMes:null, lubFoco:null, prodLub:null, lubAddAce:false, lubAddOtr:false, lubAnio:null, lubTrim:null, lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
 };
 
 /* ---------- almacenamiento ---------- */
@@ -1675,7 +1695,7 @@ async function vistaSector(sec){
   // para volver a mostrarla, agregar el sector a esta condición
   if(false) subs.push(['objetivos','Objetivos']);
   if(sec==='playa'||sec==='tienda') subs.push(['objypf','Objetivos +YPF']);
-  if(sec==='tienda') subs.push(['vencimientos','Vencimientos']);
+  if(sec==='tienda') subs.push(['vencimientos','Vencimientos'],['admtienda','Admin']);
   if(sec==='boxes'){ subs.length=0; subs.push(['servicios','Servicios'],['comparativo','Comparativo'],
     ['objetivos','Objetivos'],['presupuesto','Presupuesto'],['control','Control']); }
   const subsVis=subs.filter(([k])=>!oculta(`sub/${sec}/${k}`)).map(([k,t])=>[k,rot(`sub/${sec}/${k}`,t)]);
@@ -1686,6 +1706,7 @@ async function vistaSector(sec){
     :S.sub==='objetivos'?(sec==='tienda'?await vistaObjTienda():sec==='boxes'?await vistaObjBoxes():await vistaObjetivos(sec))
     :S.sub==='objypf'?await vistaObjYPF(sec)
     :S.sub==='vencimientos'?await vistaVencimientos()
+    :S.sub==='admtienda'?await vistaAdmTienda()
     :S.sub==='presupuesto'?await vistaPresupuesto()
     :S.sub==='control'?(S.ctrlAbierto?await vistaControl():candadoControl())
     :await vistaMes(sec);
@@ -2639,6 +2660,25 @@ const LIBRE_BASE=()=>({
   ]
 });
 const claveLibre=(a,m)=>`libre:hoja:${a}-${m}`;
+// porcentajes máximos del Programa +YPF según zona e imagen
+const COMIS_YPF={
+  A:{ni2020:{g2:1.5,g3:4},  i2008:{g2:0.8,g3:2.5}, sopha:{g2:0.3,g3:1}},
+  B:{ni2020:{g2:1.2,g3:2.8},i2008:{g2:0.4,g3:1.6}, sopha:{g2:0.1,g3:0.3}}
+};
+const IMAGENES=[['ni2020','Nueva Imagen 2020'],['i2008','Imagen 2008'],['sopha','Imagen SOPHA']];
+async function cargarComision(anio,trim){
+  const k=`comision:${anio}-T${trim}`;
+  if(S.comi&&S.comiClave===k) return S.comi;
+  let d=await leer(k,null);
+  if(!d){
+    const ta=trim>1?[anio,trim-1]:[String(Number(anio)-1),4];
+    const p=await leer(`comision:${ta[0]}-T${ta[1]}`,null);
+    d=p?JSON.parse(JSON.stringify(p)):{zona:'A',imagen:'ni2020',pvpInf:2289,pvpInd:2379};
+  }
+  S.comi=d; S.comiClave=k;
+  return d;
+}
+const guardarComision=()=>guardar(`comision:${S.comiClave.split(':')[1]}`,S.comi);
 const esVolumen=f=>/m3/i.test(`${f.c} ${f.sub||''}`);      // se guarda y se muestra en litros
 // si el número viene con coma se entiende que son m3 (139,5 = 139.500 L); entero, ya son litros
 function aLitros(txt){
@@ -2670,7 +2710,8 @@ async function ventasLibre(anio,trim,hasta){
   const por=meses.map(m=>{
     const ym=`${anio}-${m}`;
     const n=vendFam(r,ym,iN), d=vendFam(r,ym,iD), inf=vendFam(r,ym,[ID_INFINIA]);
-    return {m,ym,naftas:n,diesel:d,inf,hay:!!(n||d)};
+    const ind=vendFam(r,ym,['ind']);
+    return {m,ym,naftas:n,diesel:d,inf,ind,hay:!!(n||d)};
   });
   // unidades de tienda sin tabaco, de los cierres por turno
   const C=await combos();
@@ -2685,7 +2726,8 @@ async function ventasLibre(anio,trim,hasta){
   const sI=por.reduce((a,x)=>a+x.inf,0);
   const sU=por.reduce((a,x)=>a+x.unidades,0);
   const sC=por.reduce((a,x)=>a+x.combos,0);
-  return {por,naftas:sN,diesel:sD,mix:sN?sI/sN*100:0,unidades:sU,combos:sC};
+  const sInd=por.reduce((a,x)=>a+(x.ind||0),0);
+  return {por,naftas:sN,diesel:sD,mix:sN?sI/sN*100:0,unidades:sU,combos:sC,inf:sI,ind:sInd};
 }
 // mete en el cuadro lo que sale de las ventas de playa
 async function volcarVentasLibre(){
@@ -2917,6 +2959,33 @@ async function rollBoxes(){
 }
 
 /* ---------- vencimientos de mercadería ---------- */
+// proveedores de los que entran vencimientos; se administran desde Tienda → Admin
+// lectores que ya sé usar, se reconocen por el nombre del proveedor
+const LECTORES=[{re:/andreani/i,lector:'andreani'},{re:/panino|grand\s*wich/i,lector:'panino'}];
+async function provVenc(){
+  if(!S.provV){
+    let L=await leer('tienda:proveedores',null);
+    if(!L||!L.length) L=[{id:'andreani',nom:'Andreani',lector:'andreani'},
+                         {id:'panino',nom:'Panino S.A.',lector:'panino'}];
+    // los que cargaste a mano se enganchan con su lector si existe
+    let cambio=false;
+    L.forEach(p=>{
+      const m=LECTORES.find(x=>x.re.test(p.nom||''));
+      const l=m?m.lector:'';
+      if((p.lector||'')!==l){ p.lector=l; cambio=true; }
+    });
+    LECTORES.forEach(({re,lector})=>{
+      if(!L.some(p=>re.test(p.nom||''))){
+        L.push({id:lector,nom:lector==='panino'?'Panino S.A.':'Andreani',lector});
+        cambio=true;
+      }
+    });
+    S.provV=L;
+    if(cambio) await guardar('tienda:proveedores',L);
+  }
+  return S.provV;
+}
+const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -2932,13 +3001,118 @@ function estadoVenc(f){
   return {clave:'ok',rot:`en ${d} días`,dias:d};
 }
 
+
+async function vistaAdmTienda(){
+  if(!S.admTOk) return `<div class="envoltorio"><div class="tarjeta" style="max-width:420px;margin:0 auto">
+    <h2>Admin de Tienda</h2><p class="sub">Necesita clave.</p>
+    <div class="campo"><label for="claveAdmT">Clave</label>
+      <input type="password" id="claveAdmT" autocomplete="off"></div>
+    <button class="btn" id="abrirAdmT">Entrar</button></div></div>`;
+
+  const V=await vencimientos();
+  const todos=Object.entries(V).map(([k,v])=>({k,...v,est:estadoVenc(v.vence)}));
+  const activos=todos.filter(x=>!x.consumido&&x.est.dias>=-DIAS_GRACIA);
+  const paraRevisar=activos.filter(x=>x.est.dias<=DIAS_AVISO)
+    .sort((a,b)=>a.vence.localeCompare(b.vence));
+
+  const secc=S.admTSec||'vencimientos';
+  const menu=`<div class="subnav" style="margin-bottom:14px">
+    ${[['vencimientos','Vencimientos'],['boletas','Cargar boletas'],['prov','Proveedores']]
+      .map(([k,r])=>`<button data-admt="${k}" aria-current="${secc===k}">${r}</button>`).join('')}
+  </div>`;
+  const PV=await provVenc();
+  if(secc==='boletas'){
+    const sel=S.provSel||(PV[0]&&PV[0].id)||'';
+    const p=PV.find(x=>x.id===sel)||PV[0];
+    return `<div class="envoltorio">${menu}
+      <div class="filtro"><span class="et">Proveedor</span>
+        <select id="bol-prov">${PV.map(x=>`<option value="${esc(x.id)}"${x.id===sel?' selected':''}>${esc(x.nom)}</option>`).join('')}</select>
+      </div>
+      ${p&&p.lector?await tabAndreani()
+        :`<div class="tarjeta"><h2>${esc((p&&p.nom)||'Proveedor')}</h2>
+           <p class="vacio">Todavía no sé leer las boletas de este proveedor.<br>
+           Pasame una y le armo el lector; los vencimientos van a entrar solos.</p></div>`}
+    </div>`;
+  }
+  if(secc==='prov'){
+    return `<div class="envoltorio">${menu}
+      <div class="tarjeta">
+        <h2>Proveedores</h2>
+        <p class="sub">De acá salen los vencimientos. El que tiene lector carga solo desde la boleta; el resto, a mano por ahora.</p>
+        <div class="scroll"><table>
+          <thead><tr><th>Proveedor</th><th>Lee boletas</th><th class="num">Partidas</th><th></th></tr></thead>
+          <tbody>${PV.map(x=>{
+            const n=todos.filter(v=>norm(v.prov||'')===norm(x.nom)).length;
+            return `<tr>
+              <td><input type="text" class="lb-in lb-txt" data-provnom="${esc(x.id)}" value="${esc(x.nom)}" style="max-width:260px"></td>
+              <td>${x.lector?`<span class="ob-chip max">sí</span>`:`<span class="ob-chip no">a mano</span>`}</td>
+              <td class="num">${nf(n)}</td>
+              <td>${x.lector?'':`<button class="borrar" data-provdel="${esc(x.id)}" aria-label="Quitar">×</button>`}</td></tr>`;
+          }).join('')}</tbody></table></div>
+        <div class="rejilla" style="margin-top:11px">
+          <div class="ancho"><label for="prov-nuevo">Agregar proveedor</label>
+            <input type="text" id="prov-nuevo" placeholder="Nombre del proveedor"></div>
+        </div>
+        <button class="btn sec" id="prov-add" style="width:auto">Agregar</button>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="envoltorio">
+    ${menu}
+    <div class="hoja-venc">
+      <h1>Control de vencimientos</h1>
+      <p>Productos vencidos y los que vencen dentro de ${DIAS_AVISO} días · ${esc(S.cfg.estacion)} · ${hoyISO().split('-').reverse().join('/')}</p>
+      <table>
+        <thead><tr><th>Producto</th><th>Código</th><th>Cant.</th><th>Ingresó</th><th>Vence</th><th>Estado</th><th>Revisado</th></tr></thead>
+        <tbody>${paraRevisar.map(x=>`<tr>
+          <td>${esc(x.desc||x.barra)}</td><td>${esc(x.barra||x.cod||'')}</td>
+          <td class="num">${nf(x.cant)}</td>
+          <td class="num">${x.ingreso?x.ingreso.split('-').reverse().join('/'):'—'}</td>
+          <td class="num">${x.vence.split('-').reverse().join('/')}</td>
+          <td>${x.est.clave==='vencido'?`vencido hace ${-x.est.dias} d`:x.est.rot}</td>
+          <td class="tilde"></td></tr>`).join('')}</tbody>
+      </table>
+      ${paraRevisar.length?'':'<p>No hay nada por vencer en este plazo.</p>'}
+    </div>
+    <div class="tarjeta">
+      <h2>Vencimientos</h2>
+      <p class="sub">${nf(activos.length)} partida${activos.length===1?'':'s'} en control · ${nf(paraRevisar.length)} para revisar.</p>
+      <div class="filtro">
+        <button class="btn sec chico" id="venc-bajar" style="width:auto;margin:0">Descargar Excel</button>
+        <button class="btn sec chico" id="venc-imprimir" style="width:auto;margin:0">Imprimir para revisar</button>
+      </div>
+      <p class="sub">La hoja para imprimir trae lo vencido y lo que vence dentro de ${DIAS_AVISO} días, con una columna para tildar.</p>
+    </div>
+    <div class="tarjeta">
+      <h2>Agregar mercadería a mano</h2>
+      <p class="sub">Para lo que no viene por la factura de Andreani.</p>
+      ${true?`<div class="rejilla" style="margin:11px 0 0">
+        <div class="ancho"><label for="vn-desc">Producto</label>
+          <input type="text" id="vn-desc" placeholder="Nombre del producto" value="${esc(S.vencNuevo.desc||'')}"></div>
+        <div><label for="vn-barra">Código o barra</label>
+          <input type="text" id="vn-barra" placeholder="opcional" value="${esc(S.vencNuevo.barra||'')}"></div>
+        <div><label for="vn-cant">Cantidad</label>
+          <input type="text" inputmode="numeric" class="n" id="vn-cant" value="${esc(String(S.vencNuevo.cant||''))}" placeholder="0"></div>
+        <div><label for="vn-vence">Vence</label>
+          <input type="date" id="vn-vence" value="${esc(S.vencNuevo.vence||'')}"></div>
+      </div>
+      <button class="btn" id="vn-guardar">Agregar</button>`:''}
+    </div>
+  </div>`;
+}
+
 async function vistaVencimientos(){
   const V=await vencimientos();
-  const todos=Object.entries(V).map(([k,v])=>({k,...v,est:estadoVenc(v.vence)}))
+  const todos=Object.entries(V).map(([k,v])=>({k,...v,est:estadoVenc(v.vence),
+      ingreso:v.ingreso||(v.ts?new Date(v.ts).toISOString().slice(0,10):'')}))
     .sort((a,b)=>a.vence.localeCompare(b.vence));
+  const busca=norm(S.vencBusca||'');
+  const coincide=x=>(!busca||norm(`${x.desc||''} ${x.barra||''} ${x.cod||''} ${x.factura||''} ${x.prov||''}`).includes(busca))
+    &&(!S.vencProv||norm(x.prov||'')===norm(S.vencProv));
   const verTodo=!!S.vencTodo;
   const activos=todos.filter(x=>!x.consumido&&x.est.dias>=-DIAS_GRACIA);
-  const lista=verTodo?todos:activos;
+  const lista=(verTodo?todos:activos).filter(coincide);
   const vencidos=activos.filter(x=>x.est.clave==='vencido'||x.est.clave==='hoy');
   const pronto=activos.filter(x=>x.est.clave==='pronto');
 
@@ -2948,20 +3122,23 @@ async function vistaVencimientos(){
   const fila=x=>`<tr class="${x.est.clave==='vencido'||x.est.clave==='hoy'?'vig':''}">
     <td><strong>${esc(x.desc||x.barra)}</strong><small>${esc(x.barra||x.cod||'')}${x.factura?' · '+esc(x.factura):''}${x.consumido?' · consumido':''}</small></td>
     <td class="num">${nf(x.cant)}</td>
+    <td class="num" style="color:var(--tinta-suave)">${x.ingreso?x.ingreso.split('-').reverse().join('/'):'—'}</td>
     <td class="num">${x.vence.split('-').reverse().join('/')}</td>
-    <td class="num" style="color:${x.est.clave==='vencido'?'var(--alerta)':x.est.clave==='hoy'?'var(--alerta)':x.est.clave==='pronto'?'var(--ambar)':'var(--tinta-suave)'}">
+    <td class="num" style="color:${['vencido','hoy','pronto'].includes(x.est.clave)?'var(--alerta)':'var(--tinta-suave)'};font-weight:${['vencido','hoy','pronto'].includes(x.est.clave)?'600':'400'}">
       ${x.est.clave==='vencido'?`vencido hace ${-x.est.dias} día${x.est.dias===-1?'':'s'}`:x.est.rot}</td>
     <td>${x.consumido
       ? `<button class="ver" data-vencvolver="${esc(x.k)}">Reponer</button>`
       : `<button class="ver" data-venccons="${esc(x.k)}">Consumido</button>`}
       <button class="borrar" data-vencdel="${esc(x.k)}" aria-label="Quitar">×</button></td></tr>`;
 
+  const paraRevisar=activos.filter(x=>x.est.dias<=DIAS_AVISO)
+    .sort((a,b)=>a.vence.localeCompare(b.vence));
   return `<div class="envoltorio">
     <div class="totem">
       <div class="totem-cab"><div class="t">Vencimientos</div><div class="d">${activos.length} partida${activos.length===1?'':'s'} en control</div></div>
       <div class="linea-totem"><span class="chip" style="background:var(--alerta)"></span>
         <span class="nom">Vencido o vence hoy</span><span class="guia"></span><span class="val">${nf(vencidos.length)}</span></div>
-      <div class="linea-totem"><span class="chip" style="background:var(--ambar)"></span>
+      <div class="linea-totem"><span class="chip" style="background:var(--alerta)"></span>
         <span class="nom">Vence en ${DIAS_AVISO} días</span><span class="guia"></span><span class="val">${nf(pronto.length)}</span></div>
       <div class="totem-total"><span class="nom">Unidades en riesgo</span>
         <span class="val">${nf([...vencidos,...pronto].reduce((a,x)=>a+(Number(x.cant)||0),0))}</span></div>
@@ -2971,13 +3148,21 @@ async function vistaVencimientos(){
       <h2>${verTodo?'Todo lo cargado':'En control'}</h2>
       <p class="sub">${verTodo?`Historial completo: ${todos.length} partidas.`:`Lo que vence, más lo vencido en los últimos ${DIAS_GRACIA} días.`}</p>
       <div class="filtro">
+        <input type="search" id="venc-busca" placeholder="Buscar producto, código, factura o proveedor"
+          value="${esc(S.vencBusca||'')}" style="flex:1;min-width:180px">
+        <select id="venc-prov" style="width:auto">
+          <option value="">Todos los proveedores</option>
+          ${[...new Set(todos.map(x=>x.prov).filter(Boolean))].sort().map(p=>
+            `<option value="${esc(p)}"${S.vencProv===p?' selected':''}>${esc(p)}</option>`).join('')}
+        </select>
         <button class="btn sec chico" id="venc-todo" style="width:auto;margin:0">${verTodo?'Ver solo lo activo':'Ver todo el historial'}</button>
-        <button class="btn sec chico" id="venc-bajar" style="width:auto;margin:0">Descargar Excel</button>
       </div>
+
       ${lista.length?`<div class="scroll"><table>
-        <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Vence</th><th class="num">Estado</th><th></th></tr></thead>
+        <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Ingresó</th><th class="num">Vence</th><th class="num">Estado</th><th></th></tr></thead>
         <tbody>${lista.map(fila).join('')}</tbody></table></div>`
-      :`<p class="vacio">Nada en control por ahora.</p>`}
+      :`<p class="vacio">${busca?`No encontré nada con “${esc(S.vencBusca)}”.`:'Nada en control por ahora.'}</p>`}
+      ${busca&&lista.length?`<p class="sub" style="margin-top:9px">${lista.length} partida${lista.length===1?'':'s'} de “${esc(S.vencBusca)}”${lista.length>1?`. Se distinguen por la fecha de ingreso.`:''}</p>`:''}
     </div>
   </div>`;
 }
@@ -2987,6 +3172,26 @@ async function vistaVencimientos(){
 const RE_AND=/^(\d{6,20})\s+(.+?)\s+(\d{1,5})\s+([\d.]+,\d{2})(?:\s+([\d.]+,\d{2}))?\s*$/;
 const RE_SOLO_IMP=/^[\d.]+,\d{2}$/;
 const codAnd=c=>String(c).trim();   // tal cual viene en la factura, con los ceros
+// Panino: código con letras (04UN031), descripción, cantidad, precio unitario e importe
+const RE_PANINO=/^([0-9]{2}[A-Z]{2}[0-9]{3})\s+(.+?)\s+(\d{1,5})[.,]\d{2}\s+([\d.]+)[.,](\d{2})\s+([\d.]+)[.,]\d{2}\s*$/;
+function renglonesPanino(lineas){
+  const out=[], vistos=new Set();
+  for(const raw of lineas){
+    const l=String(raw).replace(/\s+/g,' ').trim();
+    if(!l) continue;
+    const m=l.match(RE_PANINO);
+    if(!m) continue;
+    const cant=Number(m[3])||0;
+    if(!cant) continue;
+    const unit=Number(String(m[4]).replace(/\./g,'')+'.'+m[5])||0;
+    const neto=Math.round(unit*cant*100)/100;
+    const k=m[1]+'|'+cant+'|'+neto;
+    if(vistos.has(k)) continue;      // el PDF suele traer la factura repetida
+    vistos.add(k);
+    out.push({cod:m[1],codOrig:m[1],desc:m[2].trim(),cant,unit,neto});
+  }
+  return out;
+}
 function renglonesAndreani(lineas){
   const out=[], vistos=new Set();
   for(let i=0;i<lineas.length;i++){
@@ -3014,9 +3219,9 @@ function renglonesAndreani(lineas){
 async function tabAndreani(){
   const a=S.and;
   const m=await maestro();
-  if(!a) return `<div class="aviso">Subí la factura de Andreani en PDF. Leo el código, la descripción y la cantidad de cada renglón. El <strong>código de barra sale del maestro</strong>; el que no esté, lo cargás una vez y queda guardado.</div>
-    <div class="tarjeta"><h2>Factura de Andreani</h2>
-      <p class="sub">Maestro: ${nf(m.length)} códigos, ${nf(m.filter(x=>x.barra).length)} con barra.</p>
+  if(!a) return `<div class="aviso">Subí la factura en PDF. Leo la descripción, la cantidad y el importe de cada renglón; después cargás el vencimiento de cada uno.</div>
+    <div class="tarjeta"><h2>Factura</h2>
+      ${(S.provLector||'andreani')==='andreani'?`<p class="sub">Maestro: ${nf(m.length)} códigos, ${nf(m.filter(x=>x.barra).length)} con barra.</p>`:''}
       <label class="archivo"><strong>Elegir factura</strong><small>PDF</small>
         <input type="file" id="an-arch" accept="application/pdf"></label>
       <details style="margin-top:11px"><summary>Pegar el texto</summary>
@@ -3026,40 +3231,41 @@ async function tabAndreani(){
       </details>
     </div>`;
 
-  if(a.error) return `<div class="tarjeta"><h2>Factura de Andreani</h2>
+  if(a.error) return `<div class="tarjeta"><h2>Factura de ${esc(a.prov||'proveedor')}</h2>
     <div class="aviso mal">${esc(a.error)}</div>
     <button class="btn sec" id="an-reset">Probar con otro archivo</button></div>`;
 
+  const usaBarra=(a.lector||'andreani')==='andreani';
   const listos=a.filas.filter(f=>f.barra);
-  const sin=a.filas.filter(f=>!f.barra);
+  const sin=usaBarra?a.filas.filter(f=>!f.barra):[];
   const totNeto=a.filas.reduce((x,f)=>x+f.neto,0);
   const totCant=a.filas.reduce((x,f)=>x+f.cant,0);
   const dif=a.subtotal?totNeto-a.subtotal:null;
 
   return `<div class="tarjeta">
-    <h2>${esc(a.nombre||'Factura')}</h2>
-    <p class="sub">${a.filas.length} renglones${a.numero?` · comprobante ${esc(a.numero)}`:''}${a.fecha?` · ${a.fecha}`:''}</p>
-    <div class="campo"><label>Con código de barra</label><strong class="num" style="color:var(--ok)">${listos.length}</strong></div>
-    <div class="campo"><label>Sin barra, a completar</label><strong class="num" style="color:${sin.length?'var(--alerta)':'var(--tinta-suave)'}">${sin.length}</strong></div>
+    <h2>${esc(a.prov||'Factura')}</h2>
+    <p class="sub">${a.filas.length} renglones${a.numero?` · comprobante ${esc(a.numero)}`:''}${a.fecha?` · ${a.fecha}`:''}${a.nombre?` · ${esc(a.nombre)}`:''}</p>
+    ${usaBarra?`<div class="campo"><label>Con código de barra</label><strong class="num" style="color:var(--ok)">${listos.length}</strong></div>
+    <div class="campo"><label>Sin barra, a completar</label><strong class="num" style="color:${sin.length?'var(--alerta)':'var(--tinta-suave)'}">${sin.length}</strong></div>`:''}
     <div class="campo"><label>Unidades</label><strong class="num">${nf(totCant)}</strong></div>
     <div class="campo"><label>Suma de los renglones</label><strong class="num">${nf(totNeto,2)}</strong></div>
     ${a.subtotal?`<div class="campo"><label>Subtotal de la factura</label><strong class="num">${nf(a.subtotal,2)}</strong></div>
       <div class="campo"><label>Diferencia</label><strong class="num" style="color:${Math.abs(dif)<0.05?'var(--ok)':'var(--alerta)'}">${nf(dif,2)}</strong></div>`:''}
   </div>
-  ${sin.length?`<div class="aviso">Completá el código de barra de los renglones marcados y tocá <strong>Guardar</strong>: quedan en el maestro y no vuelven a aparecer.</div>`:''}
+  ${usaBarra&&sin.length?`<div class="aviso">Completá el código de barra de los renglones marcados y tocá <strong>Guardar</strong>: quedan en el maestro y no vuelven a aparecer.</div>`:''}
   <div class="aviso">Si el remito trae el vencimiento de la mercadería, cargalo en la columna <strong>Vence</strong>: aparece en Tienda Full → Vencimientos.</div>
   ${a.subtotal&&Math.abs(dif)>=0.05?`<div class="aviso mal">La suma de los renglones no coincide con el subtotal. Revisá antes de cargar.</div>`:''}
   <div class="tarjeta">
     <h2>Renglones</h2>
     <div class="scroll"><table>
-      <thead><tr><th>Producto</th><th>Código de barra</th><th class="num">Cant.</th><th>Vence</th><th class="num">Importe</th><th></th></tr></thead>
-      <tbody>${a.filas.map((f,i)=>`<tr class="${f.barra?'':'vig'}">
+      <thead><tr><th>Producto</th>${usaBarra?'<th>Código de barra</th>':''}<th class="num">Cant.</th><th>Vence</th><th class="num">Importe</th><th></th></tr></thead>
+      <tbody>${a.filas.map((f,i)=>`<tr class="${(!usaBarra||f.barra)?'':'vig'}">
         <td><strong>${esc(f.desc)}</strong><small>cód. ${esc(f.cod)}${f.origen?' · '+f.origen:''}</small></td>
-        <td>${f.barra?`<span class="num">${esc(f.barra)}</span>`:`<input type="text" inputmode="numeric" class="n" data-anbarra="${i}" placeholder="código de barra" style="width:136px">`}</td>
+        ${usaBarra?`<td>${f.barra?`<span class="num">${esc(f.barra)}</span>`:`<input type="text" inputmode="numeric" class="n" data-anbarra="${i}" placeholder="código de barra" style="width:136px">`}</td>`:''}
         <td><input type="text" inputmode="numeric" class="n" data-ancant="${i}" value="${f.cant}" style="width:62px"></td>
         <td><input type="date" data-anvence="${i}" value="${esc(f.vence||'')}" style="width:150px"></td>
         <td class="num">${nf(f.neto,2)}</td>
-        <td>${!f.barra?`<button class="ver" data-anguardar="${i}">Guardar</button>`:''}
+        <td>${(usaBarra&&!f.barra)?`<button class="ver" data-anguardar="${i}">Guardar</button>`:''}
           <button class="borrar" data-andel="${i}" aria-label="Quitar">×</button></td></tr>`).join('')}
       </tbody>
       <tfoot><tr class="tot"><td>Total</td><td></td><td class="num">${nf(totCant)}</td><td></td><td class="num">${nf(totNeto,2)}</td><td></td></tr></tfoot>
@@ -3667,7 +3873,7 @@ async function tabConvertir(){
 
   if(!c) return `<div class="aviso">Subí la factura en PDF. Leo el código y la cantidad de cada renglón, y lo cruzo con el maestro por código. Lo que falte lo completás acá mismo.</div>
     <div class="tarjeta"><h2>Factura a Debo</h2>
-      <p class="sub">Maestro: ${nf(m.length)} códigos, ${nf(m.filter(x=>x.barra).length)} con barra.</p>
+      ${(S.provLector||'andreani')==='andreani'?`<p class="sub">Maestro: ${nf(m.length)} códigos, ${nf(m.filter(x=>x.barra).length)} con barra.</p>`:''}
       <label class="archivo"><strong>Elegir factura</strong><small>PDF de Renova</small>
         <input type="file" id="cv-arch" accept="application/pdf"></label>
       <details style="margin-top:13px"><summary>Pegar el texto a mano</summary>
@@ -4104,7 +4310,7 @@ const MENU_ADMIN_BASE=[
                   ['ventastienda','Ventas'],['objtienda','Objetivos']]],
   ['Facturas',[['facturas','Facturas'],['gastos','Gastos'],['maestro','Maestro Debo'],
                ['convertir','Renova a Debo'],['ypf','YPF lubricantes'],['topaes','Topaes a Debo'],
-               ['andreani','Andreani a Debo']]],
+               ]],
   ['Boxes',[['boxes','Reportes de servicios'],['lubricante','Compra de lubricante'],
              ['objboxes','Objetivos'],['precios','Listas de precios']]],
   ['Sistema',[['cumples','Cumpleaños'],['sync','Sincronización'],['config','Configuración']]]
@@ -4137,7 +4343,6 @@ async function vistaAdmin(){
   if(S.tab==='convertir')   c=await tabConvertir();
   if(S.tab==='ypf')         c=await tabYPF();
   if(S.tab==='topaes')      c=await tabTopaes();
-  if(S.tab==='andreani')    c=await tabAndreani();
   if(S.tab==='remitos')     c=await tabRemitos();
   if(S.tab==='facturas')    c=await tabFacturas();
   if(S.tab==='gastos')      c=await tabGastos();
@@ -4510,6 +4715,56 @@ async function tabObjTienda(){
 }
 
 
+// comisión del Programa +YPF: los litros de Infinia por su precio, por el porcentaje que corresponde
+async function bloqueComision(v,obtenidos,posibles){
+  const anio=S.libreAnio, trim=S.libreTrim;
+  const C=await cargarComision(anio,trim), ed=S.comiEdit;
+  const cumpl = posibles? obtenidos/posibles*100 : 0;
+  const tope=(COMIS_YPF[C.zona||'A']||COMIS_YPF.A)[C.imagen||'ni2020']||{g2:0,g3:0};
+  const pctG2=tope.g2*cumpl/100, pctG3=tope.g3*cumpl/100;
+  const pInf=Number(C.pvpInf)||0, pInd=Number(C.pvpInd)||0;
+  const monto = v.inf*pInf*tope.g3/100*(cumpl/100) + v.ind*pInd*tope.g3/100*(cumpl/100);
+  const campo=(k,ph)=>ed
+    ? `<input type="text" inputmode="decimal" class="n" data-comi="${k}" value="${C[k]??''}" placeholder="${ph}" style="width:96px">`
+    : (Number(C[k])?nf(Number(C[k]),2):'—');
+
+  return `<details class="lb-plega"${S.comiAbierta?' open':''} id="lb-comi">
+    <summary><span class="lb-flecha">▸</span><strong>Comisión +YPF</strong>
+      <small>${S.libreOk?`${nf(cumpl,0)}% de cumplimiento · ${monto?nf(monto):'sin precios cargados'}`:'🔒 pide clave'}</small></summary>
+    <div style="padding:0 13px 13px">
+      <div class="lb-trim" style="margin-bottom:9px">
+        <span class="et">Zona</span>
+        ${ed?`<select id="comi-zona">${['A','B'].map(z=>`<option value="${z}"${(C.zona||'A')===z?' selected':''}>Zona ${z}</option>`).join('')}</select>
+             <select id="comi-imagen">${IMAGENES.map(([k,r])=>`<option value="${k}"${(C.imagen||'ni2020')===k?' selected':''}>${r}</option>`).join('')}</select>`
+          :`<strong>Zona ${esc(C.zona||'A')} · ${esc((IMAGENES.find(x=>x[0]===(C.imagen||'ni2020'))||[,''])[1])}</strong>`}
+        <button class="lapiz-min${ed?' act':''}" id="comi-editar" style="margin-left:auto"
+          title="${ed?'Listo':'Modificar · pide clave'}">${ed?'✓':'✎'}</button>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr><th>Grado</th><th class="num">Tope</th><th class="num">Con ${nf(cumpl,0)}% cumplido</th>
+          <th class="num">Litros del trimestre</th><th class="num">PVP</th><th class="num">Monto</th></tr></thead>
+        <tbody>
+          <tr><td>Grado 3 · Infinia nafta</td><td class="num">${nf(tope.g3,1)} %</td>
+            <td class="num"><strong>${nf(pctG3,2)} %</strong></td>
+            <td class="num">${nf(v.inf)}</td><td class="num">${campo('pvpInf','precio')}</td>
+            <td class="num"><strong>${nf(v.inf*pInf*tope.g3/100*(cumpl/100))}</strong></td></tr>
+          <tr><td>Grado 3 · Infinia diesel</td><td class="num">${nf(tope.g3,1)} %</td>
+            <td class="num"><strong>${nf(pctG3,2)} %</strong></td>
+            <td class="num">${nf(v.ind)}</td><td class="num">${campo('pvpInd','precio')}</td>
+            <td class="num"><strong>${nf(v.ind*pInd*tope.g3/100*(cumpl/100))}</strong></td></tr>
+          <tr style="opacity:.6"><td>Grado 2 · Súper y Diesel 500</td><td class="num">${nf(tope.g2,1)} %</td>
+            <td class="num"><strong>${nf(pctG2,2)} %</strong></td>
+            <td class="num">${nf(v.naftas-v.inf+v.diesel-v.ind)}</td><td class="num">—</td>
+            <td class="num">no entra en la fórmula</td></tr>
+        </tbody>
+        <tfoot><tr class="tot"><td colspan="5">Comisión del trimestre</td>
+          <td class="num"><strong>${nf(monto)}</strong></td></tr></tfoot>
+      </table></div>
+      <p class="sub">Sale de los litros de Infinia por su precio, por el <strong>tope</strong> de tu zona e imagen, por el cumplimiento. La carta informa ${nf(pctG3,2)}% para grado 3, que es ese tope ya multiplicado por el cumplimiento: por eso acá se aplica una sola vez. El grado 2 se informa pero la fórmula de YPF no lo incluye.</p>
+    </div>
+  </details>`;
+}
+
 async function vistaLibre(){
   const d=await cargarLibre(), ed=S.libreEdit;
   const v=await ventasLibre(S.libreAnio,S.libreTrim,S.libreMes);
@@ -4550,6 +4805,8 @@ async function vistaLibre(){
       ${ed?`<td><button class="lb-x" data-lbdel="${i}" aria-label="Quitar">×</button></td>`:''}
     </tr>`;
   }).join('');
+
+  const comiHTML=await bloqueComision(v,obtenidos,posibles);
 
   return `<div class="envoltorio libre-ancho">
     <div class="ypf-hoja">
@@ -4607,6 +4864,7 @@ async function vistaLibre(){
           <i>Mix</i> ${nf(p.naftas?p.inf/p.naftas*100:0,1)} %</span>`; })()}
     </div>
     ${bloqueDatosLibre(d,v)}
+    ${comiHTML}
     <p class="sub">Los volúmenes van en litros. Si escribís con coma se toma como m3: <strong>139,5</strong> queda en <strong>139.500</strong>; si escribís <strong>139500</strong> queda igual. Cada mes guarda sus propios objetivos. El porcentaje sale de la regla de YPF: por debajo del mínimo es 0, en el mínimo vale 70% y sube hasta 100% en el máximo.</p>
   </div>`;
 }
@@ -4658,7 +4916,7 @@ function bloqueDatosLibre(d,v){
       <ul class="lb-mano">${mano.map(({f})=>`<li><span>${esc(f.c)}</span>
         <b class="${f.real===''||f.real===null?'falta':''}">${f.real===''||f.real===null?'sin cargar':nf(Number(f.real),Math.abs(Number(f.real))>=1000?0:2)}</b></li>`).join('')}</ul>
     </div>
-  </div>`;
+  </div></details>`;
 }
 
 // el objetivo del mes solo, cuando lo que está cargado es acumulado del trimestre
@@ -5838,6 +6096,26 @@ function conectar(){
   };
   if(abLib) abLib.onclick=entrarLibre;
   if(clLib) clLib.onkeydown=e=>{ if(e.key==='Enter') entrarLibre(); };
+  const cmD=q('#lb-comi');
+  if(cmD){
+    const cmS=cmD.querySelector('summary');
+    if(cmS) cmS.onclick=e=>{                       // para verla hace falta la clave
+      if(!cmD.open&&!S.libreOk){ e.preventDefault();
+        if(pedirClave()){ S.comiAbierta=true; render(); } }
+    };
+    cmD.ontoggle=()=>{ S.comiAbierta=cmD.open; };
+  }
+  const cmE=q('#comi-editar');
+  if(cmE) cmE.onclick=async()=>{
+    if(!S.comiEdit&&!pedirClave()) return;
+    S.comiEdit=!S.comiEdit; await render();
+  };
+  ['zona','imagen'].forEach(k=>{ const s=q('#comi-'+k);
+    if(s) s.onchange=async()=>{ S.comi[k]=s.value; await guardarComision(); await render(); }; });
+  document.querySelectorAll('#app [data-comi]').forEach(i=>i.onchange=async()=>{
+    S.comi[i.dataset.comi]=i.value.trim()===''?'':numero(i.value);
+    await guardarComision(); await render();
+  });
   const lbDat=q('#lb-datos');
   if(lbDat) lbDat.ontoggle=()=>{ S.libreDatosAbierto=lbDat.open; };
   const lbTr=q('#lb-traer');
@@ -6104,12 +6382,19 @@ function conectar(){
 
   // ---- factura de Andreani ----
   const procAnd=async(lineas,nombre)=>{
-    const r=renglonesAndreani(lineas);
-    if(!r.length) throw new Error('No reconocí renglones de producto. Probá pegando el texto.');
+    const PV=await provVenc();
+    const p=PV.find(x=>x.id===(S.provSel||'andreani'))||PV[0];
+    const esPanino=(p&&p.lector)==='panino';
+    const r=esPanino?renglonesPanino(lineas):renglonesAndreani(lineas);
+    if(!r.length) throw new Error(`No reconocí renglones de producto${p?` con el formato de ${p.nom}`:''}. Fijate que el proveedor elegido sea el correcto, o probá pegando el texto.`);
     const m=await maestro();
     const plano=lineas.join('\n');
-    const mn=plano.match(/Nro de Comprobante:\s*([A-Z0-9]+)/i);
-    const mf=plano.match(/Fecha:\s*(\d{2}[./-]\d{2}[./-]\d{4})/);
+    let mn=plano.match(/Nro de Comprobante:\s*([A-Z0-9]+)/i);
+    let mf=plano.match(/Fecha:\s*(\d{2}[./-]\d{2}[./-]\d{4})/);
+    if(esPanino){
+      mn=plano.match(/([A-Z]\d{5}-\d{8})/) || mn;
+      mf=plano.match(/(\d{2}\/\d{2}\/\d{4})/) || mf;
+    }
     // el subtotal está en la línea siguiente al rótulo
     let sub=0;
     const iS=lineas.findIndex(l=>/Subtotal/i.test(String(l)));
@@ -6126,7 +6411,7 @@ function conectar(){
       return {...f, barra:(h2&&h2.modo==='codigo')?h2.item.barra:'',
               origen:(h2&&h2.modo==='codigo')?'del maestro':(h2?'en el maestro sin barra':'')};
     });
-    S.and={nombre,filas,subtotal:sub,numero:mn?mn[1]:'',fecha:mf?mf[1]:''};
+    S.and={nombre,filas,subtotal:sub,numero:mn?mn[1]:'',fecha:mf?mf[1]:'',prov:(p&&p.nom)||'Andreani',lector:(p&&p.lector)||'andreani'};
   };
   const ana=q('#an-arch');
   if(ana) ana.onchange=async()=>{
@@ -6187,15 +6472,97 @@ function conectar(){
     const V=await vencimientos();
     let n=0;
     S.and.filas.filter(f=>f.vence).forEach(f=>{
-      const k=`${S.and.numero||hoyISO()}|${f.cod}|${f.vence}`;
+      const k=`${S.and.prov||'And'}|${S.and.numero||hoyISO()}|${f.cod}|${f.vence}`;
       V[k]={barra:f.barra||'',cod:f.cod,desc:f.desc,cant:f.cant,vence:f.vence,
-            factura:S.and.numero||'',prov:'Andreani',ts:Date.now(),
+            factura:S.and.numero||'',prov:(S.and.prov||'Andreani'),ts:Date.now(),
+            ingreso:(V[k]&&V[k].ingreso)||hoyISO(),
             consumido:(V[k]&&V[k].consumido)||false};
       n++;
     });
     if(await guardar('tienda:vencimientos',V)){ S.venc=V; toast(n+' vencimiento'+(n===1?'':'s')+' guardado'+(n===1?'':'s')); await render(); }
   };
   // ---- vencimientos ----
+  // alta a mano, con su propia clave
+  document.querySelectorAll('#app [data-admt]').forEach(b=>b.onclick=async()=>{
+    S.admTSec=b.dataset.admt; await render();
+  });
+  const abT=q('#abrirAdmT'), clT=q('#claveAdmT');
+  const entrarAdmT=async()=>{
+    if(clT.value.trim()===(S.cfg.claveVenc||'full2026')){ S.admTOk=true; S.vencNuevo={vence:hoyISO()}; await render(); }
+    else { toast('Clave incorrecta'); clT.value=''; clT.focus(); }
+  };
+  if(abT) abT.onclick=entrarAdmT;
+  if(clT) clT.onkeydown=e=>{ if(e.key==='Enter') entrarAdmT(); };
+  const vPr=q('#venc-prov');
+  if(vPr) vPr.onchange=async()=>{ S.vencProv=vPr.value; await render(); };
+  const bolP=q('#bol-prov');
+  if(bolP) bolP.onchange=async()=>{ S.provSel=bolP.value; await render(); };
+  const pvAdd=q('#prov-add');
+  if(pvAdd) pvAdd.onclick=async()=>{
+    const i=q('#prov-nuevo'), n=(i.value||'').trim();
+    if(!n){ toast('Poné el nombre'); return; }
+    const PV=await provVenc();
+    if(PV.some(x=>norm(x.nom)===norm(n))){ toast('Ese proveedor ya está'); return; }
+    PV.push({id:'p'+Date.now(),nom:n,lector:''});
+    await guardarProvV(); toast(n+' agregado'); await render();
+  };
+  document.querySelectorAll('#app [data-provnom]').forEach(i=>i.onchange=async()=>{
+    const PV=await provVenc(), p=PV.find(x=>x.id===i.dataset.provnom);
+    if(!p) return;
+    const n=(i.value||'').trim(); if(!n){ toast('El nombre no puede quedar vacío'); return; }
+    const V=await vencimientos();
+    Object.values(V).forEach(v=>{ if(norm(v.prov||'')===norm(p.nom)) v.prov=n; });
+    await guardar('tienda:vencimientos',V); S.venc=V;
+    p.nom=n; await guardarProvV(); toast('Renombrado'); await render();
+  });
+  document.querySelectorAll('#app [data-provdel]').forEach(b=>b.onclick=async()=>{
+    const PV=await provVenc(), p=PV.find(x=>x.id===b.dataset.provdel);
+    if(!p) return;
+    const V=await vencimientos();
+    const n=Object.values(V).filter(v=>norm(v.prov||'')===norm(p.nom)).length;
+    if(!confirm(`¿Borrar ${p.nom}?` + (n?`\n\nTiene ${n} partida${n===1?'':'s'} cargada${n===1?'':'s'}: quedan como están, solo se saca de la lista.`:''))) return;
+    S.provV=PV.filter(x=>x.id!==p.id);
+    await guardarProvV(); toast('Borrado'); await render();
+  });
+  const vBus=q('#venc-busca');
+  if(vBus){
+    vBus.oninput=()=>{ S.vencBusca=vBus.value; clearTimeout(S.tBusca);
+      S.tBusca=setTimeout(async()=>{ await render();
+        const c=q('#venc-busca'); if(c){ c.focus(); c.setSelectionRange(c.value.length,c.value.length); } },260); };
+  }
+  const vnBtn=q('#venc-nuevo');
+  if(vnBtn) vnBtn.onclick=async()=>{
+    if(!S.vencAlta){
+      if(!S.vencOk){
+        const c=prompt('Clave para cargar mercadería a mano');
+        if(c===null) return;
+        if(c.trim()!==(S.cfg.claveVenc||'full2026')){ toast('Clave incorrecta'); return; }
+        S.vencOk=true;
+      }
+      S.vencNuevo={vence:hoyISO()};
+    }
+    S.vencAlta=!S.vencAlta; await render();
+  };
+  ['desc','barra','cant','vence'].forEach(k=>{ const i=q('#vn-'+k);
+    if(i) i.oninput=()=>{ S.vencNuevo[k]=i.value; }; });
+  const vnG=q('#vn-guardar');
+  if(vnG) vnG.onclick=async()=>{
+    const n=S.vencNuevo;
+    if(!(n.desc||'').trim()){ toast('Poné el nombre del producto'); return; }
+    if(!n.vence){ toast('Poné la fecha de vencimiento'); return; }
+    const cant=Math.max(1,Math.round(numero(n.cant)||1));
+    const V=await vencimientos();
+    const k='m'+Date.now();
+    V[k]={desc:n.desc.trim(),barra:(n.barra||'').trim(),cant,vence:n.vence,factura:'a mano',
+          ingreso:hoyISO(),ts:Date.now()};
+    if(await guardar('tienda:vencimientos',V)){
+      S.venc=V; S.vencNuevo={vence:n.vence}; toast('Cargado');
+      await render();
+    }
+  };
+  const vnP=q('#venc-imprimir');
+  if(vnP) vnP.onclick=()=>{ document.body.classList.add('imp-venc');
+    setTimeout(()=>{ window.print(); document.body.classList.remove('imp-venc'); },120); };
   const btnVencTodo=q('#venc-todo'); if(btnVencTodo) btnVencTodo.onclick=async()=>{ S.vencTodo=!S.vencTodo; await render(); };
   document.querySelectorAll('#app [data-venccons]').forEach(b=>b.onclick=async()=>{
     const V=await vencimientos(); if(V[b.dataset.venccons]) V[b.dataset.venccons].consumido=true;
