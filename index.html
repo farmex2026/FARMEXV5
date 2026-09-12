@@ -502,8 +502,8 @@ table.mix tr:nth-child(odd) td{background:rgba(255,255,255,.025)}
 .ypf-t td.lb-auto{background:transparent;border:0;width:78px;padding:0 6px 0 0;text-align:center;
   vertical-align:middle}
 .ypf-t td.lb-auto small{display:block;font-size:9.5px;font-style:italic;color:#dbe6f7;opacity:.8;margin-top:2px}
-.ypf-t th.lb-autoh{background:transparent;border:0;font-size:9px;font-weight:400;width:78px;
-  letter-spacing:.05em;opacity:.75;padding:3px 0;text-align:center}
+.ypf-t th.lb-autoh{background:transparent;border:0;font-size:8.5px;font-weight:400;width:82px;
+  letter-spacing:.03em;opacity:.75;padding:3px 2px;text-align:center;white-space:normal;line-height:1.2}
 .lb-pto{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid rgba(255,255,255,.55)}
 .lb-pto.si{background:#3DE0A0}
 .lb-pto.no{background:#FF6B85}
@@ -852,7 +852,7 @@ const S={
   maestro:null, previaMaestro:null, mBusca:'', mSoloFalta:false, conv:null,
   gasMes:null, contactos:null, facSel:{}, facMes:'todos', avisoAbierto:false,
   diasAbiertos:{}, ctrl:null, ctrlMes:null, ctrlAbierto:false, ctrlEdit:null, top:null, bx:{}, bxRoll:null, previaBoxes:null, bxmAnio:null, bxmMes:null,
-  libreDatosAbierto:false, comi:null, comiClave:null, comiEdit:false, comiAbierta:false, libre:null, libreClave:null, libreAnio:null, libreTrim:null, libreMes:null, libreEdit:false, libreOk:false, lub:null, lubMes:null, lubFoco:null, prodLub:null, lubAddAce:false, lubAddOtr:false, lubAnio:null, lubTrim:null, lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
+  libreDatosAbierto:false, libreDia:'', comi:null, comiClave:null, comiEdit:false, comiAbierta:false, libre:null, libreClave:null, libreAnio:null, libreTrim:null, libreMes:null, libreEdit:false, libreOk:false, lub:null, lubMes:null, lubFoco:null, prodLub:null, lubAddAce:false, lubAddOtr:false, lubAnio:null, lubTrim:null, lubri:null, combos:null, cortes:null, previaCombos:null, objBAnio:null, objBMes:null, envases:null, ypf:null, syncEstado:null, previaTienda:null, presPDF:null, listas:null, previaPrecios:null, busca:'', resBusca:[], pres:{marca:'',modelo:'',anio:'',tel:'',items:[]}
 };
 
 /* ---------- almacenamiento ---------- */
@@ -1266,7 +1266,7 @@ function arrancarCartel(){
 /* ---------- barra ---------- */
 function barra(){
   const f=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'});
-  const nav=[['playa','Playa'],['tienda','Tienda Full'],['boxes','Boxes'],['admin','Administración'],['libre','Libre']]
+  const nav=[['playa','Playa'],['tienda','Tienda Full'],['boxes','Boxes'],['admin','Administración'],['libre','+YPF']]
     .filter(([k])=>!oculta('nav/'+k)).map(([k,t])=>[k,rot('nav/'+k,t)]);
   if(nav.length&&!nav.some(([k])=>k===S.vista)) S.vista=nav[0][0];
   return `<div class="top"><div class="top-fila">
@@ -2702,6 +2702,49 @@ async function fechaCargaPlaya(anio,meses){
   return `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}/${f.getFullYear()}`;
 }
 // lo que YPF mide en m3 sale de las ventas de playa: litros / 1000
+// lo vendido en un mes hasta un día, sumando los turnos cargados
+async function ventasHastaDia(ym,dia){
+  const ops=await leer(`ops:playa:${ym}`,{});
+  const iN=idsFam('Naftas'), iD=idsFam('Diesel');
+  let naftas=0,diesel=0,inf=0,ind=0,hay=false;
+  Object.entries(ops).forEach(([d,turnos])=>{
+    if(Number(d)>Number(dia)) return;
+    Object.values(turnos||{}).forEach(t=>{
+      const p=(t&&t.prod)||{};
+      Object.entries(p).forEach(([k,v])=>{
+        const n=Number(v)||0; if(!n) return;
+        hay=true;
+        if(iN.includes(k)) naftas+=n;
+        if(iD.includes(k)) diesel+=n;
+        if(k===ID_INFINIA) inf+=n;
+        if(k==='ind') ind+=n;
+      });
+    });
+  });
+  return {naftas,diesel,inf,ind,hay};
+}
+// unidades de tienda sin tabaco hasta un día
+async function unidadesHastaDia(ym,dia){
+  const ops=await leer(`ops:tienda:${ym}`,{});
+  let u=0,hay=false;
+  Object.entries(ops).forEach(([d,turnos])=>{
+    if(Number(d)>Number(dia)) return;
+    Object.values(turnos||{}).forEach(t=>{ const s=sinTabaco(t&&t.rubro).dentro; if(s){ u+=s; hay=true; } });
+  });
+  return {u,hay};
+}
+// combos hasta un día, de los cortes cargados
+async function combosHastaDia(ym,dia){
+  const CO=await cortesCombos(), dias=combosPorDia(CO);
+  let n=0,hay=false;
+  Object.entries(dias).forEach(([f,v])=>{
+    if(f.slice(0,7)!==ym) return;
+    if(Number(f.slice(8,10))>Number(dia)) return;
+    n+=Math.max(0,v.comida)+Math.max(0,v.cafe); hay=true;
+  });
+  return {n,hay};
+}
+
 async function ventasLibre(anio,trim,hasta){
   const r=await roll('playa');
   let meses=TRIM[trim-1];
@@ -2715,11 +2758,21 @@ async function ventasLibre(anio,trim,hasta){
   });
   // unidades de tienda sin tabaco, de los cierres por turno
   const C=await combos();
+  const dia=Number(S.libreDia)||0;
+  if(dia&&por.length){
+    const u=por[por.length-1];                 // solo el último mes se corta por día
+    const v=await ventasHastaDia(u.ym,dia);
+    if(v.hay){ u.naftas=v.naftas; u.diesel=v.diesel; u.inf=v.inf; u.ind=v.ind; u.hay=true; u.corte=dia; }
+  }
   for(const x of por){
     const m=await ventasMesTienda(x.ym);
     x.unidades=m.unidades;
     x.uFuente=m.fuente;
     x.combos=Number(C[x.ym])||0;
+    if(dia&&x===por[por.length-1]){
+      const uu=await unidadesHastaDia(x.ym,dia); if(uu.hay) x.unidades=uu.u;
+      const cc=await combosHastaDia(x.ym,dia);   if(cc.hay) x.combos=cc.n;
+    }
     if(m.unidades||x.combos) x.hay=true;
   }
   const sN=por.reduce((a,x)=>a+x.naftas,0), sD=por.reduce((a,x)=>a+x.diesel,0);
@@ -4726,7 +4779,7 @@ async function bloqueComision(v,obtenidos,posibles){
     : (Number(C[k])?nf(Number(C[k]),2):'—');
 
   return `<details class="lb-plega"${S.comiAbierta?' open':''} id="lb-comi">
-    <summary><span class="lb-flecha">▸</span><strong>Comisión +YPF</strong>
+    <summary><span class="lb-flecha">▸</span><strong>Carga automatizada</strong>
       <small>${S.libreOk?`${nf(cumpl,0)}% de cumplimiento · ${monto?nf(monto):'sin precios cargados'}`:'🔒 pide clave'}</small></summary>
     <div style="padding:0 13px 13px">
       <div class="lb-trim" style="margin-bottom:9px">
@@ -4826,7 +4879,7 @@ async function vistaLibre(){
           <div class="scroll"><table class="ypf-t">
             <thead><tr>${ed?'<th class="lb-autoh">Ver</th>':''}<th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
               <th>% Cumplimiento</th><th>Puntos posibles</th><th>Puntos obtenidos</th>
-              <th class="lb-autoh" title="Verde: entra solo. Rojo: a mano.">Auto</th>
+              <th class="lb-autoh" title="Verde: el dato entra solo. Rojo: lo cargás a mano. No tiene nada que ver con llegar al objetivo.">Toma de dato auto</th>
               <th class="lb-fech">Fecha de actualización</th>${ed?'<th></th>':''}</tr></thead>
             <tbody>${filas}</tbody>
             <tfoot><tr class="ypf-pie">
@@ -4851,6 +4904,13 @@ async function vistaLibre(){
       <span class="et">Mes</span>
       ${TRIM[S.libreTrim-1].map(m=>`<button data-lbmes="${m}"${m===S.libreMes?' class="act mes"':' class="mes"'}
         >${MESES[Number(m)-1]}</button>`).join('')}
+      <span class="lb-sep"></span>
+      <span class="et">Hasta el día</span>
+      <select id="lb-dia">
+        <option value="">todo el mes</option>
+        ${Array.from({length:31},(_,k)=>k+1).map(d=>
+          `<option value="${d}"${Number(S.libreDia)===d?' selected':''}>${d}</option>`).join('')}
+      </select>
       ${(()=>{ const p=v.por.find(x=>x.m===S.libreMes);
         if(!p||!p.hay) return `<span class="lb-vmes vacio">${MESES_L[Number(S.libreMes)-1]} sin ventas cargadas</span>`;
         return `<span class="lb-vmes">
@@ -4876,7 +4936,7 @@ function bloqueDatosLibre(d,v){
   const val=a=>v[a.k];                           // todo en litros
   const fmt=(x,a)=>(a.m3||a.ent)?nf(x):nf(x,1)+' %';
   const filasMes=v.por.map(p=>`<tr${p.hay?'':' style="opacity:.5"'}>
-      <td>${MESES_L[Number(p.m)-1]}</td>
+      <td>${MESES_L[Number(p.m)-1]}${p.corte?` <small>al ${p.corte}</small>`:''}</td>
       <td class="num">${p.naftas?nf(p.naftas):'—'}</td>
       <td class="num">${p.diesel?nf(p.diesel):'—'}</td>
       <td class="num">${p.naftas?nf(p.inf/p.naftas*100,1)+' %':'—'}</td>
@@ -4893,7 +4953,7 @@ function bloqueDatosLibre(d,v){
     <div class="lb-datos">
     <div class="lb-col">
       <div class="eyebrow">Sale de las ventas de playa</div>
-      <p class="sub" style="margin:3px 0 0;font-size:11px">Acumulado del trimestre hasta ${MESES_L[Number(S.libreMes)-1]}, que es como lo mide YPF.</p>
+      <p class="sub" style="margin:3px 0 0;font-size:11px">Acumulado del trimestre hasta ${MESES_L[Number(S.libreMes)-1]}${S.libreDia?`, cortado el día ${S.libreDia}`:''}, que es como lo mide YPF.</p>
       <table class="lb-mini">
         <thead><tr><th>Mes</th><th class="num">Naftas L</th><th class="num">Diesel L</th><th class="num">Mix</th><th class="num">Unid. s/tabaco</th><th class="num">Combos</th></tr></thead>
         <tbody>${filasMes}</tbody>
@@ -5176,7 +5236,7 @@ async function vistaObjYPF(sec){
         <div class="ypf-tabla">
           <div class="scroll"><table class="ypf-t">
             <thead><tr>${ed?'<th class="lb-autoh">Ver</th>':''}
-              <th class="lb-autoh" title="Verde: entra solo. Rojo: sale de Libre. Debajo, cuándo se cargó.">Auto</th>
+              <th class="lb-autoh" title="Verde: el dato entra solo. Rojo: lo cargás a mano. No tiene nada que ver con llegar al objetivo.">Toma de dato auto</th>
               <th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
               <th>% Cumplimiento</th><th>Puntos posibles</th><th>Puntos obtenidos</th></tr></thead>
             <tbody>${cuerpo}</tbody>
@@ -6129,6 +6189,12 @@ function conectar(){
   document.querySelectorAll('#app [data-lbmes]').forEach(b=>b.onclick=async()=>{
     S.libreMes=b.dataset.lbmes; S.libre=null; await render();
   });
+  const lbDia=q('#lb-dia');
+  if(lbDia) lbDia.onchange=async()=>{
+    S.libreDia=lbDia.value;
+    await volcarVentasLibre();      // el corte cambia los reales del cuadro
+    await render();
+  };
   const lbPr=q('#lb-imprimir');
   if(lbPr) lbPr.onclick=async()=>{
     if(S.libreEdit){ S.libreEdit=false; await guardarLibre(); await render(); }  // sin los campos de edición
