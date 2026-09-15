@@ -564,6 +564,9 @@ tr.pl-min td{background:rgba(34,227,245,.06)}
 .plata-btn:hover{box-shadow:0 0 0 3px rgba(255,255,255,.16)}
 .plata-btn.act{background:var(--cian);border-color:var(--cian)}
 .plata-panel{margin-top:9px;max-width:58%}
+.pl-modo button{background:var(--panel-2);border:1px solid var(--linea);color:var(--tinta-suave);
+  padding:2px 10px;font-size:12px;cursor:pointer;font-weight:600}
+.pl-modo button.act{background:var(--cian);color:#04121a;border-color:var(--cian)}
 .plata-panel table{font-size:13px}
 .plata-panel td,.plata-panel th{padding:6px 6px;white-space:nowrap}
 .plata-panel th{font-size:10px}
@@ -4999,7 +5002,15 @@ async function cargarPlata(anio,mes){
   if(!d){
     const m=Number(mes), pa=m>1?anio:String(Number(anio)-1), pm=String(m>1?m-1:12).padStart(2,'0');
     const p=await leer(`plata:${pa}-${pm}`,null);
-    d=p?JSON.parse(JSON.stringify(p)):{};
+    // tope de $200.000 por persona, repartido como YPF pondera cada objetivo
+    // tope de $200.000 por persona: 87.500 + 87.500 + 25.000
+    d=p?JSON.parse(JSON.stringify(p)):{
+      combustible:{min:41000,max:87500},
+      mix:{min:41000,max:87500},
+      unidades:{min:41000,max:87500},
+      combos:{min:41000,max:87500},
+      incognito:{min:18000,max:25000}
+    };
   }
   S.plata=d; S.plataClave=k;
   return d;
@@ -5020,8 +5031,6 @@ const PREMIOS_SEC={playa:[
    partes:[/unidades/i]},
   {id:'combos', rot:'Combos', sub:'Comida y cafetería del mes',
    partes:[/combos/i]},
-  {id:'ventacc', rot:'Venta comida y cafetería', sub:'Las dos juntas, en unidades · objetivo propio',
-   partes:[], fuente:'ventacc', objPropio:true},
   {id:'incognito', rot:'Cliente incógnito', sub:'Puntaje de la evaluación · paga desde 90%',
    partes:[/incognito|incógnito/i], pct:true, minFijo:90},
 ]};
@@ -5065,10 +5074,13 @@ async function ventaCafeComida(ym){
 }
 
 async function panelPlata(anio,mes,delMes,sec){
+  if(!S.plataGente) S.plataGente=await leer('plata:personal',{playa:10,tienda:4});
+  const gente=Math.max(1,Number(S.plataGente[sec])||1);
   const P=await cargarPlata(anio,mes), ed=S.plataEdit;
   const PREMIOS=PREMIOS_SEC[sec]||PREMIOS_SEC.playa;
   const ccMes=await ventaCafeComida(`${anio}-${mes}`);
-  let total=0;
+  const tope=Number(P.tope)||200000;
+  let total=0, topeMin=0, topeMax=0;
   const filas=PREMIOS.map(p=>{
     // se suman los objetivos y lo vendido de las partes que lo componen
     let mi=0,ma=0,re=0,falta=false;
@@ -5098,10 +5110,14 @@ async function panelPlata(anio,mes,delMes,sec){
       cobra = Math.round(pMin + ((pMax||pMin)-pMin)*avance);
     }
     total+=cobra;
+    topeMin+=pMin; topeMax+=pMax||pMin;
+    const enPct=S.plataModo==='%';
+    const aPct=x=>tope?Math.round(Number(x)/tope*10000)/100:0;
     const cel=k=>ed
-      ? `<input type="text" inputmode="numeric" class="n" data-plata="${p.id}" data-k="${k}"
-           value="${v[k]??''}" placeholder="0" style="width:84px">`
-      : `<span>${Number(v[k])?nf(Number(v[k])):'—'}</span>`;
+      ? `<input type="text" inputmode="decimal" class="n" data-plata="${p.id}" data-k="${k}"
+           value="${v[k]===''||v[k]==null?'':(enPct?String(aPct(v[k])).replace('.',','):v[k])}"
+           placeholder="0" style="width:84px">`
+      : `<span>${Number(v[k])?(enPct?nf(aPct(v[k]),2)+' %':nf(Number(v[k]))):'—'}</span>`;
     return `<tr class="pl-${nivel}">
       <td><strong>${esc(p.rot)}</strong><small>${esc(p.sub)}</small>
         <span class="ob-chip ${nivel==='max'?'max':nivel==='min'?'min':'no'}" style="margin-top:4px">${
@@ -5118,14 +5134,35 @@ async function panelPlata(anio,mes,delMes,sec){
   return `<div class="plata-panel">
     <div class="eyebrow">Objetivos por plata · ${MESES_L[Number(mes)-1]} ${anio}
       <button class="lapiz-min${ed?' act':''}" id="pl-editar" style="float:right"
-        title="${ed?'Listo':'Modificar los montos · pide clave'}" aria-label="Modificar montos">${ed?'✓':'✎'}</button></div>
+        title="${ed?'Listo':'Modificar los montos · pide clave'}" aria-label="Modificar montos">${ed?'✓':'✎'}</button>
+      ${ed?`<span class="pl-modo" style="float:right;margin-right:9px">
+        <button data-plmodo="$"${S.plataModo!=='%'?' class="act"':''}>$</button>
+        <button data-plmodo="%"${S.plataModo==='%'?' class="act"':''}>%</button>
+      </span>`:''}</div>
+    ${ed?`<div class="filtro" style="margin-bottom:9px"><span class="et">Tope por persona</span>
+      <input type="text" inputmode="numeric" class="n" id="pl-tope" value="${nf(tope)}" style="width:100px">
+      <span class="sub" style="margin:0">${S.plataModo==='%'?'los porcentajes se calculan sobre este tope':'escribí los montos en pesos'}</span></div>`:''}
     <div class="scroll"><table>
       <thead><tr><th>Objetivo</th><th class="num">Mínimo</th><th class="num">Máximo</th><th class="num">Vendido</th>
         <th class="num">Paga al mín.</th><th class="num">Paga al máx.</th><th class="num">A cobrar</th></tr></thead>
       <tbody>${filas}</tbody>
-      <tfoot><tr class="tot"><td colspan="6">Total a cobrar</td>
+      <tfoot><tr class="tot"><td colspan="4">Total a cobrar por persona</td>
+        <td class="num" style="color:var(--tinta-suave)">${nf(topeMin)}</td>
+        <td class="num" style="color:var(--tinta-suave)">${nf(topeMax)}</td>
         <td class="num"><strong>${nf(total)}</strong></td></tr></tfoot>
     </table></div>
+    <div class="totem" style="margin-top:11px">
+      <div class="totem-cab"><div class="t">Reparto del mes</div>
+        <div class="d">${nf(gente)} ${gente===1?'persona':'personas'} en ${sec==='tienda'?'Tienda Full':'Playa'}</div></div>
+      <div class="linea-totem"><span class="chip" style="background:var(--cian)"></span>
+        <span class="nom">Cobra cada uno</span><span class="guia"></span>
+        <span class="val">${nf(total)}<i>$</i></span></div>
+      <div class="totem-total"><span class="nom">Total a repartir</span>
+        <span class="val">${nf(total*gente)}<i>$</i></span></div>
+    </div>
+    <div class="filtro" style="margin-top:9px"><span class="et">Personal</span>
+      <input type="text" inputmode="numeric" class="n" id="pl-gente" data-sec="${sec}" value="${nf(gente)}" style="width:70px">
+      <span class="sub" style="margin:0">personas de ${sec==='tienda'?'Tienda Full':'Playa'}; el otro sector tiene su propio número</span></div>
     <p class="sub">Debajo del mínimo no cobra. Pasado el mínimo cobra ese monto y <strong>va subiendo derecho</strong> hasta el máximo: si vendió la mitad del camino entre los dos, cobra la mitad de la diferencia. Los montos se heredan del mes anterior.</p>
   </div>`;
 }
@@ -7315,15 +7352,37 @@ function conectar(){
   const cerrarCump=async()=>{ S.cumplesAbierto=null; await render(); };
   const cc1=document.getElementById('cerrarCump'); if(cc1) cc1.onclick=cerrarCump;
   const cc2=document.getElementById('cerrarCumpX'); if(cc2) cc2.onclick=cerrarCump;
+  const plG=q('#pl-gente');
+  if(plG) plG.onchange=async()=>{
+    const sec=plG.dataset.sec||'playa';
+    S.plataGente=S.plataGente||{};
+    S.plataGente[sec]=Math.max(1,Math.round(numero(plG.value))||1);
+    await guardar('plata:personal',S.plataGente);
+    await render();
+  };
   const plEd=q('#pl-editar');
   if(plEd) plEd.onclick=async()=>{
     if(!S.plataEdit&&!pedirClave()) return;
     S.plataEdit=!S.plataEdit; await render();
   };
+  document.querySelectorAll('#app [data-plmodo]').forEach(b=>b.onclick=async()=>{
+    S.plataModo=b.dataset.plmodo; await render();
+  });
+  const plT=q('#pl-tope');
+  if(plT) plT.onchange=async()=>{
+    S.plata.tope=Math.max(1,Math.round(numero(plT.value))||200000);
+    await guardarPlata(); await render();
+  };
   document.querySelectorAll('#app [data-plata]').forEach(i=>i.onchange=async()=>{
     const id=i.dataset.plata, k=i.dataset.k;
     S.plata[id]=S.plata[id]||{};
-    S.plata[id][k]=i.value.trim()===''?'':Math.max(0,Math.round(numero(i.value)));
+    if(i.value.trim()===''){ S.plata[id][k]=''; }
+    else{
+      const n=Math.max(0,numero(i.value));
+      const tope=Number(S.plata.tope)||200000;
+      // en modo % el número que escribís es porcentaje de ese tope
+      S.plata[id][k]=S.plataModo==='%'?Math.round(n/100*tope):Math.round(n);
+    }
     await guardarPlata(); await render();
   });
   const oyPl=q('#oy-plata');
