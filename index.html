@@ -505,8 +505,10 @@ table.mix tr:nth-child(odd) td{background:rgba(255,255,255,.025)}
 .ypf-t th.lb-autoh{background:transparent;border:0;font-size:8.5px;font-weight:400;width:82px;
   letter-spacing:.03em;opacity:.75;padding:3px 2px;text-align:center;white-space:normal;line-height:1.2}
 .lb-pto{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid rgba(255,255,255,.55)}
-.lb-pto.si{background:#3DE0A0}
+.lb-pto.max{background:#3DE0A0}
+.lb-pto.min{background:#FFC93C}
 .lb-pto.no{background:#FF6B85}
+.lb-pto.sin{background:transparent;border-style:dashed;opacity:.5}
 .ypf-t tfoot td{background:transparent;border:0;padding:13px 7px 0;text-align:center;vertical-align:top}
 .ypf-t tfoot span{display:block;font-size:22px;font-weight:600;line-height:1.1}
 .ypf-t tfoot small{display:block;font-size:11px;opacity:.9}
@@ -571,6 +573,15 @@ tr.pl-min td{background:rgba(34,227,245,.06)}
 .plata-panel td,.plata-panel th{padding:6px 6px;white-space:nowrap}
 .plata-panel th{font-size:10px}
 @media(max-width:1100px){.plata-panel{max-width:100%}}
+.fac-item{border:1px solid var(--linea-2);border-radius:var(--r);margin-top:8px}
+.fac-item>summary{list-style:none;cursor:pointer;padding:9px 12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.fac-item>summary::-webkit-details-marker{display:none}
+.fac-item>summary:hover{background:var(--panel-2)}
+.fac-item[open]>summary .lb-flecha{transform:rotate(90deg)}
+.fac-item[open]>summary{border-bottom:1px solid var(--linea)}
+.fac-nro{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--cian)}
+.fac-item>summary small{color:var(--tinta-suave);font-size:11.5px;margin-left:auto}
+.fac-item .scroll{padding:0 12px 11px}
 .lb-plega{background:var(--panel);border:1px solid var(--linea-2);border-radius:var(--r);margin:0 0 10px}
 .lb-plega>summary{list-style:none;cursor:pointer;padding:9px 13px;display:flex;align-items:center;gap:9px;
   font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
@@ -847,7 +858,7 @@ const S={
   cfg:null, vista:'playa', sub:'mes', tab:'importar', abierto:false, cargando:true,
   mes:hoyISO().slice(0,7), cmpAnio:null, cmpMes:'todos', filtro:{}, filtroCorrido:false,
   rubVer:null, rubEdit:false, plegado:{},
-  vencAlta:true, vencOk:false, admTSec:'vencimientos', provV:null, provSel:null, vencProv:'', vencNuevo:{}, vencBusca:'', admTOk:false,
+  vencAlta:true, vencOk:false, facAbierta:null, admTSec:'vencimientos', provV:null, provSel:null, vencProv:'', vencNuevo:{}, vencBusca:'', admTOk:false,
   cargaSec:'playa', cargaFecha:hoyISO(), cargaTurno:'T1', borrador:null,
   previa:null, ops:{}, roll:{}, admin:{}, errorUlt:null, diag:null, adjunto:null, grafDatos:[], turDatos:[],
   facSec:'boxes', facProv:'todos', menuAbierto:false, grupoAbierto:undefined,
@@ -2629,6 +2640,16 @@ async function vistaBoxes(){
 
 /* ---------- Libre: la performance de red tal como la manda YPF ---------- */
 // YPF puntúa así: por debajo del mínimo 0%, en el mínimo 70%, y de ahí sube lineal hasta 100% en el máximo
+// color del punto según cómo viene el objetivo
+function luzObj(real,min,max){
+  const mi=Number(min)||0, ma=Number(max)||0;
+  if((!mi&&!ma)||real===''||real===null||real===undefined)
+    return {c:'sin',rot:'sin objetivo o sin dato'};
+  const p=pctYPF(real,min,max);
+  if(p>=100) return {c:'max',rot:'llegó al máximo'};
+  if(p>0)    return {c:'min',rot:'pasó el mínimo, va camino al máximo'};
+  return {c:'no',rot:'todavía no llega al mínimo'};
+}
 function pctYPF(real,min,max){
   if(real===null||real===undefined||real==='') return 0;
   const r=Number(real), mi=Number(min)||0, ma=Number(max)||0;
@@ -3269,9 +3290,54 @@ function renglonesAndreani(lineas){
   }
   return out;
 }
+// facturas ya cargadas, agrupadas por proveedor y número
+async function historialFacturas(){
+  const V=await vencimientos();
+  const g={};
+  Object.entries(V).forEach(([k,v])=>{
+    const prov=v.prov||'sin proveedor', nro=v.factura||'sin número';
+    const id=prov+'|'+nro;
+    if(!g[id]) g[id]={prov,nro,items:[],ts:0,ingreso:v.ingreso||''};
+    g[id].items.push({...v,k});
+    const t=Number(v.ts)||0; if(t>g[id].ts) g[id].ts=t;
+    if(v.ingreso&&(!g[id].ingreso||v.ingreso>g[id].ingreso)) g[id].ingreso=v.ingreso;
+  });
+  return Object.entries(g).map(([id,x])=>({id,...x}))
+    .sort((a,b)=>(b.ingreso||'').localeCompare(a.ingreso||'')||b.ts-a.ts);
+}
+function bloqueHistorial(H){
+  if(!H.length) return `<div class="tarjeta"><h2>Facturas cargadas</h2>
+    <p class="vacio">Todavía no cargaste ninguna.</p></div>`;
+  return `<div class="tarjeta">
+    <h2>Facturas cargadas</h2>
+    <p class="sub">${H.length} factura${H.length===1?'':'s'}. Tocá una para ver qué entró.</p>
+    ${H.slice(0,40).map(f=>{
+      const un=f.items.reduce((a,x)=>a+(Number(x.cant)||0),0);
+      const abierta=S.facAbierta===f.id;
+      return `<details class="fac-item"${abierta?' open':''} data-fac="${esc(f.id)}">
+        <summary><span class="lb-flecha">▸</span>
+          <strong>${esc(f.prov)}</strong>
+          <span class="fac-nro">${esc(f.nro)}</span>
+          <small>${f.ingreso?f.ingreso.split('-').reverse().join('/'):''} · ${f.items.length} renglones · ${nf(un)} u</small></summary>
+        <div class="scroll"><table>
+          <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Vence</th><th class="num">Estado</th></tr></thead>
+          <tbody>${f.items.slice().sort((a,b)=>(a.vence||'').localeCompare(b.vence||'')).map(x=>{
+            const e=estadoVenc(x.vence);
+            return `<tr${x.consumido?' style="opacity:.5"':''}>
+              <td>${esc(x.desc||x.barra||'')}<small>${esc(x.barra||x.cod||'')}</small></td>
+              <td class="num">${nf(x.cant)}</td>
+              <td class="num">${x.vence?x.vence.split('-').reverse().join('/'):'—'}</td>
+              <td class="num" style="color:${['vencido','hoy','pronto'].includes(e.clave)?'var(--alerta)':'var(--tinta-suave)'}">${
+                x.consumido?'consumido':esc(e.rot)}</td></tr>`;}).join('')}</tbody>
+        </table></div>
+      </details>`;}).join('')}
+  </div>`;
+}
+
 async function tabAndreani(){
   const a=S.and;
   const m=await maestro();
+  const HIST=await historialFacturas();
   if(!a) return `<div class="aviso">Subí la factura en PDF. Leo la descripción, la cantidad y el importe de cada renglón; después cargás el vencimiento de cada uno.</div>
     <div class="tarjeta"><h2>Factura</h2>
       ${(S.provLector||'andreani')==='andreani'?`<p class="sub">Maestro: ${nf(m.length)} códigos, ${nf(m.filter(x=>x.barra).length)} con barra.</p>`:''}
@@ -3282,7 +3348,8 @@ async function tabAndreani(){
         <textarea id="an-texto" rows="5" placeholder="000000000000010151 YPF FULL ENDULZANTE 400X0.8G 5 13.607,18 68.035,91"></textarea>
         <button class="btn sec" id="an-pegado">Procesar texto</button>
       </details>
-    </div>`;
+    </div>
+    ${bloqueHistorial(await historialFacturas())}`;
 
   if(a.error) return `<div class="tarjeta"><h2>Factura de ${esc(a.prov||'proveedor')}</h2>
     <div class="aviso mal">${esc(a.error)}</div>
@@ -4850,8 +4917,8 @@ async function vistaLibre(){
       <td>${nf(p,1)} %</td>
       <td>${ed?`<input type="text" inputmode="numeric" class="lb-in" data-lb="${i}" data-k="pts" value="${f.pts??''}" style="width:56px">`:nf(Number(f.pts)||0,0)}</td>
       <td>${nf(pts,1)}</td>
-      <td class="lb-auto"><span class="lb-pto ${LIBRE_AUTO.some(x=>x.re.test(f.c))?'si':'no'}"
-        title="${LIBRE_AUTO.some(x=>x.re.test(f.c))?'Entra solo desde las ventas de playa':'Lo cargás a mano'}"></span></td>
+      <td class="lb-auto"><span class="lb-pto ${luzObj(f.real,f.min,f.max).c}"
+        title="${esc(luzObj(f.real,f.min,f.max).rot)}"></span></td>
       <td class="lb-fec">${ed
         ? `<input type="text" class="lb-in lb-txt" data-lb="${i}" data-k="fecha" value="${esc(f.fecha||'')}" style="width:92px">`
         : esc(f.fecha||'')}</td>
@@ -4882,7 +4949,7 @@ async function vistaLibre(){
           <div class="scroll"><table class="ypf-t">
             <thead><tr>${ed?'<th class="lb-autoh">Ver</th>':''}<th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
               <th>% Cumplimiento</th><th>Puntos posibles</th><th>Puntos obtenidos</th>
-              <th class="lb-autoh" title="Verde: el dato entra solo. Rojo: lo cargás a mano. No tiene nada que ver con llegar al objetivo.">Toma de dato auto</th>
+              <th class="lb-autoh" title="Verde: llegó al máximo. Amarillo: pasó el mínimo. Rojo: no llega.">Cómo viene</th>
               <th class="lb-fech">Fecha de actualización</th>${ed?'<th></th>':''}</tr></thead>
             <tbody>${filas}</tbody>
             <tfoot><tr class="ypf-pie">
@@ -5249,8 +5316,8 @@ async function vistaObjYPF(sec){
     return `<tr${oc?' style="opacity:.42"':''}>
       ${ed?`<td class="lb-auto"><input type="checkbox" data-oyver="${esc(f.c)}"${oc?'':' checked'}
              title="${oc?'Oculto: no se muestra ni suma':'Se muestra'}"></td>`:''}
-      <td class="lb-auto"><span class="lb-pto ${auto?'si':'no'}"
-        title="${auto?'Sale solo de lo cargado':'Sale de lo que cargaste en Libre'}"></span>
+      <td class="lb-auto"><span class="lb-pto ${luzObj(real,min,max).c}"
+        title="${esc(luzObj(real,min,max).rot)}"></span>
         ${fechas[norm(f.c)]?`<small>${esc(fechas[norm(f.c)])}</small>`:''}</td>
       <td class="lb-con">${esc(f.c)}${f.sub?` <span class="lb-sub-t">${esc(f.sub)}</span>`:''}${oc&&ed?' <span class="lb-sub-t">(oculto)</span>':''}</td>
       <td>${cel(min)}</td><td>${cel(max)}</td><td>${cel(real)}</td>
@@ -5273,7 +5340,7 @@ async function vistaObjYPF(sec){
         <div class="ypf-tabla">
           <div class="scroll"><table class="ypf-t">
             <thead><tr>${ed?'<th class="lb-autoh">Ver</th>':''}
-              <th class="lb-autoh" title="Verde: el dato entra solo. Rojo: lo cargás a mano. No tiene nada que ver con llegar al objetivo.">Toma de dato auto</th>
+              <th class="lb-autoh" title="Verde: llegó al máximo. Amarillo: pasó el mínimo. Rojo: no llega.">Cómo viene</th>
               <th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
               <th>% Cumplimiento</th><th>Puntos posibles</th><th>Puntos obtenidos</th></tr></thead>
             <tbody>${cuerpo}</tbody>
@@ -6524,6 +6591,9 @@ function conectar(){
     }catch(e){ S.and={error:(e&&e.message)||'no se pudo leer el PDF'}; }
     await render();
   };
+  document.querySelectorAll('#app [data-fac]').forEach(d=>d.ontoggle=()=>{
+    S.facAbierta=d.open?d.dataset.fac:null;
+  });
   const anp=q('#an-pegado');
   if(anp) anp.onclick=async()=>{
     const t=q('#an-texto').value.split('\n').map(x=>x.trim()).filter(Boolean);
