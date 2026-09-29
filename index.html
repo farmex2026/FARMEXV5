@@ -1239,7 +1239,6 @@ function mensajesCumple(agenda){
     hoyes.forEach(x=>{
       const n=soloNombre(x);
       m.push({t:`★ FELIZ CUMPLE ${n} ★`,clase:'fest'});
-      m.push({t:`${n} CUMPLE ${x.p.cumple}`,clase:'fest'});
       m.push({t:'★ QUE LO DISFRUTES ★',clase:'fest'});
       m.push({t:'♪ HOY SE FESTEJA ♪',clase:'fest'});
     });
@@ -1249,7 +1248,7 @@ function mensajesCumple(agenda){
   const m=[
     {t:`PRÓXIMO CUMPLE: ${n}`},
     {t:d===1?'¡MAÑANA!':`FALTAN ${d} DÍAS`},
-    {t:`${n} CUMPLE ${p.p.cumple} EL ${p.p.dia}/${p.p.mes}`}
+    {t:`${n} CUMPLE EL ${p.p.dia}/${p.p.mes}`}
   ];
   if(d<=7) m.push({t:`▸ YA FALTA POCO ▸`});
   if(d<=1) m.push({t:'PREPARÁ LA TORTA'});
@@ -2199,11 +2198,10 @@ function panelCumples(){
     </div>
     <div class="modal-cuerpo">
       ${a.length?`<div class="scroll" style="margin:0"><table>
-        <thead><tr><th>Quién</th><th class="num">Cumple</th><th class="num">Falta</th></tr></thead>
+        <thead><tr><th>Quién</th><th class="num">Falta</th></tr></thead>
         <tbody>${a.map(x=>`<tr class="${x.p.dias===0?'vig':''}">
           <td><strong>${esc(x.nombre)}</strong>${x.apellido?` ${esc(x.apellido)}`:''}
             <small>${x.p.dia}/${x.p.mes}</small></td>
-          <td class="num">${x.p.cumple}</td>
           <td class="num" style="color:${x.p.dias===0?'var(--ambar)':x.p.dias<=7?'var(--cian)':'var(--tinta-suave)'}">
             ${x.p.dias===0?'¡HOY!':x.p.dias===1?'mañana':`${x.p.dias} días`}</td></tr>`).join('')}
         </tbody></table></div>`
@@ -5985,6 +5983,7 @@ async function tabCumples(){
   </div>
   <div class="tarjeta">
     <h2>Cumpleaños · ${nf(lista.length)}</h2>
+    <p class="sub">La edad y el año de nacimiento se ven <strong>solo acá</strong>. En el cartel y en el panel que abren todos sale únicamente el día y cuánto falta.</p>
     ${hoyes.length?`<div class="aviso bien">Hoy cumple ${hoyes.map(x=>`<strong>${esc(nombreCompleto(x))}</strong>`).join(' y ')}.</div>`:''}
     ${agenda.length?`<div class="scroll"><table>
       <thead><tr><th>Nombre</th><th>Nace</th><th class="num">Cumple</th><th class="num">Falta</th><th></th></tr></thead>
