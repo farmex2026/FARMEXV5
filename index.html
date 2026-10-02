@@ -748,6 +748,33 @@ details[open] summary::after{content:'–'}
   body.imp-venc #app{background:#fff !important}
   @page{margin:12mm}
 }
+.hoja-lub{display:none}
+@media print{
+  body.imp-lub .hoja-lub{display:block !important;background:#fff}
+  body.imp-lub .hoja-lub,body.imp-lub .hoja-lub *{color:#000 !important;
+    font-family:Arial,Helvetica,sans-serif !important;letter-spacing:0 !important;text-transform:none !important}
+  body.imp-lub .hoja-lub h1{font-size:18px;margin:0 0 3px}
+  body.imp-lub .hoja-lub h2{font-size:12.5px;margin:13px 0 5px;border:0;padding:0}
+  body.imp-lub .hoja-lub p{font-size:11.5px;margin:0 0 9px}
+  body.imp-lub .hoja-lub p.pie{font-size:10px;margin-top:11px}
+  body.imp-lub .hoja-lub table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:4px}
+  body.imp-lub .hoja-lub th{background:#e4e4e4 !important;border:1px solid #666;padding:5px 6px;text-align:left;
+    font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.imp-lub .hoja-lub td{border:1px solid #666;padding:5px 6px}
+  body.imp-lub .hoja-lub th:not(:first-child),body.imp-lub .hoja-lub td:not(:first-child){text-align:right}
+  body.imp-lub .hoja-lub tfoot td{font-weight:700;background:#f2f2f2 !important;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.imp-lub .adminmain>*:not(.hoja-lub){display:none !important}
+  body.imp-lub .top,body.imp-lub .nav,body.imp-lub .adminlat,body.imp-lub .filtro,
+  body.imp-lub .aviso,body.imp-lub #lub-cuerpo{display:none !important}
+  body.imp-lub,body.imp-lub #app{background:#fff !important}
+  /* las reglas de la hoja de YPF ocultan todo lo que no sea .envoltorio: acá hace falta lo contrario */
+  body.imp-lub #app>*,body.imp-lub .adminwrap,body.imp-lub .adminmain{display:block !important}
+  body.imp-lub #app>.top,body.imp-lub #app .top,body.imp-lub #app .nav,
+  body.imp-lub #app .adminlat,body.imp-lub #app .subnav{display:none !important}
+  body.imp-lub .hoja-lub{display:block !important}
+  @page{margin:12mm}
+}
 /* al imprimir sale solo el recuadro de YPF, con sus colores */
 @media print{
   html,body{background:#fff !important}
@@ -3568,8 +3595,64 @@ async function tabLub(){
     <select id="lub-anio">${anios.map(a=>`<option value="${a}"${a===d.anio?' selected':''}>${a}</option>`).join('')}</select>
     <select id="lub-trim">${[1,2,3,4].map(x=>`<option value="${x}"${x===d.trim?' selected':''}>${ROMANO[x-1]} trimestre</option>`).join('')}</select>
     <button class="btn sec chico" id="lub-guardar" style="width:auto;margin:0">Guardar</button>
+    <button class="btn sec chico" id="lub-imprimir" style="width:auto;margin:0">Imprimir el pedido</button>
   </div>
+  ${hojaPedidoLub()}
   <div id="lub-cuerpo">${cuerpoLub()}</div>`;
+}
+
+// hoja del pedido del mes, para imprimir y mandar
+function hojaPedidoLub(){
+  const d=S.lub; if(!d) return '';
+  const mes=S.lubMes, m=d.meses[mes]||{ace:{},otr:{}};
+  const t=litrosTrim(d), L=t.por[mes]||{premium:0,otros:0,total:0,c4:0,c1:0,cajasOtr:0};
+  const objP=Number(d.obj.premium)||0, objT=Number(d.obj.total)||0;
+
+  const fAce=listaAce().map(p=>{
+    const a=(m.ace||{})[p]||{}, c4=Number(a.c4)||0, c1=Number(a.c1)||0;
+    if(!c4&&!c1) return '';
+    return `<tr><td>${esc(p)}</td><td class="num">${c4||'—'}</td><td class="num">${c1||'—'}</td>
+      <td class="num">${nf(c4*LTS_C4+c1*LTS_C1)}</td></tr>`;
+  }).filter(Boolean).join('');
+  let ltsOtrTodo=0;
+  const fOtr=listaOtr().map(o=>{
+    const c=Number((m.otr||{})[o.n])||0;
+    if(!c) return '';
+    const l=c*ltsOtro(o); ltsOtrTodo+=l;
+    return `<tr><td>${esc(o.n)}</td><td class="num">${c}</td><td class="num">${o.u} × ${o.cc} cc</td>
+      <td class="num">${nf(l,1)}</td></tr>`;
+  }).filter(Boolean).join('');
+
+  const faltaP=Math.max(0,objP-t.premium), faltaT=Math.max(0,objT-t.total);
+  return `<div class="hoja-lub">
+    <h1>Pedido de lubricante</h1>
+    <p>${esc(S.cfg.estacion)} · ${MESES_L[Number(mes)-1]} ${d.anio} · ${ROMANO[d.trim-1]} trimestre
+       · emitido el ${hoyISO().split('-').reverse().join('/')}</p>
+    ${fAce?`<h2>Aceite de motor</h2>
+      <table><thead><tr><th>Producto</th><th>Cajas 4 L</th><th>Cajas 1 L</th><th>Litros</th></tr></thead>
+      <tbody>${fAce}</tbody>
+      <tfoot><tr><td>Total aceite</td><td>${nf(L.c4)}</td><td>${nf(L.c1)}</td><td>${nf(L.premium)}</td></tr></tfoot>
+      </table>`:''}
+    ${fOtr?`<h2>Resto de la línea</h2>
+      <table><thead><tr><th>Producto</th><th>Cajas</th><th>Presentación</th><th>Litros</th></tr></thead>
+      <tbody>${fOtr}</tbody>
+      <tfoot><tr><td>Total resto</td><td>${nf(L.cajasOtr)}</td><td></td><td>${nf(ltsOtrTodo,1)}</td></tr></tfoot>
+      </table>`:''}
+    ${(!fAce&&!fOtr)?`<p>No hay nada cargado en ${MESES_L[Number(mes)-1]}.</p>`:''}
+    <h2>Cómo venimos en el trimestre</h2>
+    <table>
+      <thead><tr><th>Concepto</th><th>Objetivo</th><th>Comprado</th><th>Falta</th></tr></thead>
+      <tbody>
+        <tr><td>Aceite de motor (premium)</td><td>${objP?nf(objP):'—'}</td>
+          <td>${nf(t.premium)}</td>
+          <td>${objP?(faltaP?nf(faltaP)+' L':'cumplido'):'—'}</td></tr>
+        <tr><td>Total lubricante</td><td>${objT?nf(objT):'—'}</td>
+          <td>${nf(t.total)}</td>
+          <td>${objT?(faltaT?nf(faltaT)+' L':'cumplido'):'—'}</td></tr>
+      </tbody>
+    </table>
+    <p class="pie">Este mes suma ${nf(L.premium+ltsOtrTodo,1)} litros pedidos${L.otros!==ltsOtrTodo?` (${nf(L.premium+L.otros,1)} cuentan para el objetivo)`:''}. Los litros salen de las cajas: una de 4 L son ${LTS_C4} litros y una de 1 L son ${LTS_C1}.</p>
+  </div>`;
 }
 
 function cuerpoLub(){
@@ -6576,6 +6659,9 @@ function conectar(){
     S.prodLub.otr=S.prodLub.otr.filter(x=>x.n!==b.dataset.lubdelotr);
     await guardarProd(); await pintarLub(); toast('Quitado');
   });
+  const lubP=q('#lub-imprimir');
+  if(lubP) lubP.onclick=()=>{ document.body.classList.add('imp-lub');
+    setTimeout(()=>{ window.print(); document.body.classList.remove('imp-lub'); },120); };
   const lubG=q('#lub-guardar');
   if(lubG) lubG.onclick=async()=>{
     await guardar(claveLub(S.lub.anio,S.lub.trim),S.lub);
