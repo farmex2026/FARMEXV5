@@ -964,12 +964,17 @@ const Sync={
       if(Object.keys(cambios).length) await this.llamar('escribir',{cambios});
       await guardar('sync:ultima',{cuando:new Date().toISOString(),sentido:'subida',n:claves.length});
       marcarSync('aldia');
+      this.fallos=0;
     }catch(e){
-      claves.forEach(k=>this.cola.add(k));       // se reintenta en el próximo guardado
+      claves.forEach(k=>this.cola.add(k));       // se reintenta solo, cada vez más espaciado
+      this.fallos=(this.fallos||0)+1;
       marcarSync('error',(e&&e.message)||'');
     }
     this.enVuelo=false;
-    if(this.cola.size){ clearTimeout(this.timer); this.timer=setTimeout(()=>this.vaciarCola(),6000); }
+    if(this.cola.size){
+      const espera=Math.min(60000,4000*Math.pow(2,Math.max(0,(this.fallos||1)-1)));
+      clearTimeout(this.timer); this.timer=setTimeout(()=>this.vaciarCola(),espera);
+    }
   },
   // cuando el panel corre dentro de Apps Script hay un canal directo, sin CORS
   get servido(){ return !!(window.__FARMEX__&&window.__FARMEX__.dentro); },
@@ -1008,7 +1013,7 @@ const Sync={
     }
     if(!c.url) throw new Error('falta la dirección del script');
     const ctrl=new AbortController();
-    const corte=setTimeout(()=>ctrl.abort(),20000);   // sin esto, un Google lento cuelga la app
+    const corte=setTimeout(()=>ctrl.abort(),45000);   // Apps Script dormido tarda; sin corte la app se cuelga
     let r;
     try{
       r=await fetch(c.url,{
@@ -1071,7 +1076,20 @@ function marcarSync(estado,detalle){
   el.textContent=SYNC_ROT[estado]||'';
   el.title=detalle||'';
   el.style.display=estado==='off'?'none':'';
+  el.style.cursor=estado==='error'?'pointer':'';
 }
+// si quedó sin conectar, se reintenta tocando el cartelito
+document.addEventListener('click',async e=>{
+  const c=e.target&&e.target.closest&&e.target.closest('#chipSync');
+  if(!c) return;
+  if(((S.syncFlag||{}).estado)!=='error') return;
+  marcarSync('bajando','reintentando a mano');
+  try{
+    if(Sync.cola.size) await Sync.vaciarCola();
+    if(window.__reintentarSync) await window.__reintentarSync();
+    else { await Sync.bajar(); marcarSync('aldia'); await render(); }
+  }catch(err){ marcarSync('error',((err&&err.message)||'')+' · tocá acá para reintentar'); }
+});
 const ALM_TXT={
   visor:'Los datos se guardan y te siguen entre sesiones.',
   navegador:'Los datos se guardan en este navegador y en esta computadora. Para verlos en otro dispositivo, usá Sistema → Sincronización.',
@@ -7945,11 +7963,25 @@ async function sembrar(forzar){
     }
     const sc=await Sync.conf();
     if(!sc.url||sc.auto===false) return;
-    marcarSync('bajando');
-    try{ await Sync.bajar(); marcarSync('aldia'); }
-    catch(e){ marcarSync('error',(e&&e.message)||''); }
+    // Google a veces tarda en despertar: se reintenta solo, sin recargar la página
+    const esperas=[0,4000,12000,30000];
+    for(let i=0;i<esperas.length;i++){
+      if(esperas[i]) await new Promise(r=>setTimeout(r,esperas[i]));
+      marcarSync('bajando', i?`reintento ${i} de ${esperas.length-1}`:'');
+      try{
+        await Sync.bajar();
+        marcarSync('aldia');
+        await render();
+        return;
+      }catch(e){
+        const msg=(e&&e.message)||'';
+        if(i===esperas.length-1) marcarSync('error',msg+' · tocá acá para reintentar');
+        else marcarSync('error',msg+' · reintentando sola…');
+      }
+    }
     await render();
   };
+  window.__reintentarSync=sincronizarAlAbrir;
 
   const r=await roll('playa'); const ms=Object.keys(r).sort();
   if(ms.length) S.mes=ms[ms.length-1];
