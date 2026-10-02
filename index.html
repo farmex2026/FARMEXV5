@@ -582,6 +582,23 @@ tr.pl-min td{background:rgba(34,227,245,.06)}
 .fac-nro{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--cian)}
 .fac-item>summary small{color:var(--tinta-suave);font-size:11.5px;margin-left:auto}
 .fac-item .scroll{padding:0 12px 11px}
+.mv-item{border:1px solid var(--linea-2);border-radius:var(--r);margin-top:7px}
+.mv-item>summary{list-style:none;cursor:pointer;padding:9px 12px;display:flex;align-items:center;gap:10px}
+.mv-item>summary::-webkit-details-marker{display:none}
+.mv-item>summary:hover{background:var(--panel-2)}
+.mv-item[open]>summary{border-bottom:1px solid var(--linea)}
+.mv-pos{width:22px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:12px;
+  color:var(--tinta-suave);flex:0 0 auto}
+.mv-item .chip{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.mv-item>summary strong{min-width:150px}
+.mv-barra{flex:1;height:7px;background:var(--panel-2);border-radius:4px;overflow:hidden;min-width:60px}
+.mv-barra i{display:block;height:100%;border-radius:4px}
+.mv-num{font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;text-align:right;
+  min-width:92px;flex:0 0 auto}
+.mv-num small{display:block;font-size:10.5px;font-weight:400;color:var(--tinta-suave);
+  font-family:'Archivo',sans-serif}
+.mv-det{display:grid;grid-template-columns:1fr;gap:14px;padding:11px 12px 13px}
+@media(min-width:760px){.mv-det{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .lb-plega{background:var(--panel);border:1px solid var(--linea-2);border-radius:var(--r);margin:0 0 10px}
 .lb-plega>summary{list-style:none;cursor:pointer;padding:9px 13px;display:flex;align-items:center;gap:9px;
   font-family:'Barlow Condensed',sans-serif;letter-spacing:.05em}
@@ -4443,7 +4460,7 @@ const MENU_ADMIN_BASE=[
   ['Ventas',[['importar','Importar Excel'],['manual','Carga manual']]],
   ['Combustible',[['combustible','Cierre mensual'],['remitos','Remitos cisterna'],['objetivos','Objetivos']]],
   ['Tienda Full',[['tienda','Carga de turno'],['combostienda','Carga de combos'],
-                  ['ventastienda','Ventas'],['objtienda','Objetivos']]],
+                  ['ventastienda','Ventas'],['masvendido','Más vendido'],['objtienda','Objetivos']]],
   ['Facturas',[['facturas','Facturas'],['gastos','Gastos'],['maestro','Maestro Debo'],
                ['convertir','Renova a Debo'],['ypf','YPF lubricantes'],['topaes','Topaes a Debo'],
                ]],
@@ -4469,6 +4486,7 @@ async function vistaAdmin(){
   if(S.tab==='tienda')      c=await tabTienda();
   if(S.tab==='combostienda') c=await tabCombosTienda();
   if(S.tab==='ventastienda') c=await tabVentasTienda();
+  if(S.tab==='masvendido')   c=await tabMasVendido();
   if(S.tab==='objtienda')   c=await tabObjTienda();
   if(S.tab==='combustible') c=await tabCombustible();
   if(S.tab==='boxes')       c=await tabBoxes();
@@ -4702,6 +4720,127 @@ async function ventasMesTienda(ym){
     return {unidades:s.dentro,importe:p.dentro,tabaco:s.tabaco,fuera:s.fuera,
             tickets:m.tickets||0,turnos:0,fuente:'mes',cierres:m.cierres||'',arch:m.arch||''}; }
   return {unidades:0,importe:0,tabaco:0,fuera:0,tickets:0,turnos:0,fuente:'vacio'};
+}
+
+async function tabMasVendido(){
+  const hoy=hoyISO();
+  const anio=S.mvAnio||hoy.slice(0,4), mes=S.mvMes||'todos';
+  const turnos=S.cfg.turnos.tienda;
+  const rubros=S.cfg.tiendaRubros;
+  const nomRub=id=>(rubros.find(r=>r.id===id)||{}).nombre||id;
+  const colRub=id=>(rubros.find(r=>r.id===id)||{}).color||'#7A8AA8';
+
+  // meses a mirar
+  const todas=await Alm.claves();
+  const meses=todas.filter(k=>k.startsWith('ops:tienda:')).map(k=>k.slice(11))
+    .filter(ym=>ym.startsWith(anio)&&(mes==='todos'||ym.slice(5,7)===mes)).sort();
+
+  const tot={}, porTurno={}, porMes={}, dias={};
+  let tickets=0, turnosCargados=0;
+  for(const ym of meses){
+    const ops=await leer(`ops:tienda:${ym}`,{});
+    Object.entries(ops).forEach(([d,tt])=>{
+      Object.entries(tt||{}).forEach(([t,v])=>{
+        turnosCargados++; tickets+=Number(v.tickets)||0;
+        Object.entries((v&&v.rubro)||{}).forEach(([r,n])=>{
+          const q=Number(n)||0; if(!q) return;
+          tot[r]=(tot[r]||0)+q;
+          porTurno[r]=porTurno[r]||{}; porTurno[r][t]=(porTurno[r][t]||0)+q;
+          porMes[r]=porMes[r]||{};   porMes[r][ym]=(porMes[r][ym]||0)+q;
+          dias[r]=dias[r]||{};       dias[r][`${ym}-${d}`]=(dias[r][`${ym}-${d}`]||0)+q;
+        });
+      });
+    });
+  }
+  // combos del período, de los cortes cargados
+  const CO=await cortesCombos(), porDia=combosPorDia(CO);
+  const cb={comida:0,cafe:0};
+  Object.entries(porDia).forEach(([f,v])=>{
+    if(f.slice(0,4)!==anio) return;
+    if(mes!=='todos'&&f.slice(5,7)!==mes) return;
+    cb.comida+=Math.max(0,v.comida); cb.cafe+=Math.max(0,v.cafe);
+  });
+
+  const orden=Object.entries(tot).sort((a,b)=>b[1]-a[1]);
+  const granTotal=orden.reduce((a,x)=>a+x[1],0);
+  const mayor=orden.length?orden[0][1]:0;
+  const anios=[...new Set(todas.filter(k=>k.startsWith('ops:tienda:')).map(k=>k.slice(11,15))
+    .concat(hoy.slice(0,4)))].sort();
+
+  const rot = mes==='todos' ? `todo ${anio}` : `${MESES_L[Number(mes)-1]} ${anio}`;
+
+  return `<div class="filtro">
+    <span class="et">Período</span>
+    <select id="mv-anio">${anios.map(a=>`<option value="${a}"${a===anio?' selected':''}>${a}</option>`).join('')}</select>
+    <select id="mv-mes"><option value="todos"${mes==='todos'?' selected':''}>Todo el año</option>
+      ${MESES_L.map((n,i)=>{const v=String(i+1).padStart(2,'0');
+        return `<option value="${v}"${v===mes?' selected':''}>${n}</option>`;}).join('')}</select>
+  </div>
+  ${!orden.length?`<div class="tarjeta"><p class="vacio">No hay cierres de tienda cargados en ${esc(rot)}.</p></div>`:`
+  <div class="totem">
+    <div class="totem-cab"><div class="t">Lo más vendido · ${esc(rot)}</div>
+      <div class="d">${nf(turnosCargados)} turnos cargados</div></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--cian)"></span>
+      <span class="nom">Unidades</span><span class="guia"></span><span class="val">${nf(granTotal)}<i>u</i></span></div>
+    <div class="linea-totem"><span class="chip" style="background:#3DE0A0"></span>
+      <span class="nom">Rubros con venta</span><span class="guia"></span><span class="val">${nf(orden.length)}</span></div>
+    <div class="totem-total"><span class="nom">Tickets</span><span class="val">${nf(tickets)}<i>tk</i></span></div>
+  </div>
+  <div class="tarjeta">
+    <h2>Por rubro</h2>
+    <p class="sub">Ordenado por unidades. Tocá uno para ver el detalle por turno, por mes y los mejores días.</p>
+    ${orden.map(([r,n],i)=>{
+      const pc=granTotal?n/granTotal*100:0;
+      const anchoB=mayor?n/mayor*100:0;
+      const dd=Object.entries(dias[r]||{}).sort((a,b)=>b[1]-a[1]).slice(0,5);
+      const mm=Object.entries(porMes[r]||{}).sort();
+      return `<details class="mv-item"${S.mvAbierto===r?' open':''} data-mv="${esc(r)}">
+        <summary>
+          <span class="mv-pos">${i+1}</span>
+          <span class="chip" style="background:${colRub(r)}"></span>
+          <strong>${esc(nomRub(r))}</strong>
+          <span class="mv-barra"><i style="width:${anchoB.toFixed(1)}%;background:${colRub(r)}"></i></span>
+          <span class="mv-num">${nf(n)}<small>${nf(pc,1)}%</small></span>
+        </summary>
+        <div class="mv-det">
+          <div class="mv-col">
+            <div class="eyebrow">Por turno</div>
+            <table class="lb-mini"><tbody>
+              ${turnos.map(t=>{const q=(porTurno[r]||{})[t.id]||0;
+                return `<tr><td>${esc(t.nombre)}</td><td class="num">${nf(q)}</td>
+                  <td class="num" style="color:var(--tinta-suave)">${n?nf(q/n*100,0):0}%</td></tr>`;}).join('')}
+            </tbody></table>
+          </div>
+          ${mm.length>1?`<div class="mv-col">
+            <div class="eyebrow">Por mes</div>
+            <table class="lb-mini"><tbody>
+              ${mm.map(([ym,q])=>`<tr><td>${MESES[Number(ym.slice(5,7))-1]}</td>
+                <td class="num">${nf(q)}</td></tr>`).join('')}
+            </tbody></table></div>`:''}
+          <div class="mv-col">
+            <div class="eyebrow">Mejores días</div>
+            <table class="lb-mini"><tbody>
+              ${dd.map(([f,q])=>`<tr><td>${f.slice(8)}/${f.slice(5,7)}</td>
+                <td class="num">${nf(q)}</td></tr>`).join('')}
+            </tbody></table>
+          </div>
+        </div>
+      </details>`;}).join('')}
+  </div>
+  ${(cb.comida||cb.cafe)?`<div class="tarjeta">
+    <h2>Combos</h2>
+    <p class="sub">Salen de los reportes de combos cargados, no de los cierres por turno.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Tipo</th><th class="num">Unidades</th><th class="num">Parte</th></tr></thead>
+      <tbody>
+        <tr><td>Cafetería</td><td class="num">${nf(cb.cafe)}</td>
+          <td class="num">${nf(cb.cafe/(cb.comida+cb.cafe)*100,1)}%</td></tr>
+        <tr><td>Comida</td><td class="num">${nf(cb.comida)}</td>
+          <td class="num">${nf(cb.comida/(cb.comida+cb.cafe)*100,1)}%</td></tr>
+      </tbody>
+      <tfoot><tr class="tot"><td>Total</td><td class="num">${nf(cb.comida+cb.cafe)}</td><td></td></tr></tfoot>
+    </table></div>
+  </div>`:''}`}`;
 }
 
 async function tabVentasTienda(){
@@ -7558,6 +7697,12 @@ function conectar(){
     const roll=await leer('roll:tienda',{}); delete roll[ym]; await guardar('roll:tienda',roll);
     toast(`Cierres de ${rot} borrados`); await render();
   };
+  const mvA=q('#mv-anio'), mvM=q('#mv-mes');
+  if(mvA) mvA.onchange=async()=>{ S.mvAnio=mvA.value; await render(); };
+  if(mvM) mvM.onchange=async()=>{ S.mvMes=mvM.value; await render(); };
+  document.querySelectorAll('#app [data-mv]').forEach(d=>d.ontoggle=()=>{
+    S.mvAbierto=d.open?d.dataset.mv:null;
+  });
   const vtA=q('#vt-anio'), vtM=q('#vt-mes');
   const irVt=async()=>{ S.vtMes=`${vtA.value}-${vtM.value}`; await render(); };
   if(vtA) vtA.onchange=irVt;
