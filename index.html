@@ -3596,6 +3596,8 @@ async function tabLub(){
     <select id="lub-trim">${[1,2,3,4].map(x=>`<option value="${x}"${x===d.trim?' selected':''}>${ROMANO[x-1]} trimestre</option>`).join('')}</select>
     <button class="btn sec chico" id="lub-guardar" style="width:auto;margin:0">Guardar</button>
     <button class="btn sec chico" id="lub-imprimir" style="width:auto;margin:0">Imprimir el pedido</button>
+    <button class="btn sec chico" id="lub-vaciar-mes" style="width:auto;margin:0">Borrar el mes</button>
+    <button class="btn sec chico" id="lub-vaciar" style="width:auto;margin:0">Borrar el trimestre</button>
   </div>
   ${hojaPedidoLub()}
   <div id="lub-cuerpo">${cuerpoLub()}</div>`;
@@ -6659,6 +6661,26 @@ function conectar(){
     S.prodLub.otr=S.prodLub.otr.filter(x=>x.n!==b.dataset.lubdelotr);
     await guardarProd(); await pintarLub(); toast('Quitado');
   });
+  const lubVM=q('#lub-vaciar-mes');
+  if(lubVM) lubVM.onclick=async()=>{
+    const mes=S.lubMes, rot=MESES_L[Number(mes)-1];
+    if(!confirm(`¿Borrar lo cargado en ${rot}?\n\nEl resto del trimestre queda como está.`)) return;
+    S.lub.meses[mes]={ace:{},otr:{},crm:'',plan:''};
+    await guardar(claveLub(S.lub.anio,S.lub.trim),S.lub);
+    await volcarLubriObjetivo(S.lub);
+    toast(`${rot} borrado`); await render();
+  };
+  const lubV=q('#lub-vaciar');
+  if(lubV) lubV.onclick=async()=>{
+    const d=S.lub;
+    if(!confirm(`¿Borrar TODO el ${ROMANO[d.trim-1]} trimestre ${d.anio}?\n\nSe van los tres meses y los objetivos cargados. No se puede deshacer.`)) return;
+    const meses={};
+    TRIM[d.trim-1].forEach(m=>{ meses[m]={ace:{},otr:{},crm:'',plan:''}; });
+    S.lub={anio:d.anio,trim:d.trim,obj:{premium:'',total:'',crm:''},meses};
+    await guardar(claveLub(d.anio,d.trim),S.lub);
+    await volcarLubriObjetivo(S.lub);
+    toast('Trimestre borrado'); await render();
+  };
   const lubP=q('#lub-imprimir');
   if(lubP) lubP.onclick=()=>{ document.body.classList.add('imp-lub');
     setTimeout(()=>{ window.print(); document.body.classList.remove('imp-lub'); },120); };
