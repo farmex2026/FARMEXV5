@@ -3582,6 +3582,51 @@ async function armarYPF(renglones){
   });
 }
 
+// pedido de la Extranet YPF: cada renglón trae el producto, la presentación y las cajas
+const MAPA_PED=[
+  [/AURO\s*PLUS/i,'Auro Plus'],[/AURO\s*FE/i,'Auro FE'],
+  [/AURO\s*FR\s*530/i,'Auro FR 530'],[/AURO\s*FR\s*540/i,'Auro FR 540'],
+  [/AURO\s*D1\s*530/i,'Auro D1 530'],[/AURO\s*D1\s*0?20/i,'Auro D1 020'],
+  [/AURO\s*DPF/i,'Auro DPF'],[/AURO\s*D2/i,'Auro D2 30'],
+  [/TS\s*10?40/i,'TS 10W40'],[/FS\s*530/i,'FS 530'],[/FS\s*540/i,'FS 540'],
+  [/MI\s*15?40/i,'MI 15W-40'],[/MI\s*20?50/i,'MI 20W-50'],
+];
+const MAPA_PED_OTR=[
+  [/KRIOX/i,'Kriox 1 LT'],[/LAVA\s*PARABRISAS/i,'Lavaparabrisas 1 LT'],
+  [/HIDRO/i,'Hidro 1 LT'],
+  [/FRENOS?.*DOT\s*4.*24\s*X\s*200/i,'Freno T4 200'],[/FRENOS?.*DOT\s*4.*12\s*X\s*1/i,'Freno T4 1 LT'],
+  [/FRENOS?.*DOT\s*3.*24\s*X\s*200/i,'Freno T3 200'],[/FRENOS?.*DOT\s*3.*20\s*X\s*500/i,'Freno T3 500'],
+  [/FRENOS?.*DOT\s*3.*12\s*X\s*1/i,'Freno T3 1 LT'],
+  [/2T\s*60\s*X\s*100/i,'2T 100'],[/2T\s*40\s*X\s*200/i,'2T 200'],[/2T\s*12\s*X\s*1/i,'2T 1 LT'],
+  [/R[ÖO]D\s*MOTO/i,'Röd Moto 1 LT'],
+];
+const RE_PED=/^(.+?)\s+(4\s*\/\s*4|12\s*\/\s*1)?\s*(?:L\s*)?CJ\s+(\d{1,4})\s+[\d.,]+\s*$/i;
+
+function leerPedidoYPF(lineas){
+  const ace={}, otr={}, sinMapa=[];
+  let nro='', fecha='';
+  for(const raw of lineas){
+    const l=String(raw).replace(/\s+/g,' ').trim();
+    if(!l) continue;
+    const mn=l.match(/N[úu]mero de pedido\s*(\d+)/i); if(mn) nro=mn[1];
+    const mf=l.match(/(\d{2}\/\d{2}\/\d{4})/); if(mf&&!fecha) fecha=mf[1];
+    const m=l.match(RE_PED);
+    if(!m) continue;
+    const desc=m[1].trim(), pres=(m[2]||'').replace(/\s/g,''), cajas=Number(m[3])||0;
+    if(!cajas) continue;
+    const a=MAPA_PED.find(([re])=>re.test(desc));
+    if(a){
+      const k=a[1]; ace[k]=ace[k]||{c4:0,c1:0};
+      if(pres==='12/1') ace[k].c1+=cajas; else ace[k].c4+=cajas;
+      continue;
+    }
+    const o=MAPA_PED_OTR.find(([re])=>re.test(desc));
+    if(o){ otr[o[1]]=(otr[o[1]]||0)+cajas; continue; }
+    sinMapa.push({desc,cajas});
+  }
+  return {ace,otr,sinMapa,nro,fecha};
+}
+
 async function tabLub(){
   const hoyA=Number(hoyISO().slice(0,4));
   await prodLub();
@@ -3597,7 +3642,23 @@ async function tabLub(){
     <button class="btn sec chico" id="lub-guardar" style="width:auto;margin:0">Guardar</button>
     <button class="btn sec chico" id="lub-imprimir" style="width:auto;margin:0">Imprimir el pedido</button>
     <button class="btn sec chico" id="lub-vaciar-mes" style="width:auto;margin:0">Borrar el mes</button>
-    <button class="btn sec chico" id="lub-vaciar" style="width:auto;margin:0">Borrar el trimestre</button>
+  </div>
+  <div class="tarjeta">
+    <h2>Cargar el pedido de la Extranet</h2>
+    <p class="sub">Subí el PDF del pedido y las cajas entran solas en <strong>${MESES_L[Number(S.lubMes)-1]}</strong>.
+      Si ya había algo cargado en ese mes, lo reemplaza.</p>
+    <label class="suelta"><input type="file" id="ped-arch" accept=".pdf" hidden>
+      <strong>Elegir el pedido</strong><small>PDF de Extranet YPF</small></label>
+    ${S.pedPrevia?(S.pedPrevia.error
+      ? `<div class="aviso mal" style="margin-top:11px">${esc(S.pedPrevia.error)}</div>`
+      : `<div class="aviso bien" style="margin-top:11px">
+          Pedido ${esc(S.pedPrevia.nro||'sin número')}${S.pedPrevia.fecha?` · ${esc(S.pedPrevia.fecha)}`:''}:
+          <strong>${nf(S.pedPrevia.nAce)}</strong> renglones de aceite y <strong>${nf(S.pedPrevia.nOtr)}</strong> del resto ·
+          <strong>${nf(S.pedPrevia.litros,1)} litros</strong>.
+          ${S.pedPrevia.sinMapa.length?`<br>No reconocí ${S.pedPrevia.sinMapa.length}: ${S.pedPrevia.sinMapa.map(x=>esc(x.desc)).join(', ')}.`:''}
+        </div>
+        <button class="btn" id="ped-guardar">Cargar en ${MESES_L[Number(S.lubMes)-1]}</button>`
+      ):''}
   </div>
   ${hojaPedidoLub()}
   <div id="lub-cuerpo">${cuerpoLub()}</div>`;
@@ -6661,6 +6722,36 @@ function conectar(){
     S.prodLub.otr=S.prodLub.otr.filter(x=>x.n!==b.dataset.lubdelotr);
     await guardarProd(); await pintarLub(); toast('Quitado');
   });
+  const pedA=q('#ped-arch');
+  if(pedA) pedA.onchange=async()=>{
+    const f=pedA.files&&pedA.files[0]; if(!f) return;
+    pedA.closest('label').querySelector('strong').textContent='Leyendo el PDF…';
+    try{
+      const lineas=await textoPDF(f);
+      if(!lineas.length) throw new Error('El PDF no tiene texto adentro: es una foto o un escaneo.');
+      const r=leerPedidoYPF(lineas);
+      const nAce=Object.keys(r.ace).length, nOtr=Object.keys(r.otr).length;
+      if(!nAce&&!nOtr) throw new Error('No reconocí renglones de pedido en ese PDF.');
+      let litros=0;
+      Object.values(r.ace).forEach(v=>{ litros+=v.c4*LTS_C4+v.c1*LTS_C1; });
+      Object.entries(r.otr).forEach(([k,c])=>{ const o=listaOtr().find(x=>x.n===k); if(o) litros+=c*ltsOtro(o); });
+      S.pedPrevia={...r,nAce,nOtr,litros};
+    }catch(e){ S.pedPrevia={error:(e&&e.message)||'No pude leer el PDF.',sinMapa:[]}; }
+    await render();
+  };
+  const pedG=q('#ped-guardar');
+  if(pedG) pedG.onclick=async()=>{
+    const r=S.pedPrevia, mes=S.lubMes;
+    const m=S.lub.meses[mes]||{};
+    S.lub.meses[mes]={ace:{},otr:{},crm:m.crm||'',plan:m.plan||''};
+    Object.entries(r.ace).forEach(([k,v])=>{ S.lub.meses[mes].ace[k]={c4:v.c4||0,c1:v.c1||0}; });
+    Object.entries(r.otr).forEach(([k,c])=>{ S.lub.meses[mes].otr[k]=c; });
+    await guardar(claveLub(S.lub.anio,S.lub.trim),S.lub);
+    await volcarLubriObjetivo(S.lub);
+    S.pedPrevia=null;
+    toast(`Pedido cargado en ${MESES_L[Number(mes)-1]}`);
+    await render();
+  };
   const lubVM=q('#lub-vaciar-mes');
   if(lubVM) lubVM.onclick=async()=>{
     const mes=S.lubMes, rot=MESES_L[Number(mes)-1];
@@ -6669,17 +6760,6 @@ function conectar(){
     await guardar(claveLub(S.lub.anio,S.lub.trim),S.lub);
     await volcarLubriObjetivo(S.lub);
     toast(`${rot} borrado`); await render();
-  };
-  const lubV=q('#lub-vaciar');
-  if(lubV) lubV.onclick=async()=>{
-    const d=S.lub;
-    if(!confirm(`¿Borrar TODO el ${ROMANO[d.trim-1]} trimestre ${d.anio}?\n\nSe van los tres meses y los objetivos cargados. No se puede deshacer.`)) return;
-    const meses={};
-    TRIM[d.trim-1].forEach(m=>{ meses[m]={ace:{},otr:{},crm:'',plan:''}; });
-    S.lub={anio:d.anio,trim:d.trim,obj:{premium:'',total:'',crm:''},meses};
-    await guardar(claveLub(d.anio,d.trim),S.lub);
-    await volcarLubriObjetivo(S.lub);
-    toast('Trimestre borrado'); await render();
   };
   const lubP=q('#lub-imprimir');
   if(lubP) lubP.onclick=()=>{ document.body.classList.add('imp-lub');
