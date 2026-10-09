@@ -573,6 +573,8 @@ tr.pl-min td{background:rgba(34,227,245,.06)}
 .plata-panel td,.plata-panel th{padding:6px 6px;white-space:nowrap}
 .plata-panel th{font-size:10px}
 @media(max-width:1100px){.plata-panel{max-width:100%}}
+.ver-panel{margin-top:14px;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--tinta-suave);opacity:.75}
 .fac-item{border:1px solid var(--linea-2);border-radius:var(--r);margin-top:8px}
 .fac-item>summary{list-style:none;cursor:pointer;padding:9px 12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .fac-item>summary::-webkit-details-marker{display:none}
@@ -746,6 +748,34 @@ details[open] summary::after{content:'–'}
   body.imp-venc .top,body.imp-venc .nav,body.imp-venc .subnav{display:none !important}
   body.imp-venc{background:#fff}
   body.imp-venc #app{background:#fff !important}
+  @page{margin:12mm}
+}
+.hoja-rk{display:none}
+@media print{
+  body.imp-rk .hoja-rk{display:block !important;background:#fff}
+  body.imp-rk .hoja-rk,body.imp-rk .hoja-rk *{color:#000 !important;
+    font-family:Arial,Helvetica,sans-serif !important;letter-spacing:0 !important;text-transform:none !important}
+  body.imp-rk .hoja-rk h1{font-size:18px;margin:0 0 3px}
+  body.imp-rk .hoja-rk h2{font-size:12.5px;margin:13px 0 5px;border:0;padding:0}
+  body.imp-rk .hoja-rk p{font-size:11.5px;margin:0 0 9px}
+  body.imp-rk .hoja-rk table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px}
+  body.imp-rk .hoja-rk th{background:#e4e4e4 !important;border:1px solid #666;padding:4px 6px;text-align:left;
+    font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.imp-rk .hoja-rk td{border:1px solid #666;padding:4px 6px}
+  body.imp-rk .hoja-rk th:nth-child(1),body.imp-rk .hoja-rk td:nth-child(1){width:26px;text-align:right}
+  body.imp-rk .hoja-rk th:nth-child(4),body.imp-rk .hoja-rk td:nth-child(4),
+  body.imp-rk .hoja-rk th:nth-child(5),body.imp-rk .hoja-rk td:nth-child(5){text-align:right;width:68px}
+  body.imp-rk #app>*,body.imp-rk .adminwrap,body.imp-rk .adminmain{display:block !important}
+  body.imp-rk #app>.top,body.imp-rk #app .top,body.imp-rk #app .nav,
+  body.imp-rk #app .adminlat,body.imp-rk #app .subnav{display:none !important}
+  body.imp-rk .adminmain>*:not(.tarjeta){display:none !important}
+  body.imp-rk .tarjeta>*:not(.hoja-rk){display:none !important}
+  body.imp-rk .tarjeta{background:#fff !important;border:0 !important;box-shadow:none !important;
+    padding:0 !important;margin:0 !important}
+  body.imp-rk .tarjeta::before,body.imp-rk .tarjeta::after{display:none !important}
+  body.imp-rk .adminwrap,body.imp-rk .adminmain{padding:0 !important;margin:0 !important;max-width:none !important}
+  body.imp-rk .hoja-rk td:nth-child(2),body.imp-rk .hoja-rk td:nth-child(3){text-align:left}
+  body.imp-rk,body.imp-rk #app{background:#fff !important}
   @page{margin:12mm}
 }
 .hoja-lub{display:none}
@@ -2209,6 +2239,88 @@ async function tabCombosTienda(){
       <p class="sub" style="margin-top:9px">Cada corte suma <strong>al mes de su fecha de cierre</strong>. El primero de cada período entra completo; los siguientes, por diferencia con el anterior.</p>
       <button class="btn sec" id="cb-borrartodo">Borrar los ${cortesOrd.length} cortes y empezar de cero</button>`
     :`<p class="vacio" style="margin-top:11px">Todavía no cargaste ningún corte.</p>`}
+  </div>
+  ${bloqueRanking(CO)}`;
+}
+
+// ranking de comida y cafetería del mes, del mismo reporte de combos
+function bloqueRanking(CO){
+  const meses=[...new Set(Object.values(CO).map(c=>c.hasta.slice(0,7)))].sort().reverse();
+  const conProd=Object.values(CO).some(c=>c.prod&&Object.keys(c.prod).length);
+  if(!meses.length) return `<div class="tarjeta">
+    <h2>Ranking de comida y cafetería</h2>
+    <p class="vacio">Sale de los mismos reportes que cargás arriba.<br>Subí los tres y aparece acá.</p></div>`;
+  if(!conProd) return `<div class="tarjeta">
+    <h2>Ranking de comida y cafetería</h2>
+    <p class="vacio">Los cortes que tenés cargados se guardaron antes de que existiera el ranking,
+      así que no tienen el detalle por producto.<br>
+      Volvé a subir los tres reportes del período y el ranking aparece solo.</p></div>`;
+  const ym=(S.rkMes&&meses.includes(S.rkMes))?S.rkMes:meses[0];
+  const R=rankingMes(CO,ym);
+  const soloCombo=S.rkSolo==='combo', soloSuelto=S.rkSolo==='suelto';
+  const lista=R.filter(x=>soloCombo?x.combo:soloSuelto?!x.combo:true);
+  const totComb=R.filter(x=>x.combo).reduce((a,x)=>a+x.q,0);
+  const totSuel=R.filter(x=>!x.combo).reduce((a,x)=>a+x.q,0);
+  const mayor=lista.length?lista[0].q:0;
+  const RUB=[['cafe','Cafetería','#22E3F5'],['comida','Comida','#FF6B85']];
+  return `<div class="tarjeta">
+    <h2>Ranking de comida y cafetería</h2>
+    <p class="sub">Del mismo reporte que cargás acá. Suma los combos y también lo vendido suelto.</p>
+    <div class="filtro">
+      <select id="rk-mes">${meses.map(m=>`<option value="${m}"${m===ym?' selected':''}>${MESES_L[Number(m.slice(5,7))-1]} ${m.slice(0,4)}</option>`).join('')}</select>
+      <span class="lb-sep"></span>
+      <span class="pl-modo">
+        <button data-rksolo=""${!S.rkSolo?' class="act"':''}>Todo</button>
+        <button data-rksolo="combo"${soloCombo?' class="act"':''}>Solo combos</button>
+        <button data-rksolo="suelto"${soloSuelto?' class="act"':''}>Solo sueltos</button>
+      </span>
+      <button class="btn sec chico" id="rk-imprimir" style="width:auto;margin:0">Imprimir</button>
+    </div>
+    <div class="hoja-rk">
+      <h1>Lo más vendido · comida y cafetería</h1>
+      <p>${esc(S.cfg.estacion)} · ${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}${
+        soloCombo?' · solo combos':soloSuelto?' · solo sueltos':''} · ${nf(totComb+totSuel)} unidades</p>
+      ${RUB.map(([t,rotT])=>{
+        const lt=lista.filter(x=>(x.t||'')===t);
+        if(!lt.length) return '';
+        const tt=lt.reduce((a,x)=>a+x.q,0);
+        return `<h2>${rotT} · ${nf(tt)} unidades</h2>
+        <table><thead><tr><th>#</th><th>Producto</th><th>Grupo</th><th>Unidades</th><th>Parte</th></tr></thead>
+        <tbody>${lt.map((x,i)=>`<tr><td>${i+1}</td>
+          <td>${esc(x.n)}${x.combo?' (combo)':''}</td><td>${esc(x.g)}</td>
+          <td>${nf(x.q)}</td><td>${nf(x.q/tt*100,1)}%</td></tr>`).join('')}</tbody></table>`;}).join('')}
+    </div>
+    <div class="totem" style="margin-bottom:12px">
+      <div class="totem-cab"><div class="t">${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}</div>
+        <div class="d">${nf(lista.length)} productos</div></div>
+      <div class="linea-totem"><span class="chip" style="background:#FF6B85"></span>
+        <span class="nom">En combo</span><span class="guia"></span><span class="val">${nf(totComb)}<i>u</i></span></div>
+      <div class="linea-totem"><span class="chip" style="background:#22E3F5"></span>
+        <span class="nom">Sueltos</span><span class="guia"></span><span class="val">${nf(totSuel)}<i>u</i></span></div>
+      <div class="totem-total"><span class="nom">Total</span><span class="val">${nf(totComb+totSuel)}<i>u</i></span></div>
+    </div>
+    ${!lista.length?`<p class="vacio">No hay productos en ese mes con el filtro elegido.</p>`:
+      RUB.map(([t,rotT,color])=>{
+        const lt=lista.filter(x=>(x.t||'')===t);
+        if(!lt.length) return '';
+        const tt=lt.reduce((a,x)=>a+x.q,0);
+        const grupos=[...new Set(lt.map(x=>x.g))];
+        return `<div class="eyebrow" style="margin:14px 0 4px;color:${color}">${rotT} · ${nf(tt)} unidades</div>
+        ${grupos.map(g=>{
+          const ff=lt.filter(x=>x.g===g);
+          const tg=ff.reduce((a,x)=>a+x.q,0);
+          return `<details class="mv-item"${S.rkGrupo===t+'|'+g?' open':''} data-rkg="${esc(t+'|'+g)}">
+            <summary><span class="lb-flecha">▸</span><strong>${esc(g||'sin grupo')}</strong>
+              <span class="mv-barra"><i style="width:${tt?tg/tt*100:0}%;background:${color}"></i></span>
+              <span class="mv-num">${nf(tg)}<small>${nf(ff.length)} prod.</small></span></summary>
+            <div class="scroll" style="padding:0 12px 11px">
+              <table><thead><tr><th>Producto</th><th class="num">Unidades</th><th class="num">Parte</th></tr></thead>
+              <tbody>${ff.map(x=>`<tr>
+                <td>${esc(x.n)}${x.combo?' <span class="ob-chip min" style="margin-left:6px">combo</span>':''}</td>
+                <td class="num"><strong>${nf(x.q)}</strong></td>
+                <td class="num" style="color:var(--tinta-suave)">${nf(x.q/tg*100,1)}%</td></tr>`).join('')}</tbody>
+              </table></div>
+          </details>`;}).join('')}`;}).join('')}
   </div>`;
 }
 
@@ -3123,6 +3235,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
+const VERSION='5.2';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -3990,9 +4103,56 @@ function leerReporteCombos(filas,nombreArch){
     const q=numeroSig(texto(r,3));
     if(q){ combos+=q; filasCombo++; }
   }
+  // y de paso cada producto con sus unidades, para el ranking del mes
+  const prod={};
+  let grupo='', empezo=false;
+  for(const r of filas){
+    if(!empezo){                                              // saltear el encabezado del reporte
+      if(norm(texto(r,2))==='DETALLE'||norm(texto(r,1))==='CODIGO') empezo=true;
+      continue;
+    }
+    const c0=texto(r,0), c1=texto(r,1), det=texto(r,2), c3=texto(r,3);
+    // encabezado de grupo: trae texto en la primera columna y no trae cantidad
+    if(c0&&det&&!c1&&!c3){ grupo=det; continue; }
+    if(!c1||!det) continue;                                   // los productos vienen con código
+    if(norm(det).startsWith('TOTAL')) continue;
+    const q=numeroSig(c3);
+    if(!q) continue;
+    const esC=/-\s*COMBO\s*$/i.test(grupo);
+    const k=(esC?'C|':'S|')+rubro+'|'+det.slice(0,60);        // suelto y en combo van aparte, y cada rubro por su lado
+    if(!prod[k]) prod[k]={n:det.slice(0,60),g:grupo.replace(/\s*-\s*(COMBO|RECIPE|ITEM)\s*$/i,'').trim(),
+                          combo:esC,t:'',q:0};
+    prod[k].q+=q;
+  }
   const tipo=(TIPOS_COMBO.find(t=>t.rubros.includes(rubro))||{}).id||'';
   if(!tipo) return {error:`En “${nombreArch}” el rubro es ${rubro||'desconocido'} y no sé si es comida o cafetería.`};
-  return {desde,hasta,rubro,tipo,combos:Math.round(combos),filasCombo,arch:nombreArch};
+  Object.values(prod).forEach(p=>p.t=tipo);
+  return {desde,hasta,rubro,tipo,combos:Math.round(combos),filasCombo,prod,arch:nombreArch};
+}
+
+// ranking de productos del mes: lo de cada corte menos el anterior del mismo período
+function rankingMes(cortes,ym){
+  const porPeriodo={};
+  Object.values(cortes).forEach(c=>{ (porPeriodo[c.desde]=porPeriodo[c.desde]||[]).push(c); });
+  const acum={};
+  Object.values(porPeriodo).forEach(lista=>{
+    lista.sort((a,b)=>a.hasta.localeCompare(b.hasta));
+    let prev={};
+    lista.forEach(c=>{
+      const p=c.prod||{};
+      if(c.hasta.slice(0,7)===ym){
+        Object.entries(p).forEach(([k,x])=>{
+          const antes=(prev[k]||{}).q||0;
+          const d=x.q-antes;
+          if(d<=0) return;
+          if(!acum[k]) acum[k]={n:x.n,g:x.g,combo:x.combo,t:x.t||'',q:0};
+          acum[k].q+=d;
+        });
+      }
+      prev=p;
+    });
+  });
+  return Object.values(acum).sort((a,b)=>b.q-a.q);
 }
 
 // arma la serie diaria a partir de los cortes de un mismo período
@@ -4419,6 +4579,7 @@ function portada(){
     <input type="password" id="claveEntrada" inputmode="numeric" autocapitalize="off" autocomplete="off" spellcheck="false"
       placeholder="Clave" style="text-align:center;font-family:'IBM Plex Mono',monospace;letter-spacing:.3em">
     <button class="btn" id="entrar">Entrar</button>
+    <p class="ver-panel">versión ${VERSION}</p>
   </div></div>`;
 }
 
@@ -7267,13 +7428,18 @@ function conectar(){
         throw new Error('Los reportes no son del mismo período. Subí los tres del mismo corte.');
       const acum={comida:0,cafe:0};
       leidos.forEach(r=>acum[r.tipo]+=r.combos);
+      const prod={};
+      leidos.forEach(r=>Object.entries(r.prod||{}).forEach(([k,p])=>{
+        if(!prod[k]) prod[k]={n:p.n,g:p.g,combo:p.combo,t:p.t||'',q:0};
+        prod[k].q+=p.q;
+      }));
       const faltan=TIPOS_COMBO.filter(t=>!leidos.some(r=>r.tipo===t.id)).map(t=>t.nombre);
       // el corte anterior del mismo período, para sacar el día
       const CO=await cortesCombos();
       const previos=Object.values(CO).filter(c=>c.desde===desde&&c.hasta<hasta).sort((a,b)=>a.hasta.localeCompare(b.hasta));
       const ant=previos.length?previos[previos.length-1]:{comida:0,cafe:0};
       const primero=!previos.length;
-      S.previaCombos={desde,hasta,acum,
+      S.previaCombos={desde,hasta,acum,prod,
         dia:{comida:acum.comida-(ant.comida||0),cafe:acum.cafe-(ant.cafe||0)},
         primero,
         aviso:[faltan.length?`Falta el reporte de ${faltan.join(' y ')}: ese combo va a quedar en cero.`:'',
@@ -7288,7 +7454,8 @@ function conectar(){
     const CO=await cortesCombos();
     const k=p.desde+'|'+p.hasta;
     const pisa=!!CO[k];
-    CO[k]={desde:p.desde,hasta:p.hasta,comida:p.acum.comida,cafe:p.acum.cafe,ts:Date.now()};
+    CO[k]={desde:p.desde,hasta:p.hasta,comida:p.acum.comida,cafe:p.acum.cafe,
+           prod:p.prod||{},ts:Date.now()};
     if(await guardar('tienda:combos-cortes',CO)){
       S.cortes=CO; S.previaCombos=null;
       await recalcularCombosMes();
@@ -7296,6 +7463,17 @@ function conectar(){
     } else { cbc.disabled=false; cbc.textContent='Reintentar'; }
   };
   const cbx=q('#cb-cancelar'); if(cbx) cbx.onclick=async()=>{ S.previaCombos=null; await render(); };
+  const rkP=q('#rk-imprimir');
+  if(rkP) rkP.onclick=()=>{ document.body.classList.add('imp-rk');
+    setTimeout(()=>{ window.print(); document.body.classList.remove('imp-rk'); },120); };
+  const rkM=q('#rk-mes');
+  if(rkM) rkM.onchange=async()=>{ S.rkMes=rkM.value; await render(); };
+  document.querySelectorAll('#app [data-rksolo]').forEach(b=>b.onclick=async()=>{
+    S.rkSolo=b.dataset.rksolo; await render();
+  });
+  document.querySelectorAll('#app [data-rkg]').forEach(d=>d.ontoggle=()=>{
+    S.rkGrupo=d.open?d.dataset.rkg:null;
+  });
   const cbt=q('#cb-borrartodo');
   if(cbt) cbt.onclick=async()=>{
     if(!confirm('¿Borrar todos los cortes de combos?\n\nLos totales por mes quedan en cero hasta que vuelvas a cargarlos.')) return;
