@@ -765,6 +765,9 @@ details[open] summary::after{content:'–'}
   body.imp-rk .hoja-rk th:nth-child(1),body.imp-rk .hoja-rk td:nth-child(1){width:26px;text-align:right}
   body.imp-rk .hoja-rk th:nth-child(4),body.imp-rk .hoja-rk td:nth-child(4),
   body.imp-rk .hoja-rk th:nth-child(5),body.imp-rk .hoja-rk td:nth-child(5){text-align:right;width:68px}
+  body.imp-rk .hoja-rk table.grupo th:nth-child(3),body.imp-rk .hoja-rk table.grupo td:nth-child(3),
+  body.imp-rk .hoja-rk table.grupo th:nth-child(4),body.imp-rk .hoja-rk table.grupo td:nth-child(4){
+    text-align:right;width:74px}
   body.imp-rk #app>*,body.imp-rk .adminwrap,body.imp-rk .adminmain{display:block !important}
   body.imp-rk #app>.top,body.imp-rk #app .top,body.imp-rk #app .nav,
   body.imp-rk #app .adminlat,body.imp-rk #app .subnav{display:none !important}
@@ -2277,10 +2280,22 @@ function bloqueRanking(CO){
       <button class="btn sec chico" id="rk-imprimir" style="width:auto;margin:0">Imprimir</button>
     </div>
     <div class="hoja-rk">
-      <h1>Lo más vendido · comida y cafetería</h1>
-      <p>${esc(S.cfg.estacion)} · ${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}${
-        soloCombo?' · solo combos':soloSuelto?' · solo sueltos':''} · ${nf(totComb+totSuel)} unidades</p>
-      ${RUB.map(([t,rotT])=>{
+      ${(()=>{ const sel=S.rkImp;
+        if(!sel) return `<h1>Lo más vendido · comida y cafetería</h1>
+          <p>${esc(S.cfg.estacion)} · ${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}${
+          soloCombo?' · solo combos':soloSuelto?' · solo sueltos':''} · ${nf(totComb+totSuel)} unidades</p>`;
+        const g=sel.split('|')[1]||'';
+        const ff=lista.filter(x=>(x.t||'')+'|'+x.g===sel);
+        const tg=ff.reduce((a,x)=>a+x.q,0);
+        return `<h1>${esc(g||'Grupo')}</h1>
+          <p>${esc(S.cfg.estacion)} · ${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}${
+          soloCombo?' · solo combos':soloSuelto?' · solo sueltos':''} · ${nf(tg)} unidades</p>
+          <table class="grupo"><thead><tr><th>#</th><th>Producto</th><th>Unidades</th><th>Parte</th></tr></thead>
+          <tbody>${ff.map((x,i)=>`<tr><td>${i+1}</td>
+            <td>${esc(x.n)}${x.combo?' (combo)':''}</td>
+            <td>${nf(x.q)}</td><td>${tg?nf(x.q/tg*100,1):0}%</td></tr>`).join('')}</tbody></table>`;
+      })()}
+      ${S.rkImp?'':RUB.map(([t,rotT])=>{
         const lt=lista.filter(x=>(x.t||'')===t);
         if(!lt.length) return '';
         const tt=lt.reduce((a,x)=>a+x.q,0);
@@ -2313,13 +2328,16 @@ function bloqueRanking(CO){
             <summary><span class="lb-flecha">▸</span><strong>${esc(g||'sin grupo')}</strong>
               <span class="mv-barra"><i style="width:${tt?tg/tt*100:0}%;background:${color}"></i></span>
               <span class="mv-num">${nf(tg)}<small>${nf(ff.length)} prod.</small></span></summary>
-            <div class="scroll" style="padding:0 12px 11px">
+            <div class="scroll" style="padding:0 12px 4px">
               <table><thead><tr><th>Producto</th><th class="num">Unidades</th><th class="num">Parte</th></tr></thead>
               <tbody>${ff.map(x=>`<tr>
                 <td>${esc(x.n)}${x.combo?' <span class="ob-chip min" style="margin-left:6px">combo</span>':''}</td>
                 <td class="num"><strong>${nf(x.q)}</strong></td>
                 <td class="num" style="color:var(--tinta-suave)">${nf(x.q/tg*100,1)}%</td></tr>`).join('')}</tbody>
               </table></div>
+            <div style="padding:0 12px 12px">
+              <button class="btn sec chico" data-rkimp="${esc(t+'|'+g)}" style="width:auto;margin:0">Imprimir ${esc(g||'este grupo')}</button>
+            </div>
           </details>`;}).join('')}`;}).join('')}
   </div>`;
 }
@@ -3235,7 +3253,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
-const VERSION='5.2';
+const VERSION='5.3';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -7463,8 +7481,15 @@ function conectar(){
     } else { cbc.disabled=false; cbc.textContent='Reintentar'; }
   };
   const cbx=q('#cb-cancelar'); if(cbx) cbx.onclick=async()=>{ S.previaCombos=null; await render(); };
+  document.querySelectorAll('#app [data-rkimp]').forEach(b=>b.onclick=async()=>{
+    S.rkImp=b.dataset.rkimp;
+    await render();
+    document.body.classList.add('imp-rk');
+    setTimeout(()=>{ window.print(); document.body.classList.remove('imp-rk');
+      S.rkImp=null; render(); },160);
+  });
   const rkP=q('#rk-imprimir');
-  if(rkP) rkP.onclick=()=>{ document.body.classList.add('imp-rk');
+  if(rkP) rkP.onclick=()=>{ S.rkImp=null; document.body.classList.add('imp-rk');
     setTimeout(()=>{ window.print(); document.body.classList.remove('imp-rk'); },120); };
   const rkM=q('#rk-mes');
   if(rkM) rkM.onchange=async()=>{ S.rkMes=rkM.value; await render(); };
