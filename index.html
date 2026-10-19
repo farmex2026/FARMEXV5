@@ -632,6 +632,8 @@ tr.pl-min td{background:rgba(34,227,245,.06)}
 .lb-mano b.falta{color:var(--alerta);font-weight:600;font-size:11px}
 .ypf-t td.lb-orden{background:transparent;border:0;width:30px;padding:2px 4px 2px 0;
   vertical-align:middle;text-align:center}
+.ypf-t td.lb-ver{background:transparent;border:0;width:28px;padding:0;text-align:center;vertical-align:middle}
+.lb-apagado td{opacity:.42}
 .ypf-t th.lb-ordenh{background:transparent;border:0;width:30px;font-size:8.5px;font-weight:400;
   opacity:.7;padding:3px 0;letter-spacing:0}
 .lb-mov{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;
@@ -3003,7 +3005,8 @@ async function ventasLibre(anio,trim,hasta){
   const sU=por.reduce((a,x)=>a+x.unidades,0);
   const sC=por.reduce((a,x)=>a+x.combos,0);
   const sInd=por.reduce((a,x)=>a+(x.ind||0),0);
-  return {por,naftas:sN,diesel:sD,mix:sN?sI/sN*100:0,unidades:sU,combos:sC,inf:sI,ind:sInd};
+  return {por,naftas:sN,diesel:sD,mix:sN?sI/sN*100:0,
+          mixd:sD?sInd/sD*100:0,unidades:sU,combos:sC,inf:sI,ind:sInd};
 }
 // mete en el cuadro lo que sale de las ventas de playa
 async function volcarVentasLibre(){
@@ -3034,6 +3037,7 @@ async function volcarVentasLibre(){
 const LIBRE_AUTO=[
   {re:/volumen\s*naftas/i, k:'naftas', rot:'Volumen naftas', m3:true},
   {re:/volumen\s*diesel/i, k:'diesel', rot:'Volumen diesel', m3:true},
+  {re:/mix.*diesel|diesel.*mix/i, k:'mixd', rot:'Mix diesel infinia', m3:false},
   {re:/mix/i,              k:'mix',    rot:'Mix nafta infinia', m3:false},
   {re:/unidades/i,         k:'unidades',rot:'Unidades sin tabaco', m3:false, ent:true},
   {re:/combos/i,           k:'combos',  rot:'Combos comida y cafetería', m3:false, ent:true},
@@ -3262,7 +3266,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
-const VERSION='5.4';
+const VERSION='5.5';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -5380,9 +5384,10 @@ async function vistaLibre(){
   const nfd=(v,dec)=>v===''||v===null||v===undefined?'—':nf(Number(v),dec);
   let posibles=0, obtenidos=0;
   const filas=d.filas.map((f,i)=>{
+    if(f.off&&!ed) return '';                    // oculto: no se muestra ni suma
     const p=pctYPF(f.real,f.min,f.max);
     const pts=(Number(f.pts)||0)*p/100;
-    posibles+=Number(f.pts)||0; obtenidos+=pts;
+    if(!f.off){ posibles+=Number(f.pts)||0; obtenidos+=pts; }
     // los decimales salen del propio número, como los manda YPF
     const decDe=v=>{ const s=String(v??''); const i=s.indexOf('.'); return i<0?0:Math.min(2,s.length-i-1); };
     const dec=Math.max(decDe(f.min),decDe(f.max),decDe(f.real));
@@ -5395,12 +5400,14 @@ async function vistaLibre(){
           if(esVolumen(f)) return nf(Number(v),0);
           return `${nfd(v,Math.abs(Number(v))>=1000?0:Math.max(dec,decDe(v)))}${f.uni==='%'?' %':''}`;
         })();
-    return `<tr>
+    return `<tr${f.off?' class="lb-apagado"':''}>
       ${ed?`<td class="lb-orden">
         <button class="lb-mov" data-lbsube="${i}"${i===0?' disabled':''} aria-label="Subir" title="Subir">▲</button>
         <button class="lb-mov" data-lbbaja="${i}"${i===d.filas.length-1?' disabled':''} aria-label="Bajar" title="Bajar">▼</button>
-        <button class="lb-x" data-lbdel="${i}" aria-label="Quitar">×</button></td>`:''}
-      <td class="lb-con">${ed
+        <button class="lb-x" data-lbdel="${i}" aria-label="Quitar">×</button></td>
+      <td class="lb-ver"><label class="marca"><input type="checkbox" data-lboff="${i}"${f.off?'':' checked'}
+        title="${f.off?'Oculto: no se muestra ni suma puntos':'Se muestra y suma'}"></label></td>`:''}
+      <td class="lb-con">${f.off?'<span class="ob-chip no" style="margin-bottom:4px">oculto</span><br>':''}${ed
         ? `<input type="text" class="lb-in lb-txt" data-lb="${i}" data-k="c" value="${esc(f.c)}">
            <input type="text" class="lb-in lb-txt lb-sub" data-lb="${i}" data-k="sub" value="${esc(f.sub||'')}" placeholder="aclaración">`
         : `${esc(f.c)}${f.sub?` <span class="lb-sub-t">${esc(f.sub)}</span>`:''}`}</td>
@@ -5502,6 +5509,7 @@ function bloqueDatosLibre(d,v){
       <td class="num">${p.naftas?nf(p.naftas):'—'}</td>
       <td class="num">${p.diesel?nf(p.diesel):'—'}</td>
       <td class="num">${p.naftas?nf(p.inf/p.naftas*100,1)+' %':'—'}</td>
+      <td class="num">${p.diesel?nf((p.ind||0)/p.diesel*100,1)+' %':'—'}</td>
       <td class="num">${p.unidades?nf(p.unidades):'—'}</td>
       <td class="num">${p.combos?nf(p.combos):'—'}</td></tr>`).join('');
 
@@ -5517,10 +5525,11 @@ function bloqueDatosLibre(d,v){
       <div class="eyebrow">Sale de las ventas de playa</div>
       <p class="sub" style="margin:3px 0 0;font-size:11px">Acumulado del trimestre hasta ${MESES_L[Number(S.libreMes)-1]}${S.libreDia?`, cortado el día ${S.libreDia}`:''}, que es como lo mide YPF.</p>
       <table class="lb-mini">
-        <thead><tr><th>Mes</th><th class="num">Naftas L</th><th class="num">Diesel L</th><th class="num">Mix</th><th class="num">Unid. s/tabaco</th><th class="num">Combos</th></tr></thead>
+        <thead><tr><th>Mes</th><th class="num">Naftas L</th><th class="num">Diesel L</th><th class="num">Mix naftas</th><th class="num">Mix diesel</th><th class="num">Unid. s/tabaco</th><th class="num">Combos</th></tr></thead>
         <tbody>${filasMes}</tbody>
         <tfoot><tr><td>Hasta ${MESES[Number(S.libreMes)-1]}</td><td class="num">${nf(v.naftas)}</td>
           <td class="num">${nf(v.diesel)}</td><td class="num">${nf(v.mix,1)} %</td>
+          <td class="num">${nf(v.mixd,1)} %</td>
           <td class="num">${nf(v.unidades)}</td><td class="num">${nf(v.combos)}</td></tr></tfoot>
       </table>
       ${auto.length?`<div class="lb-cmp">${auto.map(({f,a})=>{
@@ -5748,9 +5757,11 @@ async function vistaObjYPF(sec){
   const iN=idsFam('Naftas'), iD=idsFam('Diesel');
   const vt=await ventasMesTienda(ym);
   const nafta=vendFam(r,ym,iN), diesel=vendFam(r,ym,iD), inf=vendFam(r,ym,[ID_INFINIA]);
+  const ind=vendFam(r,ym,['ind']);
   const REAL=[
     {re:/diesel/i,      v:diesel},
     {re:/naftas/i,      v:nafta},
+    {re:/mix.*diesel|diesel.*mix/i, v:diesel?ind/diesel*100:0},
     {re:/mix/i,         v:nafta?inf/nafta*100:0},
     {re:/lubricante/i,  v:Number(L[ym])||0},
     {re:/unidades/i,    v:vt.unidades},
@@ -5779,6 +5790,7 @@ async function vistaObjYPF(sec){
   const fechas={};
   for(const f of hoja.filas) fechas[norm(f.c)]=await fechaFuente(f.c,ym);
   const cuerpo=hoja.filas.map(f=>{
+    if(f.off) return '';                         // apagado en el cuadro de +YPF
     const oc=oculto(f.c);
     if(oc&&!ed) return '';
     const pct100=f.uni==='%';
@@ -6830,6 +6842,11 @@ function conectar(){
     [f[i],f[j]]=[f[j],f[i]];
     await guardarLibre(); await render();
   };
+  document.querySelectorAll('#app [data-lboff]').forEach(c=>c.onchange=async()=>{
+    const f=S.libre.filas[Number(c.dataset.lboff)];
+    f.off=!c.checked;                            // se guarda apagado, no se borra
+    await guardarLibre(); await render();
+  });
   document.querySelectorAll('#app [data-lbsube]').forEach(b=>b.onclick=()=>{
     const i=Number(b.dataset.lbsube); moverFila(i,i-1);
   });
