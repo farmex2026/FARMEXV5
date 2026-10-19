@@ -630,7 +630,16 @@ tr.pl-min td{background:rgba(34,227,245,.06)}
 .lb-mano li{display:flex;justify-content:space-between;gap:9px;padding:4px 0;border-bottom:1px solid var(--linea)}
 .lb-mano b{font-family:'IBM Plex Mono',monospace}
 .lb-mano b.falta{color:var(--alerta);font-weight:600;font-size:11px}
-.lb-x{background:none;border:0;color:#FF9CAC;font-size:19px;cursor:pointer;line-height:1}
+.ypf-t td.lb-orden{background:transparent;border:0;width:30px;padding:2px 4px 2px 0;
+  vertical-align:middle;text-align:center}
+.ypf-t th.lb-ordenh{background:transparent;border:0;width:30px;font-size:8.5px;font-weight:400;
+  opacity:.7;padding:3px 0;letter-spacing:0}
+.lb-mov{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;
+  width:22px;height:15px;font-size:9px;line-height:1;cursor:pointer;border-radius:2px;padding:0;
+  display:block;margin:0 0 2px}
+.lb-mov:hover:not(:disabled){background:rgba(255,255,255,.3)}
+.lb-mov:disabled{opacity:.25;cursor:default}
+.lb-x{background:none;border:0;color:#FF9CAC;font-size:17px;cursor:pointer;line-height:1;padding:0}
 .ob-chip{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;
   letter-spacing:.09em;font-family:'IBM Plex Mono',monospace;white-space:nowrap;border:1px solid}
 .ob-chip.max{background:rgba(61,224,160,.16);color:#6CF0BE;border-color:rgba(61,224,160,.5)}
@@ -3253,7 +3262,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
-const VERSION='5.3';
+const VERSION='5.4';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -5387,6 +5396,10 @@ async function vistaLibre(){
           return `${nfd(v,Math.abs(Number(v))>=1000?0:Math.max(dec,decDe(v)))}${f.uni==='%'?' %':''}`;
         })();
     return `<tr>
+      ${ed?`<td class="lb-orden">
+        <button class="lb-mov" data-lbsube="${i}"${i===0?' disabled':''} aria-label="Subir" title="Subir">▲</button>
+        <button class="lb-mov" data-lbbaja="${i}"${i===d.filas.length-1?' disabled':''} aria-label="Bajar" title="Bajar">▼</button>
+        <button class="lb-x" data-lbdel="${i}" aria-label="Quitar">×</button></td>`:''}
       <td class="lb-con">${ed
         ? `<input type="text" class="lb-in lb-txt" data-lb="${i}" data-k="c" value="${esc(f.c)}">
            <input type="text" class="lb-in lb-txt lb-sub" data-lb="${i}" data-k="sub" value="${esc(f.sub||'')}" placeholder="aclaración">`
@@ -5402,7 +5415,6 @@ async function vistaLibre(){
       <td class="lb-fec">${ed
         ? `<input type="text" class="lb-in lb-txt" data-lb="${i}" data-k="fecha" value="${esc(f.fecha||'')}" style="width:92px">`
         : esc(f.fecha||'')}</td>
-      ${ed?`<td><button class="lb-x" data-lbdel="${i}" aria-label="Quitar">×</button></td>`:''}
     </tr>`;
   }).join('');
 
@@ -6812,6 +6824,18 @@ function conectar(){
   };
   const lbAC=q('#lb-addcond');
   if(lbAC) lbAC.onclick=async()=>{ S.libre.condiciones.push('Nueva condición'); await guardarLibre(); await render(); };
+  const moverFila=async(i,j)=>{
+    const f=S.libre.filas;
+    if(j<0||j>=f.length) return;
+    [f[i],f[j]]=[f[j],f[i]];
+    await guardarLibre(); await render();
+  };
+  document.querySelectorAll('#app [data-lbsube]').forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.lbsube); moverFila(i,i-1);
+  });
+  document.querySelectorAll('#app [data-lbbaja]').forEach(b=>b.onclick=()=>{
+    const i=Number(b.dataset.lbbaja); moverFila(i,i+1);
+  });
   document.querySelectorAll('#app [data-lbdel]').forEach(b=>b.onclick=async()=>{
     S.libre.filas.splice(Number(b.dataset.lbdel),1); await guardarLibre(); await render();
   });
