@@ -5446,16 +5446,17 @@ async function vistaLibre(){
         </div>
         <div class="ypf-tabla">
           <div class="scroll"><table class="ypf-t">
-            <thead><tr>${ed?'<th class="lb-autoh">Ver</th>':''}<th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
+            <thead><tr>${ed?'<th class="lb-ordenh">Orden</th><th class="lb-ordenh">Ver</th>':''}
+              <th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
               <th>% Cumplimiento</th><th>Puntos posibles</th><th>Puntos obtenidos</th>
               <th class="lb-autoh" title="Verde: llegó al máximo. Amarillo: pasó el mínimo. Rojo: no llega.">Cómo viene</th>
-              <th class="lb-fech">Fecha de actualización</th>${ed?'<th></th>':''}</tr></thead>
+              <th class="lb-fech">Fecha de actualización</th></tr></thead>
             <tbody>${filas}</tbody>
             <tfoot><tr class="ypf-pie">
-              <td colspan="5"></td>
+              <td colspan="${ed?7:5}"></td>
               <td><span>${nf(posibles,0)}</span><small>Puntos Posibles</small></td>
               <td><span>${nf(obtenidos,1)}</span><small>Puntos obtenidos</small></td>
-              <td colspan="${ed?3:2}"></td>
+              <td colspan="2"></td>
             </tr></tfoot>
           </table></div>
           ${ed?`<button class="btn sec chico" id="lb-addfila" style="width:auto;margin-top:9px">Agregar concepto</button>`:''}
@@ -5848,10 +5849,10 @@ async function vistaObjYPF(sec){
               <th>Concepto</th><th>Objetivo mínima</th><th>Objetivo máxima</th><th>Real</th>
               <th>% Cumplimiento</th><th>Puntos posibles</th><th>Puntos obtenidos</th></tr></thead>
             <tbody>${cuerpo}</tbody>
-            <tfoot><tr class="ypf-pie"><td colspan="${ed?6:5}"></td>
+            <tfoot><tr class="ypf-pie"><td colspan="${ed?7:6}"></td>
               <td><span>${nf(pos,0)}</span><small>Puntos Posibles</small></td>
               <td><span>${nf(obt,1)}</span><small>Puntos obtenidos</small></td>
-              <td></td></tr></tfoot>
+            </tr></tfoot>
           </table></div>
         </div>
       </div>
