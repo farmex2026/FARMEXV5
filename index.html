@@ -3042,9 +3042,9 @@ const LIBRE_AUTO=[
   {re:/volumen\s*diesel/i, k:'diesel', rot:'Volumen diesel', m3:true},
   {re:/mix.*diesel|diesel.*mix/i, k:'mixd', rot:'Mix diesel infinia', m3:false},
   {re:/mix/i,              k:'mix',    rot:'Mix nafta infinia', m3:false},
-  {re:/(venta|unidad).*(comida|cafeter)/i, k:'sueltos', rot:'Unidades de comida y cafetería', m3:false, ent:true},
   {re:/unidades/i,         k:'unidades',rot:'Unidades sin tabaco', m3:false, ent:true},
   {re:/combos/i,           k:'combos',  rot:'Combos comida y cafetería', m3:false, ent:true},
+  {re:/venta.*(comida|cafeter)/i, k:'sueltos', rot:'Ventas comida y cafetería', m3:false, ent:true},
 ];
 async function cargarLibre(){
   if(!S.libreAnio) S.libreAnio=hoyISO().slice(0,4);
@@ -3270,7 +3270,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
-const VERSION='5.7';
+const VERSION='5.6';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -4165,9 +4165,10 @@ function leerReporteCombos(filas,nombreArch){
   return {desde,hasta,rubro,tipo,combos:Math.round(combos),filasCombo,prod,arch:nombreArch};
 }
 
-// unidades de comida y cafetería del mes: todo lo vendido, combos incluidos
+// unidades de comida y cafetería vendidas sueltas, sin los combos
 function sueltosMes(cortes,ym){
-  return rankingMes(cortes,ym).reduce((a,x)=>a+x.q,0);
+  const R=rankingMes(cortes,ym);
+  return R.filter(x=>!x.combo).reduce((a,x)=>a+x.q,0);
 }
 
 // ranking de productos del mes: lo de cada corte menos el anterior del mismo período
@@ -5536,7 +5537,7 @@ function bloqueDatosLibre(d,v){
       <div class="eyebrow">Sale de las ventas de playa</div>
       <p class="sub" style="margin:3px 0 0;font-size:11px">Acumulado del trimestre hasta ${MESES_L[Number(S.libreMes)-1]}${S.libreDia?`, cortado el día ${S.libreDia}`:''}, que es como lo mide YPF.</p>
       <table class="lb-mini">
-        <thead><tr><th>Mes</th><th class="num">Naftas L</th><th class="num">Diesel L</th><th class="num">Mix naftas</th><th class="num">Mix diesel</th><th class="num">Unid. s/tabaco</th><th class="num">Combos</th><th class="num">Unid. comida y café</th></tr></thead>
+        <thead><tr><th>Mes</th><th class="num">Naftas L</th><th class="num">Diesel L</th><th class="num">Mix naftas</th><th class="num">Mix diesel</th><th class="num">Unid. s/tabaco</th><th class="num">Combos</th><th class="num">Ventas c/c</th></tr></thead>
         <tbody>${filasMes}</tbody>
         <tfoot><tr><td>Hasta ${MESES[Number(S.libreMes)-1]}</td><td class="num">${nf(v.naftas)}</td>
           <td class="num">${nf(v.diesel)}</td><td class="num">${nf(v.mix,1)} %</td>
@@ -5776,9 +5777,9 @@ async function vistaObjYPF(sec){
     {re:/mix.*diesel|diesel.*mix/i, v:diesel?ind/diesel*100:0},
     {re:/mix/i,         v:nafta?inf/nafta*100:0},
     {re:/lubricante/i,  v:Number(L[ym])||0},
-    {re:/(venta|unidad).*(comida|cafeter)/i, v:sueltosMes(await cortesCombos(),ym)},
     {re:/unidades/i,    v:vt.unidades},
     {re:/combos/i,      v:Number(C[ym])||0},
+    {re:/venta.*(comida|cafeter)/i, v:sueltosMes(await cortesCombos(),ym)},
   ];
 
   const anios=[...new Set(Object.keys(r).map(k=>k.slice(0,4)).concat(hoy.slice(0,4)))].sort();
