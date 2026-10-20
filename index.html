@@ -584,6 +584,11 @@ tr.pl-min td{background:rgba(34,227,245,.06)}
 .fac-nro{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--cian)}
 .fac-item>summary small{color:var(--tinta-suave);font-size:11.5px;margin-left:auto}
 .fac-item .scroll{padding:0 12px 11px}
+.lt-media{display:block;font-size:10.5px;font-style:normal;font-weight:400;
+  color:var(--tinta-suave);letter-spacing:.02em;margin-top:1px;opacity:.85}
+.linea-totem .nom{line-height:1.2}
+.totem-nota{padding:5px 15px 11px;font-size:11.5px;color:var(--tinta-suave);text-align:right;
+  letter-spacing:.03em}
 .mv-item{border:1px solid var(--linea-2);border-radius:var(--r);margin-top:7px}
 .mv-item>summary{list-style:none;cursor:pointer;padding:9px 12px;display:flex;align-items:center;gap:10px}
 .mv-item>summary::-webkit-details-marker{display:none}
@@ -945,7 +950,7 @@ const SEMILLA={"ops":{"ops:playa:2025-01":{"01":{"T1":{"prod":{"sup":327.86,"d50
 const S={
   cfg:null, vista:'playa', sub:'mes', tab:'importar', abierto:false, cargando:true,
   mes:hoyISO().slice(0,7), cmpAnio:null, cmpMes:'todos', filtro:{}, filtroCorrido:false,
-  rubVer:null, rubEdit:false, plegado:{},
+  rubVer:null, rubEdit:false, plegado:{}, cmedia:null, cmPrevia:null, cmAnio:null, cmMes:null,
   vencAlta:true, vencOk:false, facAbierta:null, admTSec:'vencimientos', provV:null, provSel:null, vencProv:'', vencNuevo:{}, vencBusca:'', admTOk:false,
   cargaSec:'playa', cargaFecha:hoyISO(), cargaTurno:'T1', borrador:null,
   previa:null, ops:{}, roll:{}, admin:{}, errorUlt:null, diag:null, adjunto:null, grafDatos:[], turDatos:[],
@@ -1397,16 +1402,18 @@ function barra(){
     <nav class="nav">${nav.map(([k,t])=>`<button data-vista="${k}" aria-current="${S.vista===k}">${t}</button>`).join('')}</nav>
     </div>`;
 }
-function totem(titulo,det,filas,total,unidad,vacio){
+function totem(titulo,det,filas,total,unidad,vacio,nota){
   const hay=filas.some(f=>f.valor>0);
   return `<div class="totem">
     <div class="totem-cab"><div class="t">${titulo}</div><div class="d">${det}</div></div>
     ${hay?filas.filter(f=>f.valor>0).map(f=>`<div class="linea-totem">
         ${f.color?`<span class="chip" style="background:${f.color}"></span>`:''}
-        <span class="nom">${esc(f.nombre)}</span><span class="guia"></span>
+        <span class="nom">${esc(f.nombre)}${f.media?`<em class="lt-media">carga media ${nf(f.media,2)} L</em>`:''}</span>
+        <span class="guia"></span>
         <span class="val">${nf(f.valor)}<i>${f.unidad||unidad}</i></span></div>`).join('')
       :`<div class="totem-vacio">${vacio||'Sin datos cargados.'}</div>`}
-    <div class="totem-total"><span class="nom">Total</span><span class="val">${nf(total)}<i>${unidad}</i></span></div></div>`;
+    <div class="totem-total"><span class="nom">Total</span><span class="val">${nf(total)}<i>${unidad}</i></span></div>
+    ${nota?`<div class="totem-nota">${nota}</div>`:''}</div>`;
 }
 
 /* ---------- consulta por mes (sin carga) ---------- */
@@ -1499,6 +1506,9 @@ async function vistaMes(sec){
         <button class="btn sec chico" id="rub-todos" style="width:auto">Mostrar todos</button>`
        :`<p class="sub">${lista.length} de ${todosRub.length} rubros a la vista. Tocá el lápiz para cambiarlo${S.libreOk?'':' (pide clave)'}.</p>`}
     </div>`:'';
+  // la carga media se muestra cuando se mira un mes puntual de playa
+  const cm=(sec==='playa'&&fa!=='todos'&&fm!=='todos')
+    ? ((await cargaMedia())[`${fa}-${fm}`]||null) : null;
   const cabecera = porRubro
     ? `<div class="totem">
         <div class="totem-cab"><div class="t">Tienda Full · unidades por rubro</div><div class="d">${esc(rotulo)}</div></div>
@@ -1511,7 +1521,11 @@ async function vistaMes(sec){
         <div class="totem-total"><span class="nom">Tickets</span><span class="val">${nf(tickets)}<i>tk</i></span></div>
       </div>`
     : totem(`${SECTORES[sec]} · litros despachados`,rotulo,
-        lista.map(p=>({nombre:p.nombre,valor:porProd[p.id]||0,color:p.color})),total,u,'');
+        lista.map(p=>({nombre:p.nombre,valor:porProd[p.id]||0,color:p.color,
+          media:(cm&&cm.detalle&&cm.detalle[p.id])?cm.detalle[p.id].litros/cm.detalle[p.id].n:0})),total,u,'',
+        (sec==='playa'&&cm)
+          ? `carga media ${nf(cm.media,2)} L por despacho · ${nf(cm.despachos)} despachos`
+          : '');
 
   /* --- por turno: en tienda, rubro por rubro y turno por turno --- */
   const plega=(id,titulo,sub,cuerpo)=>`<details class="tarjeta plega"${S.plegado[id]?'':' open'} data-plega="${id}">
@@ -3270,7 +3284,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
-const VERSION='5.8';
+const VERSION='6.0';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -4110,6 +4124,106 @@ async function tabYPF(){
   </div>`;
 }
 
+/* ---------- carga media: litros por despacho ---------- */
+// el reporte de Ventas Diarias trae los totales en centésimas de litro y la cantidad de despachos
+function leerCargaMedia(texto,nombreArch){
+  const plano=String(texto).replace(/<[^>]+>/g,'\n').replace(/&nbsp;/g,' ');
+  const lineas=plano.split('\n').map(l=>l.replace(/\s+/g,' ').trim()).filter(Boolean);
+  let litros=0, despachos=0, mes='';
+  const meses={};
+  lineas.forEach(l=>{
+    const mf=l.match(/^(\d{2})\/(\d{2})$/);
+    if(mf) meses[mf[2]]=(meses[mf[2]]||0)+1;        // el reporte trae día/mes, sin año
+  });
+  mes=Object.entries(meses).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+  // la fila TOTAL: el último número es el total general
+  const iTot=lineas.findIndex(l=>/^TOTAL$/i.test(l));
+  const porProd=[];
+  if(iTot>=0){
+    const nums=[];
+    for(let k=iTot+1;k<Math.min(iTot+40,lineas.length);k++){
+      if(/^[A-Za-zÁÉÍÓÚáéíóúñ]/.test(lineas[k])) break;
+      const n=numeroSig(lineas[k]);
+      if(n) nums.push(n);
+    }
+    const unicos=nums.filter((x,i)=>i===0||x!==nums[i-1]);
+    if(unicos.length){ litros=unicos[unicos.length-1]; porProd.push(...unicos.slice(0,-1)); }
+  }
+  const iD=lineas.findIndex(l=>/^Despachos$/i.test(l));
+  if(iD>=0) despachos=numeroSig(lineas[iD+1]||'')||0;
+  if(!litros||!despachos) return {error:`En “${nombreArch}” no encontré el total de litros o la cantidad de despachos.`};
+  return {mes,litros,despachos,media:litros/despachos,porProd,arch:nombreArch};
+}
+// reporte de despachos (.mhtml): un renglón por carga, con producto y volumen
+const MAPA_DESP=[
+  [/NS\s*XXI|SUPER/i,'sup'],
+  [/GO.?INFINIA|INFINIA\s*DIESEL/i,'ind'],
+  [/INFINIA/i,'inf'],
+  [/DIESEL\s*500|D\.?DIESEL/i,'d500'],
+];
+function leerDespachos(texto,nombreArch){
+  const filas=texto.split(/<TR[^>]*>/i).slice(1);
+  const cel=/<TD[^>]*>\s*<DIV[^>]*>([\s\S]*?)<\/DIV>\s*<\/TD>/gi;
+  const porProd={}, meses={};
+  let n=0, litros=0;
+  for(const tr of filas){
+    const c=[]; let m; cel.lastIndex=0;
+    while((m=cel.exec(tr))) c.push(m[1].replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').trim());
+    if(c.length<9) continue;
+    const f=c[0].match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(!f) continue;
+    const vol=parseFloat(c[7]);
+    if(!isFinite(vol)||!vol) continue;
+    const nom=c[3]||'';
+    const k=(MAPA_DESP.find(([re])=>re.test(nom))||[,'otros'])[1];
+    porProd[k]=porProd[k]||{n:0,litros:0,nombre:nom};
+    porProd[k].n++; porProd[k].litros+=vol;
+    const ym=`${f[3]}-${String(f[1]).padStart(2,'0')}`;   // el reporte viene en mm/dd/aaaa
+    meses[ym]=(meses[ym]||0)+1;
+    n++; litros+=vol;
+  }
+  if(!n) return {error:`En “${nombreArch}” no encontré renglones de despacho.`};
+  const ym=Object.entries(meses).sort((a,b)=>b[1]-a[1])[0][0];
+  return {ym,despachos:n,litros,media:litros/n,porProd,arch:nombreArch};
+}
+
+// el mismo reporte pero en Excel: más liviano y con tres decimales
+function leerDespachosXLS(filas,nombreArch){
+  let iCab=-1;
+  for(let i=0;i<Math.min(30,filas.length);i++){
+    const f=(filas[i]||[]).map(x=>norm(x));
+    if(f.includes('PRODUCTO')&&f.includes('VOLUMEN')){ iCab=i; break; }
+  }
+  if(iCab<0) return {error:`En “${nombreArch}” no encontré el encabezado con Producto y Volumen.`};
+  const cab=(filas[iCab]||[]).map(x=>norm(x));
+  const cF=cab.indexOf('FECHA Y HORA'), cP=cab.indexOf('PRODUCTO'), cV=cab.indexOf('VOLUMEN');
+  const porProd={}, meses={};
+  let n=0, litros=0;
+  for(const r of filas.slice(iCab+1)){
+    const nom=String(r[cP]??'').trim();
+    const vol=Number(r[cV]);
+    if(!nom||!isFinite(vol)||!vol) continue;
+    const f=String(r[cF]??'');
+    const mi=f.match(/^(\d{4})-(\d{2})/)||f.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    let ym='';
+    if(mi&&mi[0].includes('-')) ym=`${mi[1]}-${mi[2]}`;
+    else if(mi) ym=`${mi[3]}-${String(mi[1]).padStart(2,'0')}`;
+    if(ym) meses[ym]=(meses[ym]||0)+1;
+    const k=(MAPA_DESP.find(([re])=>re.test(nom))||[,'otros'])[1];
+    porProd[k]=porProd[k]||{n:0,litros:0,nombre:nom};
+    porProd[k].n++; porProd[k].litros+=vol;
+    n++; litros+=vol;
+  }
+  if(!n) return {error:`En “${nombreArch}” no encontré renglones de despacho.`};
+  const ym=Object.entries(meses).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+  return {ym,despachos:n,litros,media:litros/n,porProd,arch:nombreArch};
+}
+
+async function cargaMedia(){
+  if(!S.cmedia) S.cmedia=await leer('playa:carga-media',{});
+  return S.cmedia;
+}
+
 /* ---------- combos de Tienda Full ---------- */
 const TIPOS_COMBO=[
   {id:'comida',nombre:'Combo comida',color:'#FF6B85',rubros:['241','198']},
@@ -4806,7 +4920,8 @@ async function tabCombustible(){
 
 const MENU_ADMIN_BASE=[
   ['Ventas',[['importar','Importar Excel'],['manual','Carga manual']]],
-  ['Combustible',[['combustible','Cierre mensual'],['remitos','Remitos cisterna'],['objetivos','Objetivos']]],
+  ['Combustible',[['combustible','Cierre mensual'],['remitos','Remitos cisterna'],
+                  ['cargamedia','Carga media'],['objetivos','Objetivos']]],
   ['Tienda Full',[['tienda','Carga de turno'],['combostienda','Carga de combos'],
                   ['ventastienda','Ventas'],['masvendido','Más vendido'],['objtienda','Objetivos']]],
   ['Facturas',[['facturas','Facturas'],['gastos','Gastos'],['maestro','Maestro Debo'],
@@ -4830,6 +4945,7 @@ async function vistaAdmin(){
   let c='';
   if(S.tab==='importar')    c=tabImportar();
   if(S.tab==='manual')      c=await tabManual();
+  if(S.tab==='cargamedia') c=await tabCargaMedia();
   if(S.tab==='objetivos')   c=await tabObjetivos();
   if(S.tab==='tienda')      c=await tabTienda();
   if(S.tab==='combostienda') c=await tabCombosTienda();
@@ -4895,6 +5011,54 @@ async function tabPrecios(){
   return `<div class="aviso">Estas listas alimentan el presupuesto de Boxes. Cargalas cuando YPF o Renova te manden una actualización: la lista nueva reemplaza a la anterior.</div>
     ${caja('lista-aceites','Aceites (Cluster 92)','Encabezado en la fila con CÓDIGO. Toma código, descripción de producto y precio público sugerido.',L.aceites)}
     ${caja('lista-filtros','Filtros (Renova)','Encabezado en la fila con Articulo. Toma artículo, descripción y precio unitario.',L.filtros)}`;
+}
+
+async function tabCargaMedia(){
+  const CM=await cargaMedia();
+  const hoy=hoyISO();
+  const p=S.cmPrevia;
+  const anios=[...new Set(Object.keys(CM).map(k=>k.slice(0,4)).concat(hoy.slice(0,4)))].sort().reverse();
+  const cargados=Object.entries(CM).sort((a,b)=>b[0].localeCompare(a[0]));
+  return `<div class="aviso">Subí el <strong>Reporte de Despachos</strong> del mes: de ahí sale la carga media
+    general y la de cada producto. También sirve el de <strong>Ventas Diarias</strong>, pero ese solo da la general.</div>
+  <div class="tarjeta">
+    <h2>Cargar el reporte</h2>
+    <label class="suelta"><input type="file" id="cm-arch" accept=".xlsx,.xls,.htm,.html,.mhtml,.mht" hidden>
+      <strong>Elegir el reporte</strong><small>Reporte de Despachos (.xlsx o .mhtml) o Ventas Diarias (.htm)</small></label>
+    ${p?(p.error
+      ? `<div class="aviso mal" style="margin-top:11px">${esc(p.error)}</div>`
+      : `<div class="aviso bien" style="margin-top:11px">
+          <strong>${nf(p.litros,2)} litros</strong> en <strong>${nf(p.despachos)} despachos</strong>
+          · carga media <strong>${nf(p.media,2)} L</strong>.
+          ${p.detalle?`<div class="scroll" style="margin-top:9px"><table>
+            <thead><tr><th>Producto</th><th class="num">Despachos</th><th class="num">Litros</th><th class="num">Carga media</th></tr></thead>
+            <tbody>${Object.entries(p.detalle).map(([k,v])=>`<tr>
+              <td>${esc(v.nombre||k)}</td><td class="num">${nf(v.n)}</td>
+              <td class="num">${nf(v.litros,2)}</td>
+              <td class="num"><strong>${nf(v.litros/v.n,2)} L</strong></td></tr>`).join('')}</tbody>
+          </table></div>`:'<br>El reporte no trae el año, confirmá el período.'}</div>
+        <div class="filtro" style="margin-top:9px"><span class="et">Período</span>
+          <select id="cm-anio">${anios.map(a=>`<option value="${a}"${a===(S.cmAnio||hoy.slice(0,4))?' selected':''}>${a}</option>`).join('')}</select>
+          <select id="cm-mes">${MESES_L.map((n,i)=>{const v=String(i+1).padStart(2,'0');
+            return `<option value="${v}"${v===(S.cmMes||p.mes)?' selected':''}>${n}</option>`;}).join('')}</select>
+        </div>
+        <button class="btn" id="cm-guardar">Guardar</button>`
+      ):''}
+  </div>
+  <div class="tarjeta">
+    <h2>Meses cargados</h2>
+    ${cargados.length?`<div class="scroll"><table>
+      <thead><tr><th>Mes</th><th class="num">Litros</th><th class="num">Despachos</th><th class="num">Carga media</th><th class="num">Por producto</th><th></th></tr></thead>
+      <tbody>${cargados.map(([ym,v])=>`<tr>
+        <td>${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}</td>
+        <td class="num">${nf(v.litros,2)}</td>
+        <td class="num">${nf(v.despachos)}</td>
+        <td class="num"><strong>${nf(v.media,2)} L</strong></td>
+        <td class="num" style="color:var(--tinta-suave);font-size:11.5px">${
+          v.detalle?Object.entries(v.detalle).map(([k,x])=>`${esc((x.nombre||k).slice(0,12))} ${nf(x.litros/x.n,2)}`).join(' · '):'—'}</td>
+        <td><button class="borrar" data-cmdel="${esc(ym)}" aria-label="Quitar">×</button></td></tr>`).join('')}</tbody>
+    </table></div>`:`<p class="vacio">Todavía no cargaste ningún mes.</p>`}
+  </div>`;
 }
 
 async function tabObjetivos(){
@@ -8109,6 +8273,50 @@ function conectar(){
     const M=await combosMano(); delete M[ym];
     if(await guardar('tienda:combos-mano',M)){ S.combosMano=M; toast('Vuelve a lo calculado'); await render(); }
   };
+  const cmA=q('#cm-arch');
+  if(cmA) cmA.onchange=async()=>{
+    const f=cmA.files&&cmA.files[0]; if(!f) return;
+    cmA.closest('label').querySelector('strong').textContent='Leyendo el reporte…';
+    try{
+      if(/\.xlsx?$/i.test(f.name)){
+        const r=leerDespachosXLS(await filasDeExcel(f),f.name);
+        if(!r.error){ S.cmAnio=r.ym.slice(0,4)||S.cmAnio; S.cmMes=r.ym.slice(5,7)||S.cmMes; r.detalle=r.porProd; }
+        S.cmPrevia=r; await render(); return;
+      }
+      const txt=await f.text();
+      let r;
+      if(/<TR[^>]*>[\s\S]*?Volumen|Cant\. Despachos|ReporteDespacho/i.test(txt)&&/<TD/i.test(txt)){
+        r=leerDespachos(txt,f.name);
+        if(!r.error){ S.cmAnio=r.ym.slice(0,4); S.cmMes=r.ym.slice(5,7); r.detalle=r.porProd; }
+      }
+      if(!r||r.error){
+        const r2=leerCargaMedia(txt,f.name);
+        if(!r2.error){ r=r2; S.cmMes=r2.mes||null; }
+        else if(!r) r=r2;
+      }
+      S.cmPrevia=r;
+    }catch(e){ S.cmPrevia={error:(e&&e.message)||'No pude leer el archivo.'}; }
+    await render();
+  };
+  const cmAn=q('#cm-anio'), cmMe=q('#cm-mes');
+  if(cmAn) cmAn.onchange=()=>{ S.cmAnio=cmAn.value; };
+  if(cmMe) cmMe.onchange=()=>{ S.cmMes=cmMe.value; };
+  const cmG=q('#cm-guardar');
+  if(cmG) cmG.onclick=async()=>{
+    const p=S.cmPrevia;
+    const ym=`${S.cmAnio||hoyISO().slice(0,4)}-${S.cmMes||p.mes}`;
+    const CM=await cargaMedia();
+    CM[ym]={litros:p.litros,despachos:p.despachos,media:p.media,
+            detalle:p.detalle||null,ts:Date.now()};
+    if(await guardar('playa:carga-media',CM)){
+      S.cmedia=CM; S.cmPrevia=null;
+      toast('Carga media guardada'); await render();
+    }
+  };
+  document.querySelectorAll('#app [data-cmdel]').forEach(b=>b.onclick=async()=>{
+    const CM=await cargaMedia(); delete CM[b.dataset.cmdel];
+    if(await guardar('playa:carga-media',CM)){ S.cmedia=CM; toast('Quitado'); await render(); }
+  });
   const vtF=q('#vt-arch');
   if(vtF) vtF.onchange=async()=>{
     const f=vtF.files&&vtF.files[0]; if(!f) return;
