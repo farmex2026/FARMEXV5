@@ -3175,6 +3175,78 @@ const SERVICIOS=[
 const CANALES=[{id:'APP YPF',nombre:'App YPF',color:'#22E3F5'},{id:'Presencial',nombre:'Presencial',color:'#9D7CFF'}];
 
 // del reporte solo se guarda lo que sirve: nada de nombre, DNI, teléfono, mail ni patente
+// datos del cliente del mismo reporte: DNI (I), nombre (J), celular (M), mail (N),
+// marca (O), patente (P) y modelo (Q). El listado arranca en la fila 11.
+const COL_CLI={dni:8,nombre:9,cel:12,mail:13,marca:14,patente:15,modelo:16};
+function leerClientesBoxes(filas,nombreArch){
+  const esCab=r=>{
+    const t=(r||[]).map(c=>norm(c==null?'':c)).join('|');
+    return t.indexOf('FECHA DE FINALIZACION')>=0&&t.indexOf('TIPO DE TRABAJO')>=0;
+  };
+  let iCab=filas.findIndex(esCab);
+  if(iCab<0) iCab=9;                       // sin encabezado, arranca en la fila 11
+  const cab=(filas[iCab]||[]).map(c=>norm(c==null?'':c));
+  const buscar=(def,...pistas)=>{
+    for(const p of pistas){ const q=norm(p); const i=cab.findIndex(c=>String(c||'').indexOf(q)>=0); if(i>=0) return i; }
+    return def;
+  };
+  // si el encabezado trae los títulos se usan; si no, las columnas fijas
+  const C={
+    dni:    buscar(COL_CLI.dni,'DNI','DOCUMENTO'),
+    nombre: buscar(COL_CLI.nombre,'NOMBRE Y APELLIDO','APELLIDO Y NOMBRE','NOMBRE'),
+    cel:    buscar(COL_CLI.cel,'CELULAR','TELEFONO'),
+    mail:   buscar(COL_CLI.mail,'MAIL','CORREO','E-MAIL'),
+    marca:  buscar(COL_CLI.marca,'ACTIVO: MARCA','MARCA'),
+    patente:buscar(COL_CLI.patente,'PATENTE','DOMINIO'),
+    modelo: buscar(COL_CLI.modelo,'ACTIVO: MODELO','MODELO'),
+  };
+  const iF=buscar(-1,'FECHA DE FINALIZACI');
+  const out=[];
+  for(const r0 of filas.slice(iCab+1)){
+    const r=r0||[];
+    const tx=i=>i>=0?String(r[i]??'').trim():'';
+    const pat=tx(C.patente).toUpperCase().replace(/\s+/g,'');
+    const dni=tx(C.dni).replace(/\D/g,'');
+    const nom=tx(C.nombre);
+    if(!pat&&!dni&&!nom) continue;
+    let f='';
+    const cf=tx(iF);
+    const m=cf.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if(m) f=`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    out.push({dni,nombre:nom,cel:tx(C.cel),mail:tx(C.mail),
+      marca:tx(C.marca).toUpperCase(),patente:pat,modelo:tx(C.modelo),f});
+  }
+  return out;
+}
+async function clientesBoxes(){
+  if(!S.cliBox) S.cliBox=await leer('boxes:clientes',{});
+  return S.cliBox;
+}
+// suma lo nuevo sin pisar lo que ya había
+function sumarClientes(B,lista){
+  let nuevos=0, actualizados=0;
+  lista.forEach(c=>{
+    const k=c.patente||('d'+c.dni)||norm(c.nombre);
+    if(!k) return;
+    const a=B[k];
+    if(!a){
+      B[k]={...c,fechas:c.f?[c.f]:[],visitas:1,ultima:c.f||'',alta:c.f||hoyISO()};
+      nuevos++;
+    }else{
+      ['dni','nombre','cel','mail','marca','modelo'].forEach(x=>{ if(c[x]&&!a[x]) a[x]=c[x]; });
+      // las visitas se cuentan por fecha, así volver a subir el mismo reporte no las infla
+      a.fechas=a.fechas||(a.ultima?[a.ultima]:[]);
+      if(c.f&&!a.fechas.includes(c.f)){
+        a.fechas.push(c.f);
+        if(c.f>(a.ultima||'')) a.ultima=c.f;
+        actualizados++;
+      }
+      a.visitas=a.fechas.length||1;
+    }
+  });
+  return {nuevos,actualizados};
+}
+
 function leerReporteBoxes(filas,nombreArch){
   // el reporte trae arriba una línea de filtros que también dice "Fecha de finalización":
   // el encabezado de verdad es el que tiene además el tipo de trabajo y la marca.
@@ -3284,7 +3356,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
-const VERSION='6.0';
+const VERSION='6.1';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -3787,6 +3859,52 @@ function leerPedidoYPF(lineas){
     sinMapa.push({desc,cajas});
   }
   return {ace,otr,sinMapa,nro,fecha};
+}
+
+async function tabBaseBox(){
+  const B=await clientesBoxes();
+  const todos=Object.entries(B).map(([k,v])=>({k,...v}));
+  const q=norm(S.cbBusca||'');
+  const lista=todos.filter(c=>!q||norm(`${c.nombre||''} ${c.patente||''} ${c.dni||''} ${c.cel||''} ${c.mail||''} ${c.marca||''} ${c.modelo||''}`).includes(q))
+    .sort((a,b)=>(b.ultima||'').localeCompare(a.ultima||'')||String(a.nombre||'').localeCompare(String(b.nombre||'')));
+  const conCel=todos.filter(c=>c.cel).length, conMail=todos.filter(c=>c.mail).length;
+  const tope=200;
+  return `<div class="aviso">Se arma sola con los reportes de servicios que cargás todos los días.
+    Cada auto entra una vez y se le van sumando las visitas.</div>
+  <div class="totem">
+    <div class="totem-cab"><div class="t">Base de clientes</div>
+      <div class="d">Boxes</div></div>
+    <div class="linea-totem"><span class="chip" style="background:var(--cian)"></span>
+      <span class="nom">Autos</span><span class="guia"></span><span class="val">${nf(todos.length)}</span></div>
+    <div class="linea-totem"><span class="chip" style="background:#3DE0A0"></span>
+      <span class="nom">Con celular</span><span class="guia"></span><span class="val">${nf(conCel)}</span></div>
+    <div class="linea-totem"><span class="chip" style="background:#9D7CFF"></span>
+      <span class="nom">Con mail</span><span class="guia"></span><span class="val">${nf(conMail)}</span></div>
+    <div class="totem-total"><span class="nom">Visitas</span>
+      <span class="val">${nf(todos.reduce((a,c)=>a+(Number(c.visitas)||1),0))}</span></div>
+  </div>
+  <div class="tarjeta">
+    <h2>Clientes</h2>
+    <div class="filtro">
+      <input type="search" id="cb-buscar" placeholder="Buscar por patente, nombre, DNI, celular o marca"
+        value="${esc(S.cbBusca||'')}" style="flex:1;min-width:220px">
+      <button class="btn sec chico" id="cb-bajar" style="width:auto;margin:0">Descargar Excel</button>
+    </div>
+    ${lista.length?`<div class="scroll"><table>
+      <thead><tr><th>Patente</th><th>Cliente</th><th>Vehículo</th><th>Contacto</th>
+        <th class="num">Visitas</th><th class="num">Última</th><th></th></tr></thead>
+      <tbody>${lista.slice(0,tope).map(c=>`<tr>
+        <td><strong class="num">${esc(c.patente||'—')}</strong></td>
+        <td>${esc(c.nombre||'—')}${c.dni?`<small>DNI ${esc(c.dni)}</small>`:''}</td>
+        <td>${esc(c.marca||'—')}<small>${esc(c.modelo||'')}</small></td>
+        <td>${esc(c.cel||'')}${c.mail?`<small>${esc(c.mail)}</small>`:''}${(!c.cel&&!c.mail)?'—':''}</td>
+        <td class="num">${nf(c.visitas||1)}</td>
+        <td class="num">${c.ultima?c.ultima.split('-').reverse().join('/'):'—'}</td>
+        <td><button class="borrar" data-clidel="${esc(c.k)}" aria-label="Quitar">×</button></td></tr>`).join('')}</tbody>
+    </table></div>
+    ${lista.length>tope?`<p class="sub" style="margin-top:9px">Mostrando ${tope} de ${nf(lista.length)}. Buscá para achicar la lista.</p>`:''}`
+    :`<p class="vacio">${q?`No encontré nada con “${esc(S.cbBusca)}”.`:'Todavía no hay clientes. Se cargan solos con los reportes de servicios.'}</p>`}
+  </div>`;
 }
 
 async function tabLub(){
@@ -4928,7 +5046,7 @@ const MENU_ADMIN_BASE=[
                ['convertir','Renova a Debo'],['ypf','YPF lubricantes'],['topaes','Topaes a Debo'],
                ]],
   ['Boxes',[['boxes','Reportes de servicios'],['lubricante','Compra de lubricante'],
-             ['objboxes','Objetivos'],['precios','Listas de precios']]],
+             ['objboxes','Objetivos'],['precios','Listas de precios'],['basebox','Base']]],
   ['Sistema',[['cumples','Cumpleaños'],['sync','Sincronización'],['config','Configuración']]]
 ];
 // se arma en cada dibujo: aplica los nombres propios y saca las pestañas ocultas
@@ -4956,6 +5074,7 @@ async function vistaAdmin(){
   if(S.tab==='boxes')       c=await tabBoxes();
   if(S.tab==='lubricante')  c=await tabLub();
   if(S.tab==='objboxes')    c=await tabObjBoxes();
+  if(S.tab==='basebox')  c=await tabBaseBox();
   if(S.tab==='precios')     c=await tabPrecios();
   if(S.tab==='maestro')     c=await tabMaestro();
   if(S.tab==='convertir')   c=await tabConvertir();
@@ -7175,15 +7294,36 @@ function conectar(){
   });
 
   // ---- reportes de Boxes ----
+  const cbB=q('#cb-buscar');
+  if(cbB) cbB.oninput=()=>{ S.cbBusca=cbB.value; clearTimeout(S.tCli);
+    S.tCli=setTimeout(async()=>{ await render();
+      const i=q('#cb-buscar'); if(i){ i.focus(); i.setSelectionRange(i.value.length,i.value.length); } },260); };
+  document.querySelectorAll('#app [data-clidel]').forEach(b=>b.onclick=async()=>{
+    const B=await clientesBoxes(); delete B[b.dataset.clidel];
+    if(await guardar('boxes:clientes',B)){ S.cliBox=B; toast('Quitado'); await render(); }
+  });
+  const cbBaj=q('#cb-bajar');
+  if(cbBaj) cbBaj.onclick=async()=>{
+    const B=await clientesBoxes();
+    const filas=[['Patente','DNI','Nombre y apellido','Celular','Mail','Marca','Modelo','Visitas','Última']];
+    Object.values(B).sort((a,b)=>(b.ultima||'').localeCompare(a.ultima||''))
+      .forEach(c=>filas.push([c.patente||'',c.dni||'',c.nombre||'',c.cel||'',c.mail||'',
+        c.marca||'',c.modelo||'',c.visitas||1,c.ultima||'']));
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(filas),'Clientes');
+    XLSX.writeFile(wb,`clientes-boxes-${hoyISO()}.xlsx`);
+  };
   const bxa=q('#bx-arch');
   if(bxa) bxa.onchange=async()=>{
     const fs=[...(bxa.files||[])]; if(!fs.length) return;
     bxa.closest('label').querySelector('strong').textContent='Leyendo…';
     try{
-      const juntos={meses:{},total:0,saltadas:0};
+      const juntos={meses:{},total:0,saltadas:0,clientes:[]};
       for(const f of fs){
-        const r=leerReporteBoxes(await filasDeExcel(f),f.name);
+        const filas=await filasDeExcel(f);
+        const r=leerReporteBoxes(filas,f.name);
         if(r.error) throw new Error(r.error);
+        try{ juntos.clientes.push(...leerClientesBoxes(filas,f.name)); }catch(_){}
         juntos.total+=r.total; juntos.saltadas+=r.saltadas;
         for(const [ym,x] of Object.entries(r.meses)){
           if(!juntos.meses[ym]) juntos.meses[ym]={dias:{},n:0};
@@ -7210,10 +7350,17 @@ function conectar(){
       }
     }
     await guardar('boxes:roll',r); S.bxRoll=r;
+    // los datos del cliente van a la base, sin pisar lo que ya estaba
+    let cli={nuevos:0,actualizados:0};
+    if(p.clientes&&p.clientes.length){
+      const B=await clientesBoxes();
+      cli=sumarClientes(B,p.clientes);
+      if(await guardar('boxes:clientes',B)) S.cliBox=B;
+    }
     const ms=Object.keys(p.meses).sort();
     S.filtro.bxserv={a:ms[ms.length-1].slice(0,4),m:ms[ms.length-1].slice(5,7)};
     S.previaBoxes=null;
-    toast(nf(p.total)+' servicios cargados'); await render();
+    toast(nf(p.total)+' servicios cargados'+(cli.nuevos?` · ${nf(cli.nuevos)} clientes nuevos`:'')); await render();
   };
   const bxx=q('#bx-cancelar'); if(bxx) bxx.onclick=async()=>{ S.previaBoxes=null; await render(); };
   document.querySelectorAll('#app [data-bxdel]').forEach(b=>b.onclick=async()=>{
