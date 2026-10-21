@@ -2209,7 +2209,8 @@ async function tabTienda(){
           <td>${c.existe?'<span class="etiq pend">reemplaza</span>':'<span class="etiq pag">nuevo</span>'}</td></tr>`).join('')}
         </tbody></table></div>
       ${nuevos.length?`<div class="aviso" style="margin-top:11px">Rubros que no tengo en la lista: <strong>${nuevos.map(c=>esc(c)).join(', ')}</strong>. Se guardan igual; decime si querés que alguno se vea en Tienda Full.</div>`:''}
-      <button class="btn" id="tf-confirmar">Cargar ${p.cierres.length>1?'los cierres':'el cierre'}</button>
+      <button class="btn" id="tf-confirmar">Cargar ${p.cierres.length>1?'los cierres':'el cierre'}${
+        S.fxPrevia&&S.fxPrevia.lista?' y el detalle':''}</button>
       <button class="btn sec" id="tf-cancelar">Cancelar</button>`;
   }
 
@@ -2223,30 +2224,19 @@ async function tabTienda(){
   return `<div class="aviso">Subí los dos cierres de caja del día, el de mañana y el de tarde. El turno lo saco del nombre del archivo: <strong>TM</strong> mañana, <strong>TT</strong> tarde. Los chicos ven solo las unidades y los tickets; los importes quedan acá.</div>
   <div class="tarjeta">
     <h2>Importar cierres de caja</h2>
-    <p class="sub">Archivos .htm tal como los exporta el sistema. Podés mandar varios días juntos.</p>
+    <p class="sub">Tirá los <strong>cuatro archivos del día</strong> juntos: los dos cierres y los dos Facturado.
+      La app los separa sola y la fecha sale del cierre.</p>
     <label class="archivo"><strong>Elegir archivos</strong>
-      <small>.htm o .html · por ejemplo 01-08TM.htm y 01-08TT.htm</small>
+      <small>.htm · 01-08TM, 01-08TT, Facturado-TM y Facturado-TT</small>
       <input type="file" id="tf-arch" accept=".htm,.html" multiple></label>
     ${previa}
+    ${S.fxPrevia&&S.fxPrevia.lista?`<div class="aviso bien" style="margin-top:9px">
+      ${S.fxPrevia.lista.map(x=>`<strong>Detalle ${esc(x.rot)}</strong>: ${nf(x.prod.length)} productos ·
+        ${nf(x.unidades)} unidades (${nf(x.sinTab)} sin tabaco)`).join('<br>')}
+      ${S.fxPrevia.lista.some(x=>!x.f)?'<br>Sin fecha: la tomo del cierre que subas junto.':''}</div>`:''}
+    ${S.fxPrevia&&S.fxPrevia.error?`<div class="aviso mal" style="margin-top:9px">${esc(S.fxPrevia.error)}</div>`:''}
   </div>
-  <div class="tarjeta">
-    <h2>Detalle de lo vendido</h2>
-    <p class="sub">Los <strong>Facturado-TM</strong> y <strong>Facturado-TT</strong> del mismo día: de ahí sale el
-      ranking por producto. Podés mandar varios días juntos, el turno sale del nombre del archivo.</p>
-    <label class="archivo"><strong>Elegir los Facturado</strong>
-      <small>.htm · por ejemplo Facturado-TM.htm</small>
-      <input type="file" id="fx-arch" accept=".htm,.html" multiple></label>
-    ${S.fxPrevia?(S.fxPrevia.error
-      ? `<div class="aviso mal" style="margin-top:11px">${esc(S.fxPrevia.error)}</div>`
-      : `<div class="aviso bien" style="margin-top:11px">
-          ${S.fxPrevia.lista.map(x=>`<strong>${esc(x.rot)}</strong>: ${nf(x.prod.length)} productos ·
-            ${nf(x.unidades)} unidades (${nf(x.sinTab)} sin tabaco)`).join('<br>')}
-          ${S.fxPrevia.lista.some(x=>x.fallan)?'<br>Ojo: algún renglón no cierra la cuenta de cantidad por precio.':''}</div>
-        <div class="filtro" style="margin-top:9px"><span class="et">Día</span>
-          <input type="date" id="fx-fecha" value="${esc(S.fxFecha||hoyISO())}"></div>
-        <button class="btn" id="fx-guardar">Guardar el detalle</button>`
-      ):''}
-  </div>
+
   <div class="tarjeta">
     <h2>Importes por día</h2>
     <p class="sub">Lo recaudado en cada cierre. Esto no se muestra en la pestaña Tienda Full.</p>
@@ -2283,7 +2273,8 @@ async function tabCombosTienda(){
           <td>${c.existe?'<span class="etiq pend">reemplaza</span>':'<span class="etiq pag">nuevo</span>'}</td></tr>`).join('')}
         </tbody></table></div>
       ${nuevos.length?`<div class="aviso" style="margin-top:11px">Rubros que no tengo en la lista: <strong>${nuevos.map(c=>esc(c)).join(', ')}</strong>. Se guardan igual; decime si querés que alguno se vea en Tienda Full.</div>`:''}
-      <button class="btn" id="tf-confirmar">Cargar ${p.cierres.length>1?'los cierres':'el cierre'}</button>
+      <button class="btn" id="tf-confirmar">Cargar ${p.cierres.length>1?'los cierres':'el cierre'}${
+        S.fxPrevia&&S.fxPrevia.lista?' y el detalle':''}</button>
       <button class="btn sec" id="tf-cancelar">Cancelar</button>`;
   }
 
@@ -3423,7 +3414,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
-const VERSION='6.2';
+const VERSION='6.3';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -5753,7 +5744,11 @@ async function tabVentasTurnos(){
   </div>
   <div class="tarjeta">
     <h2>Día por día</h2>
-    <p class="sub">Tocá un día para ver qué vendió cada turno.</p>
+    <p class="sub">${nf(dias.length)} día${dias.length===1?'':'s'} cargado${dias.length===1?'':'s'} en
+      ${MESES_L[Number(ym.slice(5,7))-1]}. Tocá uno para ver qué vendió cada turno.</p>
+    <div class="filtro">
+      <button class="btn sec chico" id="vtu-borrarmes" style="width:auto;margin:0">Borrar el mes entero</button>
+    </div>
     ${dias.slice().reverse().map(f=>{
       const t=F[f].turnos||{};
       const tot=Object.values(t).reduce((a,x)=>a+(x.unidades||0),0);
@@ -5762,11 +5757,14 @@ async function tabVentasTurnos(){
         <summary><span class="lb-flecha">▸</span>
           <strong>${f.split('-').reverse().join('/')}</strong>
           <span class="mv-barra"></span>
-          <span class="mv-num">${nf(tot)}<small>${Object.keys(t).length} turno${Object.keys(t).length===1?'':'s'}</small></span></summary>
+          <span class="mv-num">${nf(tot)}<small>${Object.keys(t).length} turno${Object.keys(t).length===1?'':'s'}</small></span>
+          <button class="borrar" data-vtudel="${esc(f)}" aria-label="Borrar el día"
+            title="Borrar este día">×</button></summary>
         <div class="scroll" style="padding:0 12px 11px">
           ${Object.entries(t).map(([tid,x])=>{
             const L=(x.prod||[]).slice().sort((a,b)=>b.q-a.q);
-            return `<div class="eyebrow" style="margin:9px 0 4px">${tid==='T1'?'Mañana':'Tarde'} · ${nf(x.unidades)} unidades</div>
+            return `<div class="eyebrow" style="margin:9px 0 4px">${tid==='T1'?'Mañana':'Tarde'} · ${nf(x.unidades)} unidades
+              <button class="ver" data-vtudelt="${esc(f)}|${tid}" style="margin-left:9px">borrar turno</button></div>
             <table><thead><tr><th>Producto</th><th class="num">Cantidad</th></tr></thead>
             <tbody>${L.map(p=>`<tr><td>${esc(p.det)}</td><td class="num"><strong>${nf(p.q)}</strong></td></tr>`).join('')}</tbody></table>`;
           }).join('')}
@@ -7501,6 +7499,30 @@ function conectar(){
   });
 
   // ---- reportes de Boxes ----
+  document.querySelectorAll('#app [data-vtudel]').forEach(b=>b.onclick=async e=>{
+    e.preventDefault(); e.stopPropagation();
+    const f=b.dataset.vtudel;
+    if(!confirm(`¿Borrar el detalle del ${f.split('-').reverse().join('/')}?`)) return;
+    const F=await factTurno(); delete F[f];
+    if(await guardar('tienda:facturado',F)){ S.fact=F; toast('Día borrado'); await render(); }
+  });
+  document.querySelectorAll('#app [data-vtudelt]').forEach(b=>b.onclick=async()=>{
+    const [f,tid]=b.dataset.vtudelt.split('|');
+    const rot=tid==='T1'?'mañana':'tarde';
+    if(!confirm(`¿Borrar el turno ${rot} del ${f.split('-').reverse().join('/')}?`)) return;
+    const F=await factTurno();
+    if(F[f]&&F[f].turnos){ delete F[f].turnos[tid]; if(!Object.keys(F[f].turnos).length) delete F[f]; }
+    if(await guardar('tienda:facturado',F)){ S.fact=F; toast('Turno borrado'); await render(); }
+  });
+  const vtuBM=q('#vtu-borrarmes');
+  if(vtuBM) vtuBM.onclick=async()=>{
+    const F=await factTurno();
+    const ym=S.vtuMes||Object.keys(F).sort().reverse()[0].slice(0,7);
+    const n=Object.keys(F).filter(k=>k.startsWith(ym)).length;
+    if(!confirm(`¿Borrar los ${n} días cargados de ${MESES_L[Number(ym.slice(5,7))-1]}?`)) return;
+    Object.keys(F).forEach(k=>{ if(k.startsWith(ym)) delete F[k]; });
+    if(await guardar('tienda:facturado',F)){ S.fact=F; S.vtuMes=null; toast('Mes borrado'); await render(); }
+  };
   const vtuM=q('#vtu-mes');
   if(vtuM) vtuM.onchange=async()=>{ S.vtuMes=vtuM.value; await render(); };
   const vtuB=q('#vtu-buscar');
@@ -8101,67 +8123,59 @@ function conectar(){
     if(await guardar('tienda:combos-cortes',CO)){ S.cortes=CO; await recalcularCombosMes(); toast('Corte quitado'); await render(); }
   });
 
-  const fxa=q('#fx-arch');
-  if(fxa) fxa.onchange=async()=>{
-    const fs=[...(fxa.files||[])]; if(!fs.length) return;
-    fxa.closest('label').querySelector('strong').textContent='Leyendo…';
-    try{
-      const lista=[];
-      for(const f of fs){
-        const r=leerFacturado(await textoHTM(f),f.name);
-        if(r.error) throw new Error(r.error);
-        const tt=/TT|TARDE/i.test(f.name)?'T2':'T1';
-        r.turno=tt; r.rot=tt==='T1'?'Mañana':'Tarde';
-        // si el nombre trae la fecha, se usa
-        const m=f.name.match(/(\d{2})-(\d{2})(?:-(\d{2,4}))?/);
-        if(m){ const a=m[3]?(m[3].length===2?'20'+m[3]:m[3]):hoyISO().slice(0,4);
-               r.f=`${a}-${m[2]}-${m[1]}`; }
-        lista.push(r);
-      }
-      const conF=lista.find(x=>x.f);
-      if(conF) S.fxFecha=conF.f;
-      S.fxPrevia={lista};
-    }catch(e){ S.fxPrevia={error:(e&&e.message)||'no se pudo leer'}; }
-    await render();
-  };
-  const fxF=q('#fx-fecha');
-  if(fxF) fxF.onchange=()=>{ S.fxFecha=fxF.value; };
-  const fxG=q('#fx-guardar');
-  if(fxG) fxG.onclick=async()=>{
-    const f=S.fxFecha||hoyISO();
-    const F=await factTurno();
-    F[f]=F[f]||{turnos:{}};
-    S.fxPrevia.lista.forEach(x=>{
-      F[f].turnos[x.turno]={prod:x.prod,unidades:x.unidades,sinTab:x.sinTab,ts:Date.now()};
-    });
-    if(await guardar('tienda:facturado',F)){
-      S.fact=F; S.fxPrevia=null;
-      toast('Detalle guardado'); await render();
-    }
-  };
-
   // ---- cierres de tienda ----
   const tfa=q('#tf-arch');
   if(tfa) tfa.onchange=async()=>{
     const fs=[...(tfa.files||[])]; if(!fs.length) return;
     tfa.closest('label').querySelector('strong').textContent='Leyendo…';
     try{
-      const cierres=[];
+      const cierres=[], facturados=[];
       for(const f of fs){
-        const c=leerCierre(await textoHTM(f),f.name);
+        const txt=await textoHTM(f);
+        if(/facturado/i.test(f.name)||/Ventas por Planilla/i.test(txt)){
+          const r=leerFacturado(txt,f.name);
+          if(r.error) throw new Error(r.error);
+          const tt=/TT|TARDE/i.test(f.name)?'T2':'T1';
+          r.turno=tt; r.rot=tt==='T1'?'Mañana':'Tarde';
+          const m=f.name.match(/(\d{2})-(\d{2})(?:-(\d{2,4}))?/);
+          if(m){ const a=m[3]?(m[3].length===2?'20'+m[3]:m[3]):hoyISO().slice(0,4);
+                 r.f=`${a}-${m[2]}-${m[1]}`; }
+          facturados.push(r);
+          continue;
+        }
+        const c=leerCierre(txt,f.name);
         if(c.error) throw new Error(c.error);
         const ya=await ops('tienda',c.fecha.slice(0,7));
         c.existe=!!(ya[c.fecha.slice(8,10)]&&ya[c.fecha.slice(8,10)][c.turno]);
         cierres.push(c);
       }
       cierres.sort((a,b)=>(a.fecha+a.turno).localeCompare(b.fecha+b.turno));
-      S.previaTienda={cierres};
+      // los Facturado sin fecha toman la del cierre del mismo turno
+      facturados.forEach(x=>{
+        if(x.f) return;
+        const c=cierres.find(y=>y.turno===x.turno)||cierres[0];
+        if(c) x.f=c.fecha;
+      });
+      S.previaTienda=cierres.length?{cierres}:null;
+      S.fxPrevia=facturados.length?{lista:facturados}:null;
+      if(!cierres.length&&!facturados.length) throw new Error('no reconocí ninguno de los archivos');
     }catch(e){ S.previaTienda={error:(e&&e.message)||'no se pudo leer'}; }
     await render();
   };
   const tfc=q('#tf-confirmar');
   if(tfc) tfc.onclick=async()=>{
     const p=S.previaTienda; if(!p||!p.cierres) return;
+    // el detalle de lo vendido del mismo día entra junto
+    if(S.fxPrevia&&S.fxPrevia.lista){
+      const F=await factTurno();
+      S.fxPrevia.lista.forEach(x=>{
+        const f=x.f||(p.cierres[0]||{}).fecha;
+        if(!f) return;
+        F[f]=F[f]||{turnos:{}};
+        F[f].turnos[x.turno]={prod:x.prod,unidades:x.unidades,sinTab:x.sinTab,ts:Date.now()};
+      });
+      if(await guardar('tienda:facturado',F)){ S.fact=F; S.fxPrevia=null; }
+    }
     tfc.disabled=true; tfc.textContent='Cargando…';
     const imp=await admin('tienda-importes',{});
     const meses=new Set(); let fallo=false;
