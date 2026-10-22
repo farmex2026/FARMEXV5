@@ -2342,7 +2342,12 @@ function bloqueRanking(CO){
       así que no tienen el detalle por producto.<br>
       Volvé a subir los tres reportes del período y el ranking aparece solo.</p></div>`;
   const ym=(S.rkMes&&meses.includes(S.rkMes))?S.rkMes:meses[0];
-  const R=rankingMes(CO,ym);
+  // los cortes cargados de ese mes son las fechas que se pueden mirar
+  const fechas=[...new Set(Object.values(CO).filter(c=>c.hasta.slice(0,7)===ym).map(c=>c.hasta))].sort();
+  const corte=(S.rkDia&&fechas.includes(S.rkDia))?S.rkDia:'';
+  const R=rankingMes(CO,ym,corte||null);
+  const Rdia=corte?rankingMes(CO,ym,corte,true):[];
+  const movDia=Rdia.reduce((a,x)=>a+x.q,0);
   const soloCombo=S.rkSolo==='combo', soloSuelto=S.rkSolo==='suelto';
   const lista=R.filter(x=>soloCombo?x.combo:soloSuelto?!x.combo:true);
   const totComb=R.filter(x=>x.combo).reduce((a,x)=>a+x.q,0);
@@ -2354,6 +2359,10 @@ function bloqueRanking(CO){
     <p class="sub">Del mismo reporte que cargás acá. Suma los combos y también lo vendido suelto.</p>
     <div class="filtro">
       <select id="rk-mes">${meses.map(m=>`<option value="${m}"${m===ym?' selected':''}>${MESES_L[Number(m.slice(5,7))-1]} ${m.slice(0,4)}</option>`).join('')}</select>
+      <select id="rk-dia" title="Mirá el acumulado hasta una fecha">
+        <option value="">todo el mes</option>
+        ${fechas.map(f=>`<option value="${f}"${f===corte?' selected':''}>hasta el ${f.slice(8)}/${f.slice(5,7)}</option>`).join('')}
+      </select>
       <span class="lb-sep"></span>
       <span class="pl-modo">
         <button data-rksolo=""${!S.rkSolo?' class="act"':''}>Todo</button>
@@ -2389,8 +2398,12 @@ function bloqueRanking(CO){
           <td>${nf(x.q)}</td><td>${nf(x.q/tt*100,1)}%</td></tr>`).join('')}</tbody></table>`;}).join('')}
     </div>
     <div class="totem" style="margin-bottom:12px">
-      <div class="totem-cab"><div class="t">${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}</div>
+      <div class="totem-cab"><div class="t">${MESES_L[Number(ym.slice(5,7))-1]} ${ym.slice(0,4)}${
+        corte?` · hasta el ${corte.slice(8)}/${corte.slice(5,7)}`:''}</div>
         <div class="d">${nf(lista.length)} productos</div></div>
+      ${corte?`<div class="linea-totem"><span class="chip" style="background:#FFC93C"></span>
+        <span class="nom">Movimiento de ese corte</span><span class="guia"></span>
+        <span class="val">${nf(movDia)}<i>u</i></span></div>`:''}
       <div class="linea-totem"><span class="chip" style="background:#FF6B85"></span>
         <span class="nom">En combo</span><span class="guia"></span><span class="val">${nf(totComb)}<i>u</i></span></div>
       <div class="linea-totem"><span class="chip" style="background:#22E3F5"></span>
@@ -3414,7 +3427,7 @@ async function provVenc(){
   return S.provV;
 }
 const guardarProvV=()=>guardar('tienda:proveedores',S.provV);
-const VERSION='6.3';
+const VERSION='6.4';
 const DIAS_GRACIA=5;    // lo vencido se sigue viendo estos días
 const DIAS_AVISO=30;    // se marca lo que vence dentro de este plazo
 async function vencimientos(){
@@ -4525,7 +4538,7 @@ function sueltosMes(cortes,ym){
 }
 
 // ranking de productos del mes: lo de cada corte menos el anterior del mismo período
-function rankingMes(cortes,ym){
+function rankingMes(cortes,ym,hasta,soloEse){
   const porPeriodo={};
   Object.values(cortes).forEach(c=>{ (porPeriodo[c.desde]=porPeriodo[c.desde]||[]).push(c); });
   const acum={};
@@ -4534,7 +4547,10 @@ function rankingMes(cortes,ym){
     let prev={};
     lista.forEach(c=>{
       const p=c.prod||{};
-      if(c.hasta.slice(0,7)===ym){
+      const dentro = c.hasta.slice(0,7)===ym
+        && (!hasta||c.hasta<=hasta)
+        && (!soloEse||c.hasta===hasta);
+      if(dentro){
         Object.entries(p).forEach(([k,x])=>{
           const antes=(prev[k]||{}).q||0;
           const d=x.q-antes;
@@ -8103,7 +8119,9 @@ function conectar(){
   if(rkP) rkP.onclick=()=>{ S.rkImp=null; document.body.classList.add('imp-rk');
     setTimeout(()=>{ window.print(); document.body.classList.remove('imp-rk'); },120); };
   const rkM=q('#rk-mes');
-  if(rkM) rkM.onchange=async()=>{ S.rkMes=rkM.value; await render(); };
+  if(rkM) rkM.onchange=async()=>{ S.rkMes=rkM.value; S.rkDia=''; await render(); };
+  const rkD=q('#rk-dia');
+  if(rkD) rkD.onchange=async()=>{ S.rkDia=rkD.value; await render(); };
   document.querySelectorAll('#app [data-rksolo]').forEach(b=>b.onclick=async()=>{
     S.rkSolo=b.dataset.rksolo; await render();
   });
